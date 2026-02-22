@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="mr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- 1. Optimized Meta Tags & Header Hierarchy -->
+    <title>AI Krushi Mitra | Smart AI Agriculture Advisor & Weather Updates for Farmers</title>
+    <meta name="title" content="AI Krushi Mitra | Smart AI Agriculture Advisor & Weather Updates for Farmers">
+    <meta name="description" content="Get AI-powered agricultural advice, real-time weather updates, market prices (Mandi Bhav), crop disease detection, and smart irrigation tips with AI Krushi Mitra – your digital farming friend in Marathi, Hindi & English.">
+    <meta name="keywords" content="AI Agriculture India, Smart Farming Advisor, Mandi Bhav, Crop Doctor, Weather Forecast Maharashtra, PM Kisan Scheme, Shetkari Mitra">
+    <meta name="author" content="AI Krushi Mitra">
+    <meta name="theme-color" content="#020617">
+    
+     <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Matches standard Tailwind colors used in app
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Leaflet Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Favicon & Manifest -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- 6. Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AI Krushi Mitra",
+      "headline": "Smart AI Agriculture Advisor",
+      "applicationCategory": "AgricultureApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "description": "AI-powered agricultural advisor providing weather, market rates, and crop health analysis for Indian farmers.",
+      "featureList": "Crop Disease Detection, Real-time Weather, Mandi Prices, Government Schemes Information, Soil Health Card",
+      "author": {
+        "@type": "Organization",
+        "name": "AI Krushi Mitra Team"
+      }
+    }
+    </script>
+
+    <!-- Critical CSS for Loader -->
+    <style>
+      html, body { 
+        background-color: #020617; 
+        color: #f1f5f9; 
+        margin: 0; 
+        padding: 0; 
+        height: 100%; 
+        width: 100%;
+        overflow: hidden; 
+      }
+      #root {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        z-index: 10;
+      }
+      .app-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 20%, #052e2b, #020617 70%);
+        color: #10b981;
+        z-index: 9999;
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@^3.4.1",
+    "express": "https://esm.sh/express@^5.2.1",
+    "dotenv/": "https://esm.sh/dotenv@^17.3.1/",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "fs": "https://esm.sh/fs@^0.0.1-security",
+    "three": "https://esm.sh/three@^0.182.0",
+    "clsx": "https://esm.sh/clsx@^2.1.1",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "path": "https://esm.sh/path@^0.12.7",
+    "leaflet": "https://esm.sh/leaflet@^1.9.4",
+    "ws": "https://esm.sh/ws@^8.19.0",
+    "url": "https://esm.sh/url@^0.11.4",
+    "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@^0.10.32",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@^9.5.0",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@^10.7.7",
+    "jwt-decode": "https://esm.sh/jwt-decode@^4.0.0",
+    "@react-oauth/google": "https://esm.sh/@react-oauth/google@^0.13.4",
+    "postprocessing": "https://esm.sh/postprocessing@^6.38.2",
+    "@react-three/postprocessing": "https://esm.sh/@react-three/postprocessing@^3.0.4"
+  }
+}
+</script>
+</head>
+<body class="selection:bg-emerald-500/30 selection:text-emerald-50">
+    <!-- 2. Solve "JavaScript Required" Issue for SEO (Rich NoScript) -->
+    <noscript>
+      <div style="padding: 20px; color: #f1f5f9; background: #020617; max-width: 800px; margin: 0 auto;">
+        <h1>AI Krushi Mitra - Smart Farming Assistant</h1>
+        <p>AI Krushi Mitra is a comprehensive digital platform for Indian farmers.</p>
+        
+        <h2>Key Features:</h2>
+        <ul>
+            <li><strong>AI Crop Doctor:</strong> Upload crop photos to detect diseases like Rust, Blight, and Pests instantly.</li>
+            <li><strong>Market Rates (Mandi Bhav):</strong> Real-time prices for Soyabean, Cotton, Onion, Wheat, and more from APMC markets.</li>
+            <li><strong>Weather Forecast:</strong> Hyper-local weather predictions including rainfall alerts and wind speed for safe farming.</li>
+            <li><strong>Government Schemes:</strong> Information on PM Kisan Samman Nidhi, Crop Insurance (PMFBY), and Solar Pump subsidies.</li>
+            <li><strong>Soil Health:</strong> NPK fertilizer calculator and soil health card analysis.</li>
+        </ul>
+        
+        <h2>Available in Languages:</h2>
+        <p>Marathi (मराठी), Hindi (हिंदी), English</p>
+        
+        <p><em>Please enable JavaScript to access the full interactive dashboard and AI features.</em></p>
+      </div>
+    </noscript>
+    
+    <!-- Content Layer -->
+    <div id="root">
+        <!-- Initial Loader -->
+        <div class="app-loader">
+            <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">AI KRUSHI MITRA</h1>
+            <p style="font-size: 12px; letter-spacing: 0.2em; margin-top: 10px; opacity: 0.7;">LOADING SMART FARMING ENGINE...</p>
+        </div>
+    </div>
+    
+    <!-- App Entry -->
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
