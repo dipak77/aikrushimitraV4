@@ -7,8 +7,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   
   // Prioritize env file, then system env, checking common key names for AI Studio/Vercel/Local
-  const apiKey = env.API_KEY || env.GOOGLE_API_KEY || env.GEMINI_API_KEY || 
-                 process.env.API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
+  const apiKey = env.GEMINI_API_KEY || env.API_KEY || env.GOOGLE_API_KEY || 
+                 process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY || '';
 
   // Use provided Client ID or fallback to the one in env/process
   const googleClientId = env.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '1027814161858-jo1pcipmdp02l9fb24fgfuoa671i41tv.apps.googleusercontent.com';
@@ -31,9 +31,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       allowedHosts: true,
       cors: true,
-      hmr: {
-        clientPort: 443 // Ensure HMR connects via the public HTTPS port
-      },
+      hmr: false,
       watch: {
         usePolling: true,
       }

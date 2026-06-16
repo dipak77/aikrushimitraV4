@@ -23,7 +23,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
  * Encode Uint8Array to base64 string
  */
 export function encode(bytes: Uint8Array): string {
-  return arrayBufferToBase64(bytes.buffer);
+  return arrayBufferToBase64(bytes.buffer as ArrayBuffer);
 }
 
 /**
@@ -110,7 +110,7 @@ export function createPCMChunk(
 ): GenAIBlob {
   const int16 = downsampleTo16k(data, sampleRate);
   return { 
-    data: arrayBufferToBase64(int16.buffer), 
+    data: arrayBufferToBase64(int16.buffer as ArrayBuffer), 
     mimeType: "audio/pcm;rate=16000"
   };
 }
@@ -124,7 +124,7 @@ export function createPCMChunkBase64(
   sampleRate: number
 ): string {
   const int16 = downsampleTo16k(data, sampleRate);
-  return arrayBufferToBase64(int16.buffer);
+  return arrayBufferToBase64(int16.buffer as ArrayBuffer);
 }
 
 /**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ViewState, Language, UserProfile } from './types';
 import { logActivity } from './services/analyticsService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -23,6 +23,7 @@ import ProfileView from './components/views/ProfileView';
 import CropCalendarView from './components/views/CropCalendarView';
 import AdminDashboard from './components/views/AdminDashboard';
 import SplashScreen from './components/views/SplashScreen';
+import LandingPage from './components/views/LandingPage';
 import SabjiMandiView from './components/views/SabjiMandiView';
 import LoginView from './components/views/LoginView';
 import AgriKnowledgeView from './components/views/AgriKnowledgeView';
@@ -50,22 +51,21 @@ const App = () => {
   }, [view, user]);
 
   // --- AUTH CHECK ---
-  const handleSplashComplete = () => {
-      // Check for existing session
-      const savedSession = localStorage.getItem('user_session');
-      if (savedSession) {
-          try {
+  const handleSplashComplete = useCallback(() => {
+      try {
+          // Check for existing session
+          const savedSession = localStorage.getItem('user_session');
+          if (savedSession) {
               const parsedUser = JSON.parse(savedSession);
               setUser(parsedUser);
-              setView('DASHBOARD');
-          } catch (e) {
-              setView('LOGIN');
           }
-      } else {
-          // Navigate to Login Screen so user can CHOOSE (Google or Guest)
-          setView('LOGIN');
+      } catch (e) {
+          console.error("Session load error:", e);
+      } finally {
+          // Always navigate to Landing Page after splash
+          setView('LANDING');
       }
-  };
+  }, [setView, setUser]);
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
       setUser(loggedInUser);
@@ -73,13 +73,14 @@ const App = () => {
   };
 
   const getView = () => {
-    // If no user is set (and not on Splash), force Login View
-    if (!user && view !== 'SPLASH') {
+    // If no user is set (and not on Splash or Landing), force Login View
+    if (!user && view !== 'SPLASH' && view !== 'LANDING') {
         return <LoginView onLoginSuccess={handleLoginSuccess} lang={lang} />;
     }
 
     switch(view) {
        case 'SPLASH': return <SplashScreen onComplete={handleSplashComplete} />;
+       case 'LANDING': return <LandingPage onGetStarted={() => user ? setView('DASHBOARD') : setView('LOGIN')} lang={lang} setLang={setLang} />;
        case 'LOGIN': return <LoginView onLoginSuccess={handleLoginSuccess} lang={lang} />;
        case 'DASHBOARD': return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
        case 'VOICE_ASSISTANT': return user ? <VoiceAssistant lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
@@ -88,7 +89,7 @@ const App = () => {
        case 'YIELD': return <YieldPredictor lang={lang} onBack={() => setView('DASHBOARD')} />;
        case 'AREA_CALCULATOR': return <AreaCalculator lang={lang} onBack={() => setView('DASHBOARD')} />;
        case 'CALENDAR': return <CropCalendarView lang={lang} onBack={() => setView('DASHBOARD')} />;
-       case 'ADMIN': return <AdminDashboard onBack={() => setView('DASHBOARD')} />;
+       case 'ADMIN': return <AdminDashboard lang={lang} onBack={() => setView('DASHBOARD')} />;
        case 'SABJI_MANDI': return user ? <SabjiMandiView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        case 'SCHEMES': 
           if(selectedScheme) {
@@ -110,11 +111,11 @@ const App = () => {
     }
   };
 
-  const isFullScreen = view === 'VOICE_ASSISTANT' || view === 'AREA_CALCULATOR' || view === 'SPLASH' || view === 'ADMIN' || view === 'LOGIN';
+  const isFullScreen = view === 'VOICE_ASSISTANT' || view === 'AREA_CALCULATOR' || view === 'SPLASH' || view === 'LANDING' || view === 'ADMIN' || view === 'LOGIN';
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <div className="relative w-full h-[100dvh] bg-transparent overflow-hidden text-slate-100 font-jakarta">
+        <div className={`relative w-full ${view === 'LANDING' ? 'min-h-screen' : 'h-[100dvh]'} bg-transparent ${view === 'LANDING' ? '' : 'overflow-hidden'} text-slate-100 font-jakarta`}>
         
         {/* 1. Global Background Layers */}
         <div className="premium-bg">
@@ -131,12 +132,12 @@ const App = () => {
         {!isFullScreen && <Sidebar view={view} setView={setView} lang={lang} />}
 
         {/* 4. Main Content Area */}
-        <main className="relative w-full h-full z-10">
+        <main className={`relative w-full ${view === 'LANDING' ? '' : 'h-full'} z-10`}>
             {getView()}
         </main>
 
         {/* 5. Mobile Navigation */}
-        {view === 'DASHBOARD' && <MobileNav view={view} setView={setView} />}
+        {!isFullScreen && <MobileNav view={view} setView={setView} />}
         </div>
     </GoogleOAuthProvider>
   );

@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information including region, land size, and primary crops",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's display name"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "picture": {
+          "type": "string",
+          "description": "User avatar URL"
+        },
+        "village": {
+          "type": "string",
+          "description": "User's agricultural village"
+        },
+        "district": {
+          "type": "string",
+          "description": "User's agricultural district"
+        },
+        "landSize": {
+          "type": "string",
+          "description": "Land size in acres"
+        },
+        "crop": {
+          "type": "string",
+          "description": "Primary crop cultivated"
+        },
+        "joinedAt": {
+          "type": "number",
+          "description": "Timestamp of sign up"
+        },
+        "lastLogin": {
+          "type": "number",
+          "description": "Timestamp of last login"
+        }
+      },
+      "required": ["name", "village", "district", "landSize", "crop"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Activity log entry tracking user interactions with the app",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique log entry ID"
+        },
+        "timestamp": {
+          "type": "number",
+          "description": "Epoch timestamp of action"
+        },
+        "view": {
+          "type": "string",
+          "description": "Active view identifier where action occurred"
+        },
+        "action": {
+          "type": "string",
+          "description": "Description of action"
+        },
+        "location": {
+          "type": "string",
+          "description": "Approximate location/IP city"
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Client user agent"
+        },
+        "userName": {
+          "type": "string",
+          "description": "User/Guest name"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Auth email if available"
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Session tracking ID"
+        },
+        "device": {
+          "type": "string",
+          "description": "Calculated device type"
+        },
+        "os": {
+          "type": "string",
+          "description": "Calculated operating system"
+        },
+        "provider": {
+          "type": "string",
+          "description": "Auth provider",
+          "enum": ["google", "guest", "unknown"]
+        }
+      },
+      "required": ["id", "timestamp", "view", "location", "userAgent"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Durable storage for farmer profiles, keyed by authentication UID"
+    },
+    "activityLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/ActivityLog"
+      },
+      "description": "Telemetry activity logs tracking action metrics"
+    }
+  }
+}

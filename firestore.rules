@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Strictly Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for auth correctness
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Blueprint for User Profiles
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['name', 'village', 'district', 'landSize', 'crop']) &&
+             data.keys().size() <= 9 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.village is string && data.village.size() > 0 && data.village.size() <= 100 &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             data.landSize is string && data.landSize.size() > 0 && data.landSize.size() <= 50 &&
+             data.crop is string && data.crop.size() > 0 && data.crop.size() <= 100 &&
+             (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 150)) &&
+             (!data.keys().hasAny(['picture']) || (data.picture is string && data.picture.size() <= 500)) &&
+             (!data.keys().hasAny(['joinedAt']) || data.joinedAt is int) &&
+             (!data.keys().hasAny(['lastLogin']) || data.lastLogin is int);
+    }
+
+    // Validation Blueprint for Activity Logs
+    function isValidActivityLog(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'view', 'location', 'userAgent']) &&
+             data.keys().size() <= 12 &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.timestamp is int &&
+             data.view is string && data.view.size() > 0 && data.view.size() <= 100 &&
+             data.location is string && data.location.size() <= 150 &&
+             data.userAgent is string && data.userAgent.size() <= 512 &&
+             (!data.keys().hasAny(['action']) || (data.action is string && data.action.size() <= 200)) &&
+             (!data.keys().hasAny(['userName']) || (data.userName is string && data.userName.size() <= 100)) &&
+             (!data.keys().hasAny(['userEmail']) || (data.userEmail is string && data.userEmail.size() <= 150)) &&
+             (!data.keys().hasAny(['sessionId']) || (data.sessionId is string && data.sessionId.size() <= 128)) &&
+             (!data.keys().hasAny(['device']) || (data.device is string && data.device.size() <= 100)) &&
+             (!data.keys().hasAny(['os']) || (data.os is string && data.os.size() <= 100)) &&
+             (!data.keys().hasAny(['provider']) || (data.provider is string && data.provider in ['google', 'guest', 'unknown']));
+    }
+
+    // ==========================================
+    // PATH matches
+    // ==========================================
+
+    // User Profile Rules
+    match /users/{userId} {
+      // Path validation
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false; // Block user schema listing / scraping
+
+      allow create: if isOwner(userId) && 
+                       isValidId(userId) && 
+                       isValidUserProfile(request.resource.data);
+
+      allow update: if isOwner(userId) && 
+                       isValidId(userId) && 
+                       isValidUserProfile(request.resource.data) &&
+                       // Protect immutability of creation metrics if they exist
+                       (!resource.data.keys().hasAny(['joinedAt']) || 
+                        request.resource.data.joinedAt == resource.data.joinedAt);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+    }
+
+    // Telemetry Activity Logs
+    match /activityLogs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId);
+      allow list: if false; // Only system admins can query bulk logs
+
+      // Allow authenticated or server-associated requests to log activity sessions
+      allow create: if isSignedIn() && 
+                       isValidId(logId) && 
+                       isValidActivityLog(request.resource.data);
+                       
+      allow update, delete: if false; // Activity logs are immutable once generated
+    }
+  }
+}

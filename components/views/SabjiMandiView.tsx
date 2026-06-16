@@ -40,10 +40,19 @@ const CATEGORIES: CategoryConfig[] = [
   { key: 'fruit', emoji: '🍎', gradient: 'from-rose-500 to-pink-600', glow: 'rgba(244,63,94,0.4)', activeText: 'text-white' },
 ];
 
-const FRESHNESS_LABELS = {
+const FRESHNESS_LABELS: Record<Language, string> = {
   mr: '🌿 ताजे आजच',
   hi: '🌿 आज ताज़ा',
   en: '🌿 Fresh Today',
+  te: '🌿 ఈరోజు తాజాది',
+  ta: '🌿 இன்று புதியது',
+  kn: '🌿 ಇಂದು ತಾಜಾ',
+  bn: '🌿 আজ তাজা',
+  gu: '🌿 આજે તાજા',
+  pa: '🌿 ਅੱਜ ਤਾਜ਼ਾ',
+  ml: '🌿 ഇന്ന് പുതിയത്',
+  or: '🌿 ଆଜି ତାଜା',
+  as: '🌿 আজি সতেজ',
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -550,22 +559,18 @@ const SabjiMandiView = ({
               </div>
 
               <h2 className="text-2xl font-black text-white mb-2 tracking-tight">
-                {lang === 'mr' ? 'ऑर्डर पाठवली! ✅' : lang === 'hi' ? 'ऑर्डर भेजा! ✅' : 'Order Sent! ✅'}
+                {t.mandi_order_sent}
               </h2>
               <p className="text-sm text-white/40 mb-6 leading-relaxed">
-                {lang === 'mr'
-                  ? 'WhatsApp वर तुमच्या ऑर्डरची माहिती पाठवली आहे.'
-                  : lang === 'hi'
-                    ? 'WhatsApp पर आपके ऑर्डर का विवरण भेजा गया है।'
-                    : 'Your order details have been sent via WhatsApp.'}
+                {t.mandi_order_desc}
               </p>
 
               {/* Trust Badges */}
               <div className="flex items-center justify-center gap-4 mb-6">
                 {[
-                  { icon: Truck, label: lang === 'mr' ? 'डिलिव्हरी' : 'Delivery' },
-                  { icon: Shield, label: lang === 'mr' ? 'सुरक्षित' : 'Secure' },
-                  { icon: Clock, label: lang === 'mr' ? 'जलद' : 'Fast' },
+                  { icon: Truck, label: t.mandi_delivery },
+                  { icon: Shield, label: t.mandi_secure },
+                  { icon: Clock, label: t.mandi_fast },
                 ].map((badge, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
                     <div className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/15 flex items-center justify-center">
@@ -583,7 +588,7 @@ const SabjiMandiView = ({
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 py-3.5 rounded-xl shadow-[0_8px_32px_rgba(34,197,94,0.3)]"
               >
                 <span className="font-bold">
-                  {lang === 'mr' ? 'ठीक आहे' : lang === 'hi' ? 'ठीक है' : 'Done'}
+                  {t.mandi_done}
                 </span>
               </Button>
             </div>
@@ -626,7 +631,7 @@ const SabjiMandiView = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
-                  placeholder={lang === 'mr' ? 'भाजी शोधा...' : lang === 'hi' ? 'सब्ज़ी खोजें...' : 'Search vegetables...'}
+                  placeholder={t.mandi_search_placeholder}
                   className={clsx(
                     "w-full rounded-xl pl-12 pr-12 py-3.5",
                     "bg-white/[0.04] border text-white text-sm font-medium",
@@ -692,7 +697,7 @@ const SabjiMandiView = ({
         {/* ── Results Count ────────────────────────────── */}
         <div className="flex items-center justify-between px-1 pt-4 pb-2">
           <p className="text-xs text-white/20 font-medium">
-            {products.length} {lang === 'mr' ? 'वस्तू' : lang === 'hi' ? 'आइटम' : 'items'}
+            {products.length} {t.mandi_items}
             {searchQuery && (
               <span className="text-white/10"> • "{searchQuery}"</span>
             )}
@@ -703,7 +708,7 @@ const SabjiMandiView = ({
               style={{ animation: 'float-badge 2s ease-in-out infinite' }}
             >
               <ShoppingCart size={10} />
-              {totalItems} in cart
+              {totalItems} {t.mandi_in_cart}
             </span>
           )}
         </div>
@@ -734,7 +739,7 @@ const SabjiMandiView = ({
                 <Search size={24} className="text-white/15" />
               </div>
               <p className="text-white/30 font-medium text-sm mb-1">
-                {lang === 'mr' ? 'काहीही सापडले नाही' : lang === 'hi' ? 'कुछ नहीं मिला' : 'No items found'}
+                {t.mandi_no_items}
               </p>
               <p className="text-white/15 text-xs">"{searchQuery}"</p>
             </div>

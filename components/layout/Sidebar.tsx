@@ -26,6 +26,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   }, []);
 
   const items = [
+    { id: 'LANDING', icon: Crown, color: 'emerald', gradient: 'from-emerald-400 to-teal-500', label: 'Home' },
     { id: 'DASHBOARD', icon: LayoutDashboard, color: 'emerald', gradient: 'from-emerald-400 to-teal-500' },
     { id: 'AGRI_KNOWLEDGE', icon: BookOpen, color: 'blue', gradient: 'from-blue-400 to-indigo-500' },
     { id: 'SABJI_MANDI', icon: ShoppingCart, color: 'green', gradient: 'from-green-400 to-emerald-500' },

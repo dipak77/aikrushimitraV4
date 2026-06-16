@@ -365,43 +365,6 @@ const MobileNav = ({
     return Math.max(0, el.scrollHeight - el.clientHeight);
   }, []);
 
-  /* ── Scroll-driven show/hide ── */
-  useEffect(() => {
-    const target = findScrollContainer();
-    scrollTargetRef.current = target;
-    lastYRef.current = readScrollY(target);
-
-    const onScroll = () => {
-      const t = scrollTargetRef.current;
-      if (!t) return;
-      nextYRef.current = Math.max(0, readScrollY(t));
-
-      if (tickingRef.current) return;
-      tickingRef.current = true;
-
-      requestAnimationFrame(() => {
-        tickingRef.current = false;
-        const currentY = nextYRef.current;
-        const lastY = lastYRef.current;
-        const diff = Math.abs(currentY - lastY);
-        const maxY = readMaxY(t);
-
-        if (currentY < SCROLL.topZone || currentY >= maxY - SCROLL.bottomZone) {
-          setIsVisible(true);
-        } else if (currentY < lastY && diff > SCROLL.showThreshold) {
-          setIsVisible(true);
-        } else if (currentY > lastY && diff > SCROLL.hideThreshold) {
-          setIsVisible(false);
-        }
-
-        lastYRef.current = currentY;
-      });
-    };
-
-    target.addEventListener("scroll", onScroll, { passive: true });
-    return () => target.removeEventListener("scroll", onScroll);
-  }, [findScrollContainer, readScrollY, readMaxY]);
-
   /* ── Navigation handler ── */
   const onTap = useCallback(
     (id: ViewState) => {

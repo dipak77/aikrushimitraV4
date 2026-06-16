@@ -4,7 +4,9 @@ import { GlassTile } from './GlassTile';
 import { DASH_TEXT } from './constants';
 import { Mic } from 'lucide-react';
 
-export const VoiceWidget = ({ lang, onNavigate }: any) => {
+import { Language, ViewState } from '../../types';
+
+export const VoiceWidget = ({ lang, onNavigate }: { lang: Language; onNavigate: (view: ViewState) => void }) => {
   const txt = DASH_TEXT[lang];
   
   return (
@@ -14,7 +16,7 @@ export const VoiceWidget = ({ lang, onNavigate }: any) => {
       
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-blue-500/20 
         animate-[spin_12s_linear_infinite] opacity-50" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
       
       <div className="text-center relative z-10">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full 

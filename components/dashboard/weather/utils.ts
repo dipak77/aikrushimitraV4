@@ -15,34 +15,36 @@ export type WeatherAtmosphericIconKind =
   | "rainWind"
   | "stormWind";
 
-export const DASH_TEXT: any = {
-  en: {
-    weather_desc: {
-      0: "Clear sky",
-      1: "Mainly clear",
-      2: "Partly cloudy",
-      3: "Overcast",
-      45: "Fog",
-      48: "Rime fog",
-      51: "Light drizzle",
-      53: "Drizzle",
-      55: "Heavy drizzle",
-      61: "Light rain",
-      63: "Rain",
-      65: "Heavy rain",
-      71: "Light snow",
-      73: "Snow",
-      75: "Heavy snow",
-      80: "Rain showers",
-      81: "Heavy showers",
-      82: "Violent showers",
-      85: "Snow showers",
-      86: "Heavy snow showers",
-      95: "Thunderstorm",
-      96: "Thunderstorm + hail",
-      99: "Severe thunderstorm",
-    },
+const enDashText = {
+  weather_desc: {
+    0: "Clear sky",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Fog",
+    48: "Rime fog",
+    51: "Light drizzle",
+    53: "Drizzle",
+    55: "Heavy drizzle",
+    61: "Light rain",
+    63: "Rain",
+    65: "Heavy rain",
+    71: "Light snow",
+    73: "Snow",
+    75: "Heavy snow",
+    80: "Rain showers",
+    81: "Heavy showers",
+    82: "Violent showers",
+    85: "Snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm + hail",
+    99: "Severe thunderstorm",
   },
+};
+
+export const DASH_TEXT: any = {
+  en: enDashText,
   mr: {
     weather_desc: {
       0: "निरभ्र आकाश",
@@ -97,6 +99,15 @@ export const DASH_TEXT: any = {
       99: "तेज आंधी",
     },
   },
+  te: { ...enDashText },
+  ta: { ...enDashText },
+  kn: { ...enDashText },
+  bn: { ...enDashText },
+  gu: { ...enDashText },
+  pa: { ...enDashText },
+  ml: { ...enDashText },
+  or: { ...enDashText },
+  as: { ...enDashText },
 };
 
 export type WxType = "clear" | "cloudy" | "rain" | "storm" | "snow" | "fog" | "windy";

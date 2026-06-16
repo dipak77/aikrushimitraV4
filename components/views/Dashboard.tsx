@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Language, ViewState } from '../../types';
-import { TRANSLATIONS } from '../../constants';
-import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen } from 'lucide-react';
+import { TRANSLATIONS, LANGUAGES } from '../../constants';
+import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { fetchWeather, getPlaceName, DEFAULT_COORDS, MOCK_WEATHER } from '../../services/weatherService';
 import { DASH_TEXT } from '../dashboard/constants';
@@ -20,6 +21,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
     const t = TRANSLATIONS[lang];
     const txt = DASH_TEXT[lang];
     const [weather, setWeather] = useState<any>(MOCK_WEATHER);
+    const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [liveLocation, setLiveLocation] = useState<string>(user.village || "Locating...");
 
@@ -130,10 +132,49 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
 
                  {/* RIGHT: Actions */}
                  <div className="flex items-center gap-3">
-                     <button onClick={toggleLang} className="h-9 px-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center gap-2 backdrop-blur-md">
-                         <Languages size={16} className="text-slate-300"/>
-                         <span className="hidden md:block text-[10px] font-bold uppercase text-white tracking-wide">{lang === 'mr' ? 'मराठी' : lang === 'hi' ? 'हिंदी' : 'ENG'}</span>
-                     </button>
+                    <div className="relative">
+                        <button 
+                            onClick={() => setLangMenuOpen(!langMenuOpen)} 
+                            className={`h-9 px-3 rounded-full transition-all flex items-center gap-2 backdrop-blur-md border ${langMenuOpen ? 'bg-emerald-500 border-emerald-500 text-slate-900' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                        >
+                            <Languages size={16} className={langMenuOpen ? 'text-slate-900' : 'text-emerald-400'}/>
+                            <span className="hidden md:block text-[10px] font-bold uppercase tracking-wide">
+                                {LANGUAGES.find(l => l.code === lang)?.name}
+                            </span>
+                            <ChevronDown size={12} className={`transition-transform duration-300 ${langMenuOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        <AnimatePresence>
+                            {langMenuOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute right-0 mt-2 w-64 bg-[#0a1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[120] p-2"
+                                >
+                                    <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                        {LANGUAGES.map((l) => (
+                                            <button
+                                                key={l.code}
+                                                onClick={() => {
+                                                    setLang(l.code as Language);
+                                                    setLangMenuOpen(false);
+                                                    triggerHaptic();
+                                                }}
+                                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${lang === l.code ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-white/5 text-slate-300'}`}
+                                            >
+                                                <div className="flex flex-col items-start text-left">
+                                                    <span className="text-sm font-bold">{l.name}</span>
+                                                    <span className="text-[10px] opacity-50 uppercase tracking-wider">{l.label}</span>
+                                                </div>
+                                                {lang === l.code && <CheckCircle2 size={16} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                      {/* Analytics / Admin */}
                      <button 
@@ -142,6 +183,17 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         title="Analytics"
                      >
                          <Shield size={16} className="text-slate-300 group-hover:text-emerald-400 transition-colors"/>
+                     </button>
+
+                     {/* Home / Landing */}
+                     <button 
+                        onClick={() => onNavigate('LANDING')} 
+                        className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center backdrop-blur-md group"
+                        title="Home"
+                     >
+                         <svg className="w-4 h-4 text-slate-300 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                         </svg>
                      </button>
                      
                      {/* User Profile */}

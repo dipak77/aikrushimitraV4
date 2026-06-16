@@ -8,13 +8,13 @@ import { WebSocketServer } from 'ws';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // =============================================================================
 // API KEY SETUP
 // =============================================================================
 const cleanKey = (key) => key ? key.trim().replace(/^["']|["']$/g, '') : '';
-const RAW_API_KEY = process.env.API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const RAW_API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY;
 const API_KEY = cleanKey(RAW_API_KEY);
 
 // Environment Detection
@@ -140,7 +140,14 @@ const getAIClient = () => {
   if (!API_KEY) {
     throw new Error('API_KEY not configured on server. Check environment variables.');
   }
-  return new GoogleGenAI({ apiKey: API_KEY });
+  return new GoogleGenAI({ 
+    apiKey: API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
 };
 
 // =============================================================================
@@ -243,7 +250,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.5-flash',
       contents: prompt,
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
@@ -273,7 +280,7 @@ app.post('/api/vision', async (req, res) => {
     const ai = getAIClient();
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.5-flash',
       contents: {
         parts: [
           {
@@ -317,7 +324,7 @@ app.post('/api/updates', async (req, res) => {
     // Google Search grounding is incompatible with forced JSON mime type.
     // The model returns plain text/markdown with citations when grounding is active.
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }]
@@ -431,7 +438,7 @@ if (!isProduction) {
     const vite = await createServer({
       server: {
         middlewareMode: true,
-        hmr: { server }
+        hmr: false
       },
       appType: 'custom'
     });
@@ -573,7 +580,7 @@ wss.on('connection', async (clientWs, req) => {
 
         try {
           session = await ai.live.connect({
-            model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+            model: 'gemini-2.5-flash-native-audio-preview-09-2025',
             config: {
               responseModalities: ['AUDIO'],
               speechConfig: {

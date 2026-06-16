@@ -1,9 +1,10 @@
 
 import 'react';
 
-export type Language = 'mr' | 'hi' | 'en';
+export type Language = 'mr' | 'hi' | 'en' | 'te' | 'ta' | 'kn' | 'bn' | 'gu' | 'pa' | 'ml' | 'or' | 'as';
 
 export type ViewState = 
+  | 'LANDING'
   | 'SPLASH' 
   | 'LANGUAGE' 
   | 'LOGIN' 

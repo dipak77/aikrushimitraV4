@@ -176,7 +176,7 @@ const ProfileView = ({
                 </div>
 
                 {/* Save Button */}
-                <div className="pt-4">
+                <div className="pt-4 space-y-4">
                     <Button 
                         fullWidth 
                         size="lg" 
@@ -186,6 +186,19 @@ const ProfileView = ({
                         className="shadow-cyan-500/20"
                     >
                         Save Details
+                    </Button>
+
+                    <Button 
+                        fullWidth 
+                        size="lg" 
+                        variant="outline" 
+                        onClick={() => {
+                            localStorage.removeItem('user_session');
+                            window.location.reload();
+                        }}
+                        className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                    >
+                        Sign Out
                     </Button>
                 </div>
 

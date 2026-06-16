@@ -11,7 +11,7 @@ export const NewsTicker = ({ lang }: { lang: Language }) => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                 </span>
-                <span className="text-[10px] font-black text-white uppercase tracking-widest">LIVE</span>
+                <span className="text-[10px] font-black text-white uppercase tracking-widest">{DASH_TEXT[lang].live}</span>
             </div>
             <div className="whitespace-nowrap animate-marquee pl-4">
                 <span className="text-xs font-semibold text-slate-200 tracking-wide">{DASH_TEXT[lang].news}</span>

@@ -28,7 +28,7 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
     if (!image) return;
     setAnalyzing(true);
     const res = await analyzeCropDisease(image, lang);
-    setResult(res || "Error analyzing image.");
+    setResult(res || t.error_analyzing);
     setAnalyzing(false);
   };
 
@@ -69,8 +69,8 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
           {/* Controls / Result */}
           {image && !analyzing && !result && (
              <div className="flex gap-3 animate-enter">
-                <Button onClick={reset} variant="secondary" fullWidth className="py-4">Retake</Button>
-                <Button onClick={analyze} variant="primary" fullWidth icon={<ScanLine size={18}/>} className="py-4 shadow-emerald-500/20 from-emerald-600 to-teal-600">Analyze Disease</Button>
+                <Button onClick={reset} variant="secondary" fullWidth className="py-4">{t.retake}</Button>
+                <Button onClick={analyze} variant="primary" fullWidth icon={<ScanLine size={18}/>} className="py-4 shadow-emerald-500/20 from-emerald-600 to-teal-600">{t.analyze_disease_btn}</Button>
              </div>
           )}
 
@@ -81,7 +81,7 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
                     <Loader2 size={48} className="text-cyan-400 animate-spin relative z-10"/>
                 </div>
                 <p className="font-bold text-xl text-white animate-pulse">{t.analyzing}</p>
-                <p className="text-slate-400 text-sm mt-2">Checking for symptoms...</p>
+                <p className="text-slate-400 text-sm mt-2">{t.checking_symptoms}</p>
              </div>
           )}
 
@@ -93,7 +93,7 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
                    </div>
                    <div>
                        <h3 className="text-xl font-black text-white">{t.analysis_report}</h3>
-                       <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider">AI Diagnosis Complete</p>
+                       <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider">{t.ai_diagnosis_complete}</p>
                    </div>
                 </div>
                 <div className="prose prose-invert prose-lg max-w-none">
@@ -101,7 +101,7 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
                 </div>
                 <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
                    <Button variant="primary" fullWidth icon={<Share2 size={18}/>}>{t.share_expert}</Button>
-                   <Button onClick={reset} variant="ghost" fullWidth>Scan Another Crop</Button>
+                   <Button onClick={reset} variant="ghost" fullWidth>{t.scan_another}</Button>
                 </div>
              </div>
           )}

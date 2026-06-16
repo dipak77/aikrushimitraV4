@@ -459,7 +459,7 @@ export const AppHeaderLogo = () => {
               WebkitBackgroundClip: 'text',
             }}
           >
-            Mitra
+            Agent
           </span>
         </h1>
 
@@ -473,7 +473,7 @@ export const AppHeaderLogo = () => {
             }}
           />
           <p className="text-[10px] md:text-[11px] font-bold text-slate-400/90 uppercase tracking-[0.2em] leading-none truncate transition-colors duration-300 group-hover:text-slate-300/90">
-            Smart Farming
+            Dashboard
           </p>
           {/* Tiny eagle icon indicator */}
           <span

@@ -12,6 +12,8 @@ export default {
     extend: {
       fontFamily: {
         jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
       },
       colors: {
@@ -19,11 +21,11 @@ export default {
         
         // New Semantic Palette
         agri: {
-          green: '#00D9B0', // Accent Green
+          green: '#00FF00', // Accent Green
           gold: '#FFB800',  // Premium/Alerts
           purple: '#7B61FF', // Calendar/AI
-          dark: '#0A1F2E',   // Card BG Base
-          success: '#00E676',
+          dark: '#050505',   // Card BG Base
+          success: '#00FF00',
           warning: '#FFB300',
           error: '#FF3D71',
           info: '#00B8D4'

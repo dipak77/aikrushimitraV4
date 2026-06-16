@@ -8,6 +8,17 @@ import { triggerHaptic } from '../../utils/common';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import clsx from 'clsx';
 
+const enMarketText = {
+    status: "Market Status",
+    apmc_open: "APMC Market Open",
+    last_updated: "Last Updated",
+    today: "Today",
+    arrival: "Arrival",
+    crops: {
+        'Soyabean': 'Soyabean', 'Cotton': 'Cotton', 'Onion': 'Onion', 'Tur': 'Tur', 'Wheat': 'Wheat', 'Maize': 'Maize', 'Gram': 'Gram', 'Tomato': 'Tomato', 'Potato': 'Potato', 'Rice': 'Rice'
+    }
+};
+
 const MARKET_TEXT: Record<Language, any> = {
     mr: {
         status: "बाजार स्थिती",
@@ -29,16 +40,16 @@ const MARKET_TEXT: Record<Language, any> = {
             'Soyabean': 'सोयाबीन', 'Cotton': 'कपास', 'Onion': 'प्याज', 'Tur': 'तूर', 'Wheat': 'गेहूं', 'Maize': 'मक्का', 'Gram': 'चना', 'Tomato': 'टमाटर', 'Potato': 'आलू', 'Rice': 'चावल'
         }
     },
-    en: {
-        status: "Market Status",
-        apmc_open: "APMC Market Open",
-        last_updated: "Last Updated",
-        today: "Today",
-        arrival: "Arrival",
-        crops: {
-            'Soyabean': 'Soyabean', 'Cotton': 'Cotton', 'Onion': 'Onion', 'Tur': 'Tur', 'Wheat': 'Wheat', 'Maize': 'Maize', 'Gram': 'Gram', 'Tomato': 'Tomato', 'Potato': 'Potato', 'Rice': 'Rice'
-        }
-    }
+    en: enMarketText,
+    te: { ...enMarketText },
+    ta: { ...enMarketText },
+    kn: { ...enMarketText },
+    bn: { ...enMarketText },
+    gu: { ...enMarketText },
+    pa: { ...enMarketText },
+    ml: { ...enMarketText },
+    or: { ...enMarketText },
+    as: { ...enMarketText },
 };
 
 // Simple SVG Sparkline Component
@@ -123,7 +134,7 @@ const MarketView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =>
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg text-white">{mt.crops[m.name] || m.name}</h3>
-                                    <p className="text-slate-400 text-xs font-bold">{mt.arrival}: {m.arrival}</p>
+                                    <p className="text-slate-400 text-xs font-bold">{mt.arrival}: {m.arrival === 'High' ? t.arrival_high : m.arrival === 'Med' ? t.arrival_med : m.arrival === 'Low' ? t.arrival_low : m.arrival}</p>
                                 </div>
                             </div>
                             <div className="text-right">

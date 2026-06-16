@@ -109,21 +109,31 @@ export const DynamicGreeting = ({ user, lang }: { user: UserProfile, lang: Langu
         <div className="absolute inset-0 -inset-x-8 -inset-y-4 bg-gradient-to-r from-current/5 via-current/3 to-transparent blur-2xl opacity-0 group-hover/greeting:opacity-100 transition-opacity duration-700"></div>
         
         {/* Refined Floating Particles */}
-        {[...Array(6)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute w-1.5 h-1.5 rounded-full"
-            style={{ 
-              left: `${i * 12 + Math.random() * 10}px`,
-              top: `${-5 + Math.random() * 10}px`,
-              background: `linear-gradient(135deg, ${hour < 12 ? 'rgb(251, 191, 36)' : hour < 17 ? 'rgb(250, 204, 21)' : hour < 21 ? 'rgb(244, 114, 182)' : 'rgb(165, 180, 252)'}, ${hour < 12 ? 'rgb(249, 115, 22)' : hour < 17 ? 'rgb(251, 146, 60)' : hour < 21 ? 'rgb(236, 72, 153)' : 'rgb(129, 140, 248)'})`,
-              animation: `particle-drift ${3 + Math.random() * 2}s ease-out infinite`,
-              animationDelay: `${i * 0.3}s`,
-              '--tx': `${(Math.random() - 0.5) * 20}px`,
-              opacity: 0.5,
-            } as React.CSSProperties}
-          />
-        ))}
+        {[...Array(6)].map((_, i) => {
+          // Stable pseudo-random offsets based on index to avoid layout changes during rerenders
+          const leftOffset = i * 12 + ((i * 7) % 10);
+          const topOffset = -5 + ((i * 13) % 10);
+          const duration = 3 + (i % 3);
+          const txOffset = ((i * 17) % 20) - 10;
+          return (
+            <div 
+              key={i}
+              className="absolute w-1.5 h-1.5 rounded-full"
+              style={{ 
+                left: `${leftOffset}px`,
+                top: `${topOffset}px`,
+                background: `linear-gradient(135deg, ${hour < 12 ? 'rgb(251, 191, 36)' : hour < 17 ? 'rgb(250, 204, 21)' : hour < 21 ? 'rgb(244, 114, 182)' : 'rgb(165, 180, 252)'}, ${hour < 12 ? 'rgb(249, 115, 22)' : hour < 17 ? 'rgb(251, 146, 60)' : hour < 21 ? 'rgb(236, 72, 153)' : 'rgb(129, 140, 248)'})`,
+                animationName: 'particle-drift',
+                animationDuration: `${duration}s`,
+                animationTimingFunction: 'ease-out',
+                animationIterationCount: 'infinite',
+                animationDelay: `${i * 0.3}s`,
+                '--tx': `${txOffset}px`,
+                opacity: 0.5,
+              } as React.CSSProperties}
+            />
+          );
+        })}
         
         {/* Professional Greeting Text */}
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-black leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] tracking-tight flex items-center gap-2.5 flex-wrap">
@@ -136,7 +146,12 @@ export const DynamicGreeting = ({ user, lang }: { user: UserProfile, lang: Langu
           
           <span 
             className={`text-transparent bg-clip-text bg-gradient-to-r ${greetingColor} bg-[length:200%_auto] animate-[greeting-flow_4s_ease_infinite]`}
-            style={{ animation: 'name-shine 2.5s ease-in-out infinite' }}
+            style={{ 
+              animationName: 'name-shine',
+              animationDuration: '2.5s',
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite'
+            }}
           >
             {user.name.split(' ')[0]}
           </span>

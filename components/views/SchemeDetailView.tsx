@@ -11,7 +11,7 @@ const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Languag
         <div className="h-full w-full flex flex-col bg-[#020617] animate-enter lg:pl-32">
             {/* Header with Hero Gradient */}
             <div className={`relative w-full h-64 bg-gradient-to-br ${scheme.grad} shrink-0`}>
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent"></div>
                 
                 <div className="absolute top-0 left-0 right-0 p-6 pt-safe-top flex items-center gap-4 z-10">

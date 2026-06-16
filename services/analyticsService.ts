@@ -1,4 +1,5 @@
 import { ActivityLog, UserProfile } from "../types";
+import { generateUUID } from "../utils/common";
 
 const SESSION_KEY = 'app_current_session';
 
@@ -58,7 +59,7 @@ export const logActivity = async (
 ) => {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   if (!sessionId) {
-    sessionId = crypto.randomUUID();
+    sessionId = generateUUID();
     sessionStorage.setItem(SESSION_KEY, sessionId);
   }
 
@@ -73,7 +74,7 @@ export const logActivity = async (
   const userName = user?.name || `Guest_${sessionId.substring(0, 6)}`;
 
   const newLog: ActivityLog = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     timestamp: Date.now(),
     view,
     action,

@@ -31,7 +31,7 @@ const SoilAnalysis = ({ lang, onBack }: { lang: Language, onBack: () => void }) 
                     <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl"></div>
                     <div className="relative z-10">
                         <h2 className="text-xl font-bold mb-1 text-white">{t.soil_subtitle}</h2>
-                        <p className="text-slate-400 text-sm mb-6">Adjust sliders based on your soil health card.</p>
+                        <p className="text-slate-400 text-sm mb-6">{t.soil_health_card_tip}</p>
                         
                         {/* Sliders */}
                         <div className="space-y-6">
@@ -68,7 +68,7 @@ const SoilAnalysis = ({ lang, onBack }: { lang: Language, onBack: () => void }) 
                                 type="text" 
                                 value={crop}
                                 onChange={(e) => setCrop(e.target.value)}
-                                placeholder="e.g. Soyabean, Cotton, Rice"
+                                placeholder={t.crop_placeholder}
                                 className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
                             />
                         </div>
@@ -97,7 +97,7 @@ const SoilAnalysis = ({ lang, onBack }: { lang: Language, onBack: () => void }) 
                             </div>
                             <div>
                                 <h3 className="text-xl font-black text-white">{t.soil_result_title}</h3>
-                                <p className="text-cyan-400 text-xs font-bold uppercase tracking-wider">AI Recommendation</p>
+                                <p className="text-cyan-400 text-xs font-bold uppercase tracking-wider">{t.ai_recommendation}</p>
                             </div>
                          </div>
                          <div className="prose prose-invert prose-lg max-w-none">

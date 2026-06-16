@@ -777,6 +777,8 @@ const Scene = memo(({
         <ChromaticAberration
           offset={new THREE.Vector2(0.0005, 0.0005)}
           blendFunction={BlendFunction.NORMAL}
+          radialModulation={false}
+          modulationOffset={0}
         />
       </EffectComposer>
     </>

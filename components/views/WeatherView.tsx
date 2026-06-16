@@ -30,6 +30,27 @@ import { fetchWeather, getPlaceName, DEFAULT_COORDS, WeatherData, MOCK_WEATHER }
 import { DASH_TEXT, wxTypeFrom, mapToAtmosphericIconKind } from '../dashboard/weather/utils';
 import { WeatherAtmosphericIcon } from '../dashboard/weather/WeatherIcons';
 
+const enWeatherVText = {
+    hourly: "Hourly Forecast",
+    daily: "7-Day Forecast",
+    insight_title: "AI Agri-Insight",
+    visibility: "Visibility",
+    uv: "UV Index",
+    moon: "Moon Phase",
+    km: "km",
+    high: "H",
+    low: "L",
+    waxing: "Waxing",
+    spraying_tip: "Good conditions for spraying. Finish tasks before 4 PM.",
+    night_tip: "Night time. Temp may drop, protect young crops.",
+    sunrise: "Sunrise",
+    sunset: "Sunset",
+    feels_like: "Feels Like",
+    humidity: "Humidity",
+    wind: "Wind",
+    pressure: "Pressure"
+};
+
 const WEATHER_V_TEXT: Record<Language, any> = {
     mr: {
         hourly: "तासाभराचा अंदाज",
@@ -71,26 +92,16 @@ const WEATHER_V_TEXT: Record<Language, any> = {
         wind: "हवा",
         pressure: "दबाव"
     },
-    en: {
-        hourly: "Hourly Forecast",
-        daily: "7-Day Forecast",
-        insight_title: "AI Agri-Insight",
-        visibility: "Visibility",
-        uv: "UV Index",
-        moon: "Moon Phase",
-        km: "km",
-        high: "H",
-        low: "L",
-        waxing: "Waxing",
-        spraying_tip: "Good conditions for spraying. Finish tasks before 4 PM.",
-        night_tip: "Night time. Temp may drop, protect young crops.",
-        sunrise: "Sunrise",
-        sunset: "Sunset",
-        feels_like: "Feels Like",
-        humidity: "Humidity",
-        wind: "Wind",
-        pressure: "Pressure"
-    }
+    en: enWeatherVText,
+    te: { ...enWeatherVText },
+    ta: { ...enWeatherVText },
+    kn: { ...enWeatherVText },
+    bn: { ...enWeatherVText },
+    gu: { ...enWeatherVText },
+    pa: { ...enWeatherVText },
+    ml: { ...enWeatherVText },
+    or: { ...enWeatherVText },
+    as: { ...enWeatherVText },
 };
 
 const MetricCard = ({ icon: Icon, label, value, unit, color }: { icon: any, label: string, value: string | number, unit?: string, color: string }) => (
