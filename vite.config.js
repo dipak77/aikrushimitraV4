@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
                  process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY || '';
 
   // Use provided Client ID or fallback to the one in env/process
-  const googleClientId = env.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '1027814161858-jo1pcipmdp02l9fb24fgfuoa671i41tv.apps.googleusercontent.com';
+  const googleClientId = env.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '947961081206-0sh2q9fja06hcc65gj8o2tghhd164uia.apps.googleusercontent.com';
 
   return {
     plugins: [react()],

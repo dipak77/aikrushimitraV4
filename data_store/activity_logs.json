@@ -1,0 +1,50 @@
+[
+  {
+    "id": "c0d9806f-c591-4124-9932-bd84f3a5cfee",
+    "timestamp": 1782326355705,
+    "view": "LANDING",
+    "action": "VIEW",
+    "location": "Maharashtra",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
+    "userName": "Guest Farmer",
+    "userEmail": "guest_8830@aikrushimitra.in",
+    "sessionId": "2c8ee45a-7c23-466c-867e-31e86c59bcbd",
+    "device": "Desktop",
+    "os": "Windows",
+    "provider": "guest",
+    "serverTimestamp": 1782326356018,
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "84031c1b-462a-4bcd-8035-c0d288e23904",
+    "timestamp": 1782326230788,
+    "view": "DASHBOARD",
+    "action": "VIEW",
+    "location": "Maharashtra",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
+    "userName": "Guest Farmer",
+    "userEmail": "guest_8830@aikrushimitra.in",
+    "sessionId": "2c8ee45a-7c23-466c-867e-31e86c59bcbd",
+    "device": "Desktop",
+    "os": "Windows",
+    "provider": "guest",
+    "serverTimestamp": 1782326230939,
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "f008e79d-5b3d-42d8-b330-540c1cb97837",
+    "timestamp": 1782326201541,
+    "view": "LANDING",
+    "action": "VIEW",
+    "location": "Maharashtra",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
+    "userName": "Guest Farmer",
+    "userEmail": "guest_8830@aikrushimitra.in",
+    "sessionId": "2c8ee45a-7c23-466c-867e-31e86c59bcbd",
+    "device": "Desktop",
+    "os": "Windows",
+    "provider": "guest",
+    "serverTimestamp": 1782326201613,
+    "ip": "127.0.0.1"
+  }
+]

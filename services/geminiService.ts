@@ -1,5 +1,69 @@
 
-// Helper for backend calls
+import { GoogleGenAI } from '@google/genai';
+import firebaseConfig from '../firebase-applet-config.json';
+
+// Initialize lazy GoogleGenAI client for client-side fallback
+let clientAI: any = null;
+const getClientAI = () => {
+  if (!clientAI) {
+    const apiKey = getGenAIKey();
+    if (!apiKey) {
+      throw new Error("Gemini API key is missing. Please configure it in your environment or firebase-applet-config.json.");
+    }
+    clientAI = new GoogleGenAI({ apiKey });
+  }
+  return clientAI;
+};
+
+// Fallback direct call to Gemini API when proxy server is unavailable
+const callGeminiDirectly = async (endpoint: string, body: any) => {
+  const ai = getClientAI();
+  
+  if (endpoint === '/api/chat') {
+    const requestConfig: any = {};
+    if (body.systemInstruction) {
+      requestConfig.systemInstruction = body.systemInstruction;
+    }
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: body.prompt,
+      ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
+    });
+    return response.text;
+  }
+  
+  if (endpoint === '/api/vision') {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          inlineData: {
+            mimeType: body.mimeType || 'image/jpeg',
+            data: body.imageBase64
+          }
+        },
+        { text: body.prompt }
+      ]
+    });
+    return response.text;
+  }
+  
+  if (endpoint === '/api/updates') {
+    // Grounding with Google Search
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: body.prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+    return response.text;
+  }
+  
+  throw new Error(`Unsupported direct endpoint: ${endpoint}`);
+};
+
+// Helper for backend calls with automatic client-side fallback
 const postToProxy = async (endpoint: string, body: any) => {
   try {
     const response = await fetch(endpoint, {
@@ -8,12 +72,20 @@ const postToProxy = async (endpoint: string, body: any) => {
       body: JSON.stringify(body)
     });
     
-    if (!response.ok) throw new Error(`Proxy Error: ${response.statusText}`);
+    const contentType = response.headers.get("content-type") || '';
+    if (!response.ok || contentType.includes("text/html")) {
+      throw new Error(`Proxy unavailable or returned HTML fallback (status ${response.status})`);
+    }
     const data = await response.json();
     return data.text;
   } catch (error) {
-    console.error(`Error calling ${endpoint}:`, error);
-    throw error;
+    console.warn(`Proxy failed for ${endpoint}, falling back to direct client-side Gemini API:`, error);
+    try {
+      return await callGeminiDirectly(endpoint, body);
+    } catch (fallbackError) {
+      console.error("Client-side Gemini API fallback failed:", fallbackError);
+      throw fallbackError;
+    }
   }
 };
 
@@ -139,5 +211,9 @@ export const getGenAIKey = () => {
   
   // 2. Fallback to build-time replacement (Vite local development)
   // The logic in vite.config.js ensures this value is populated
-  return process.env.API_KEY || ''; 
+  const buildTimeKey = process.env.API_KEY || '';
+  if (buildTimeKey) return buildTimeKey;
+
+  // 3. Fallback to firebase applet configuration key
+  return firebaseConfig?.apiKey || '';
 };
