@@ -5,7 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { WebSocketServer } from 'ws';
-import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1 } from './utils/prompts.js';
+import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1, SOIL_INTERPRETER_V1 } from './utils/prompts.js';
 import { retrieveContext } from './services/ragService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -521,6 +521,36 @@ app.post('/api/schemes/match', async (req, res) => {
   } catch (error) {
     console.error('❌ Scheme Matcher Error:', error.message);
     return res.status(500).json({ error: 'Failed to match schemes', details: error.message });
+  }
+});
+
+// --- Soil Advisory ---
+app.post('/api/soil/advisory', async (req, res) => {
+  try {
+    const { npk, crop, user } = req.body;
+    if (!npk || !crop) {
+      return res.status(400).json({ error: 'Missing NPK values or crop' });
+    }
+    const ai = getAIClient();
+    
+    const prompt = SOIL_INTERPRETER_V1
+      .replace(/{soil_report_json}/g, JSON.stringify(npk))
+      .replace(/{next_crop}/g, crop)
+      .replace(/{user_district}/g, user?.district || 'Yavatmal')
+      .replace(/{user_state}/g, user?.state || 'maharashtra')
+      .replace(/{soil_type}/g, user?.soilType || 'black')
+      .replace(/{previous_crop}/g, 'soybean')
+      .replace(/{user_language}/g, user?.language || 'mr');
+      
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt
+    });
+    
+    return res.json({ text: response.text });
+  } catch (error) {
+    console.error('❌ Soil Advisory Error:', error.message);
+    return res.status(500).json({ error: 'Failed to interpret soil card', details: error.message });
   }
 });
 

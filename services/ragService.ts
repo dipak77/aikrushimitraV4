@@ -1,7 +1,5 @@
-import firebaseConfig from '../firebase-applet-config.json';
-import { KNOWLEDGE_BASE } from '../data/knowledge';
+import { KNOWLEDGE_BASE, KnowledgeItem } from '../data/knowledge';
 
-// Cache for generated chunk embeddings to prevent redundant API calls
 const chunkEmbeddingCache: Record<string, number[]> = {};
 
 function cleanText(text: string): string {
@@ -71,22 +69,20 @@ export async function retrieveContext(
   userContext: { crops?: string[]; state?: string; district?: string } = {},
   apiKey?: string
 ): Promise<{ contextText: string; citations: { source: string; category: string }[] }> {
-  // 1. Gather all knowledge articles
-  const articles = KNOWLEDGE_BASE || [];
+  const articles: KnowledgeItem[] = KNOWLEDGE_BASE || [];
   
-  // 2. Pre-filter by user's crops if specified
+  // Filter by user's crops if specified
   const filteredArticles = articles.filter((art) => {
     if (!userContext.crops || userContext.crops.length === 0) return true;
-    const lowerTitle = art.title.toLowerCase();
-    const lowerCategory = art.category.toLowerCase();
+    const titleText = `${art.title.mr} ${art.title.en} ${art.title.hi || ''}`.toLowerCase();
+    const categoryText = art.category.toLowerCase();
     return userContext.crops.some(
-      (crop) => lowerTitle.includes(crop.toLowerCase()) || lowerCategory.includes(crop.toLowerCase())
+      (crop) => titleText.includes(crop.toLowerCase()) || categoryText.includes(crop.toLowerCase())
     );
   });
 
   const targetArticles = filteredArticles.length > 0 ? filteredArticles : articles;
   
-  // 3. Create chunks from matching articles
   interface ChunkItem {
     id: string;
     text: string;
@@ -96,12 +92,19 @@ export async function retrieveContext(
   
   const allChunks: ChunkItem[] = [];
   targetArticles.forEach((art, artIdx) => {
-    const textChunks = chunkText(art.content, 250, 40);
+    // Compile content from sections
+    const contentText = art.sections
+      .map((s) => `${s.title.mr} ${s.title.en} ${s.content.mr} ${s.content.en}`)
+      .join('\n');
+    
+    const textChunks = chunkText(contentText, 250, 40);
+    const sourceTitle = art.title.mr || art.title.en;
+    
     textChunks.forEach((chunk, chunkIdx) => {
       allChunks.push({
         id: `art_${artIdx}_chunk_${chunkIdx}`,
         text: chunk,
-        source: art.title,
+        source: sourceTitle,
         category: art.category
       });
     });
@@ -111,22 +114,20 @@ export async function retrieveContext(
     return { contextText: '', citations: [] };
   }
 
-  // 4. Keyword pre-filter to narrow candidates down to top 12 (to avoid API rate limits)
+  // Keyword pre-filter to narrow candidates down to top 12
   const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   const scoredChunks = allChunks.map((chunk) => ({
     chunk,
     score: getKeywordScore(chunk.text, queryWords)
   }));
   
-  // Sort and take top 12 candidates
   scoredChunks.sort((a, b) => b.score - a.score);
   const candidates = scoredChunks.slice(0, 12).map(c => c.chunk);
 
-  // 5. If API key is available, calculate semantic similarity
-  const activeKey = apiKey || firebaseConfig.apiKey || process.env.API_KEY || '';
+  // If API key is available, calculate semantic similarity
+  const activeKey = apiKey || '';
   if (activeKey && candidates.length > 0) {
     try {
-      // Lazy import GoogleGenAI client to avoid server-side dependency issues
       const { GoogleGenAI } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey: activeKey });
 
@@ -135,7 +136,7 @@ export async function retrieveContext(
         model: 'text-embedding-004',
         contents: query
       });
-      const queryVector = queryEmbedResp.embedding?.values;
+      const queryVector = (queryEmbedResp as any).embedding?.values || (queryEmbedResp as any).embeddings?.[0]?.values;
 
       if (queryVector) {
         // Embed candidates that are not cached yet
@@ -146,12 +147,12 @@ export async function retrieveContext(
               model: 'text-embedding-004',
               contents: c.text
             }).then(resp => {
-              const vector = resp.embedding?.values;
+              const vector = (resp as any).embedding?.values || (resp as any).embeddings?.[0]?.values;
               if (vector) {
                 chunkEmbeddingCache[c.id] = vector;
               }
             }).catch(() => {
-              // Ignore failure for individual chunks
+              // Ignore
             })
           );
           await Promise.all(embedPromises);

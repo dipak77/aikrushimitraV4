@@ -443,19 +443,27 @@ const VoiceAssistant = ({
       const ai = new GoogleGenAI({ apiKey });
 
       // Client-side RAG context matching based on active user crops
-      const userCrops = user.crops || (user.crop ? [user.crop] : []);
-      const filteredKb = KNOWLEDGE_BASE.filter(art => 
-        userCrops.some(crop => 
-          art.title.toLowerCase().includes(crop.toLowerCase()) || 
-          art.category.toLowerCase().includes(crop.toLowerCase())
-        )
-      );
-      const ragContext = filteredKb.map(art => `[Source: ${art.title}]\n${art.content.slice(0, 500)}`).join('\n\n');
+      const userCrops = user.crop ? [user.crop] : [];
+      const filteredKb = KNOWLEDGE_BASE.filter(art => {
+        const titleText = `${art.title.mr} ${art.title.en} ${art.title.hi || ''}`.toLowerCase();
+        const categoryText = art.category.toLowerCase();
+        return userCrops.some(crop => 
+          titleText.includes(crop.toLowerCase()) || 
+          categoryText.includes(crop.toLowerCase())
+        );
+      });
+      const ragContext = filteredKb.map(art => {
+        const titleText = art.title.mr || art.title.en;
+        const contentText = art.sections
+          .map(s => `${s.title.mr} ${s.title.en} ${s.content.mr} ${s.content.en}`)
+          .join('\n');
+        return `[Source: ${titleText}]\n${contentText.slice(0, 400)}`;
+      }).join('\n\n');
       
       const systemPrompt = AGRI_EXPERT_V1
         .replace(/{user_language}/g, lang || 'mr')
         .replace(/{user_district}/g, user.district || 'Yavatmal')
-        .replace(/{user_state}/g, user.state || 'maharashtra')
+        .replace(/{user_state}/g, 'maharashtra')
         .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
         .replace(/{user_name}/g, user.name || 'शेतकरी मित्र')
         .replace(/{user_land_size}/g, user.landSize || 'N/A')

@@ -144,10 +144,8 @@ export const getAIFarmingAdvice = async (query: string, lang: string, cropContex
 // Function to get soil specific fertilizer recommendations
 export const getSoilAdvice = async (npk: {n: number, p: number, k: number}, crop: string, lang: string) => {
     try {
-        const prompt = `Soil NPK is N:${npk.n}, P:${npk.p}, K:${npk.k}. Crop is ${crop}. 
-        Give advice in native ${lang === 'mr' ? 'Rural Marathi' : 'Hindi/English'} tone. Explain simply like a village expert.`;
-        
-        return await postToProxy('/api/chat', { prompt });
+        const user = useUserStore.getState().user;
+        return await postToProxy('/api/soil/advisory', { npk, crop, user });
     } catch (e) {
         return "Error fetching advice.";
     }

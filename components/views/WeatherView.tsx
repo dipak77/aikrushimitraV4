@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
+import { useUserStore } from '../../store/useUserStore';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -120,9 +121,35 @@ const MetricCard = ({ icon: Icon, label, value, unit, color }: { icon: any, labe
 
 const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) => {
     const vt = WEATHER_V_TEXT[lang];
+    const user = useUserStore((state) => state.user);
     const [loading, setLoading] = useState(false);
     const [weather, setWeather] = useState<WeatherData | null>(MOCK_WEATHER);
     const [locationName, setLocationName] = useState('Locating...');
+    const [aiAdvisory, setAiAdvisory] = useState<string>('');
+    const [loadingAdvisory, setLoadingAdvisory] = useState(false);
+
+    useEffect(() => {
+        if (!weather || !user) return;
+        const fetchAdvisory = async () => {
+            setLoadingAdvisory(true);
+            try {
+                const res = await fetch('/api/weather/advisory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user, weatherForecast: weather.daily })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setAiAdvisory(data.text);
+                }
+            } catch (err) {
+                console.error("Failed to load weather advisory:", err);
+            } finally {
+                setLoadingAdvisory(false);
+            }
+        };
+        fetchAdvisory();
+    }, [weather, user]);
 
     useEffect(() => {
         const load = async () => {
@@ -258,13 +285,20 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
                     <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full" />
                     <div className="flex items-start gap-4 relative z-10">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 shrink-0">
-                            <Sparkles size={24} />
+                            <Sparkles size={24} className={clsx(loadingAdvisory && "animate-spin")} />
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <h3 className="text-emerald-400 font-black text-sm uppercase tracking-widest mb-1">{vt.insight_title}</h3>
-                            <p className="text-white/80 text-sm leading-relaxed font-medium">
-                                {isDay ? vt.spraying_tip : vt.night_tip}
-                            </p>
+                            {loadingAdvisory ? (
+                                <div className="flex items-center gap-2 py-2">
+                                    <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider animate-pulse">Calculating Agri-Insights...</span>
+                                </div>
+                            ) : (
+                                <p className="text-white/80 text-sm leading-relaxed font-medium whitespace-pre-wrap">
+                                    {aiAdvisory || (isDay ? vt.spraying_tip : vt.night_tip)}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
