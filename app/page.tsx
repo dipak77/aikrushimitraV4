@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import LandingPage from '../components/views/LandingPage';
 import { Language } from '../types';
+import AnalyticsTracker from '../components/AnalyticsTracker';
 
 export default function Home() {
   const [lang, setLang] = useState<Language>('mr');
@@ -13,10 +14,13 @@ export default function Home() {
   };
 
   return (
-    <LandingPage
-      onGetStarted={handleGetStarted}
-      lang={lang}
-      setLang={setLang}
-    />
+    <>
+      <AnalyticsTracker viewName="LANDING_PAGE" locationName="Landing Page" />
+      <LandingPage
+        onGetStarted={handleGetStarted}
+        lang={lang}
+        setLang={setLang}
+      />
+    </>
   );
 }

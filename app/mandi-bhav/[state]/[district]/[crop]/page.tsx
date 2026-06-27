@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MOCK_MARKET } from '../../../../../data/mock';
+import AnalyticsTracker from '../../../../../components/AnalyticsTracker';
 
 interface MandiBhavParams {
   state: string;
@@ -70,6 +71,7 @@ export default function MandiBhavPage({ params }: { params: MandiBhavParams }) {
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-12 md:py-20">
+      <AnalyticsTracker viewName={`MANDI_BHAV_${crop.toUpperCase()}`} locationName={`Mandi Rate: ${state}/${district}/${crop}`} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}

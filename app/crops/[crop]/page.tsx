@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import AnalyticsTracker from '../../../components/AnalyticsTracker';
 
 interface CropParams {
   crop: string;
@@ -57,6 +58,7 @@ export default function CropPage({ params }: { params: CropParams }) {
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-12 md:py-20">
+      <AnalyticsTracker viewName={`CROP_GUIDE_${crop.toUpperCase()}`} locationName={`Crops Guide: ${crop}`} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}

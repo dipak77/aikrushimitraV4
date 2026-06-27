@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import AnalyticsTracker from '../../../components/AnalyticsTracker';
 
 interface DiseaseParams {
   disease: string;
@@ -65,6 +66,7 @@ export default function DiseasePage({ params }: { params: DiseaseParams }) {
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-12 md:py-20">
+      <AnalyticsTracker viewName={`DISEASE_GUIDE_${disease.toUpperCase().replace(/-/g, '_')}`} locationName={`Diseases Guide: ${name}`} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
