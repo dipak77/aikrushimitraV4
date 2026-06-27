@@ -1357,7 +1357,7 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
       `}} />
 
       {/* Global premium styles + animations polyfill */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         .font-display { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -1411,7 +1411,7 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
         .fade-in { animation-name: fade-in; }
         .slide-in-from-right { animation-name: slide-in-from-right; }
         .slide-in-from-top-2 { animation-name: slide-in-from-top; }
-      `}</style>
+      `}} />
     </main>
   );
 }

@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "lint": "tsc --noEmit",
-    "build": "vite build",
+    "build": "next build",
     "preview": "vite preview --host"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.390.0",
+    "next": "^14.2.35",
     "postprocessing": "^6.36.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

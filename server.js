@@ -430,61 +430,39 @@ const wss = new WebSocketServer({
 // =============================================================================
 
 if (!isProduction) {
-  // DEVELOPMENT: Vite Middleware
-  console.log('🔧 Initializing Vite middleware...');
+  // DEVELOPMENT: Next.js Middleware
+  console.log('🔧 Initializing Next.js middleware...');
 
   try {
-    const { createServer } = await import('vite');
-    const vite = await createServer({
-      server: {
-        middlewareMode: true,
-        hmr: false
-      },
-      appType: 'custom'
-    });
+    const { default: next } = await import('next');
+    const nextApp = next({ dev: true });
+    const nextHandler = nextApp.getRequestHandler();
+    await nextApp.prepare();
 
-    app.use(vite.middlewares);
-
-    // Dev SPA Fallback
-    app.use('*', async (req, res, next) => {
+    app.use((req, res, nextMiddleware) => {
       const url = req.originalUrl;
-
-      if (url.startsWith('/api') || url.startsWith('/ws')) return next();
-
-      // Skip requests for static assets
-      const ext = path.extname(url);
-      if (ext && ext !== '.html') return next();
-
-      try {
-        const templatePath = path.resolve(__dirname, 'index.html');
-        if (!fs.existsSync(templatePath)) {
-          return res.status(404).send('index.html not found');
-        }
-        const template = fs.readFileSync(templatePath, 'utf-8');
-        const html = await vite.transformIndexHtml(url, template);
-        return res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-      } catch (e) {
-        vite.ssrFixStacktrace(e);
-        next(e);
+      if (url.startsWith('/api') || url.startsWith('/ws')) {
+        return nextMiddleware();
       }
+      return nextHandler(req, res);
     });
 
   } catch (e) {
-    console.error('❌ Failed to initialize Vite middleware:', e.message);
+    console.error('❌ Failed to initialize Next.js middleware:', e.message);
   }
 
 } else {
   // PRODUCTION: Serve Built Assets
-  const distPath = path.resolve(__dirname, 'dist');
-  console.log(`🚀 Serving static assets from: ${distPath}`);
+  const outPath = path.resolve(__dirname, 'out');
+  console.log(`🚀 Serving static assets from: ${outPath}`);
 
-  if (!fs.existsSync(distPath)) {
-    console.error("❌ ERROR: 'dist' directory not found. Run 'npm run build' first.");
+  if (!fs.existsSync(outPath)) {
+    console.error("❌ ERROR: 'out' directory not found. Run 'npm run build' first.");
   }
 
   // Helper: Serve index.html with API key injection
   const serveIndexWithInjection = (req, res) => {
-    const indexPath = path.resolve(distPath, 'index.html');
+    const indexPath = path.resolve(outPath, 'index.html');
 
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('Application not built. Run npm run build.');
@@ -510,7 +488,7 @@ if (!isProduction) {
   };
 
   // Serve static files (JS, CSS, images etc.) - exclude index.html
-  app.use(express.static(distPath, { index: false }));
+  app.use(express.static(outPath, { index: false }));
 
   // Return 404 for missing static assets (files with extensions)
   app.use((req, res, next) => {

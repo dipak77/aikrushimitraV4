@@ -52,18 +52,20 @@ const App = () => {
 
   // --- AUTH CHECK ---
   const handleSplashComplete = useCallback(() => {
+      let hasSession = false;
       try {
           // Check for existing session
           const savedSession = localStorage.getItem('user_session');
           if (savedSession) {
               const parsedUser = JSON.parse(savedSession);
               setUser(parsedUser);
+              hasSession = true;
           }
       } catch (e) {
           console.error("Session load error:", e);
       } finally {
-          // Always navigate to Landing Page after splash
-          setView('LANDING');
+          // Route authenticated users to Dashboard, and guests to Login
+          setView(hasSession ? 'DASHBOARD' : 'LOGIN');
       }
   }, [setView, setUser]);
 
