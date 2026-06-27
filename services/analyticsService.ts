@@ -1,5 +1,7 @@
 import { ActivityLog, UserProfile } from "../types";
 import { generateUUID } from "../utils/common";
+import { analytics } from "../utils/firebase";
+import { logEvent, setUserId, setUserProperties } from "firebase/analytics";
 
 const SESSION_KEY = 'app_current_session';
 
@@ -87,6 +89,42 @@ export const logActivity = async (
     os,
     provider
   };
+
+  // --- SYNC TO FIREBASE GOOGLE ANALYTICS ---
+  if (analytics) {
+    try {
+      if (userEmail) {
+        setUserId(analytics, userEmail);
+      }
+      
+      setUserProperties(analytics, {
+        user_name: userName,
+        user_email: userEmail || "anonymous",
+        device_type: device,
+        operating_system: os,
+        auth_provider: provider,
+        user_location: location || "unknown"
+      });
+
+      logEvent(analytics, 'activity_log', {
+        view_name: view,
+        action_name: action,
+        user_location: location || "unknown",
+        device_type: device,
+        operating_system: os,
+        session_id: sessionId
+      });
+
+      // Also register a standard page view
+      logEvent(analytics, 'page_view', {
+        page_title: view,
+        page_location: window.location.href,
+        page_path: `/${view.toLowerCase()}`
+      });
+    } catch (err) {
+      console.warn("Firebase Analytics Logging Error:", err);
+    }
+  }
 
   try {
     const response = await fetch('/api/activity/log', {

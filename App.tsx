@@ -44,9 +44,9 @@ const App = () => {
 
   // --- ANALYTICS TRACKING ---
   useEffect(() => {
-    if (view !== 'SPLASH' && view !== 'LOGIN' && user) {
-       const location = localStorage.getItem('last_known_loc') || user.village;
-       logActivity(view, location, user);
+    if (view !== 'SPLASH') {
+       const location = user ? (localStorage.getItem('last_known_loc') || user.village) : 'Landing Page';
+       logActivity(view, location, user || undefined);
     }
   }, [view, user]);
 

@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 
 // Safely import client config (Vite resolves this path because we created the file)
 import firebaseConfig from '../firebase-applet-config.json';
@@ -25,6 +26,10 @@ const app = getApps().length === 0
 
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
+
+export const analytics = (hasConfig && firebaseConfig.measurementId && typeof window !== 'undefined')
+  ? getAnalytics(app)
+  : null;
 
 // =============================================================================
 // ERROR HANDLER (MANDATORY per Integration Skill, Section 3)

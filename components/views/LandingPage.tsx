@@ -110,8 +110,8 @@ const Header = ({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'py-2.5' : 'py-4'
+      className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled ? 'top-9 py-2' : 'top-9 py-4'
       }`}
       role="banner"
     >
@@ -316,12 +316,12 @@ const MandiTicker = () => {
     { n: 'Gram', e: '🫛', p: '₹5,420', c: '+3.7%', up: true },
   ];
   return (
-    <div className="relative py-3 bg-gradient-to-r from-emerald-500/10 via-amber-500/5 to-emerald-500/10 border-y border-white/5 overflow-hidden">
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:flex shrink-0 items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold tracking-wider">
-          <span className="relative flex h-2 w-2">
+    <div className="fixed top-0 left-0 right-0 z-[52] h-9 bg-slate-950/95 backdrop-blur-md border-b border-white/5 overflow-hidden flex items-center">
+      <div className="flex items-center gap-4 w-full">
+        <div className="flex shrink-0 items-center gap-1.5 ml-4 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black tracking-wider">
+          <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
           </span>
           LIVE MANDI
         </div>
@@ -329,10 +329,10 @@ const MandiTicker = () => {
           <div className="flex gap-8 animate-marquee w-max">
             {[...crops, ...crops].map((c, i) => (
               <div key={i} className="flex items-center gap-2.5 whitespace-nowrap">
-                <span className="text-lg">{c.e}</span>
-                <span className="text-sm font-semibold text-white">{c.n}</span>
-                <span className="text-sm font-mono font-bold text-white">{c.p}</span>
-                <span className={`text-xs font-semibold ${c.up ? 'text-emerald-400' : 'text-red-400'}`}>{c.c}</span>
+                <span className="text-sm">{c.e}</span>
+                <span className="text-xs font-semibold text-white">{c.n}</span>
+                <span className="text-xs font-mono font-bold text-white">{c.p}</span>
+                <span className={`text-[10px] font-semibold ${c.up ? 'text-emerald-400' : 'text-red-400'}`}>{c.c}</span>
                 <span className="text-white/20 ml-2">|</span>
               </div>
             ))}
@@ -350,7 +350,7 @@ const HeroSection = ({ t, handleGetStarted, handleScrollTo }: any) => {
   const { ref: heroRef, isInView: heroInView } = useInView(0.1);
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center pt-32 pb-20 overflow-hidden">
+    <section id="home" className="relative min-h-screen flex items-center pt-40 pb-20 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none" style={meshBg} />
       <div className="absolute inset-0 pointer-events-none" style={gridPattern} />
@@ -705,7 +705,7 @@ const AboutSection = ({ t }: any) => {
             <div className="relative rounded-3xl overflow-hidden border border-white/10 aspect-video shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 z-10" />
               <img
-                src="https://picsum.photos/seed/crops/800/600"
+                src="/images/farm-scan.png"
                 alt="Farming"
                 className="w-full h-full object-cover opacity-80"
                 loading="lazy"
@@ -1305,6 +1305,8 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
         id="progress-bar"
       />
 
+      <MandiTicker />
+
       <Header
         scrolled={scrolled}
         mobileMenuOpen={mobileMenuOpen}
@@ -1330,7 +1332,6 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
       />
 
       <HeroSection t={t} handleGetStarted={handleGetStarted} handleScrollTo={handleScrollTo} />
-      <MandiTicker />
       <AboutSection t={t} />
       <FeaturesSection t={t} />
       <HowItWorksSection t={t} />
