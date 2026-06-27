@@ -12,6 +12,8 @@ import { GoogleGenAI, LiveServerMessage, Modality, Type } from '@google/genai';
 import { getGenAIKey } from '../../services/geminiService';
 import clsx from 'clsx';
 import { MOCK_MARKET } from '../../data/mock';
+import { KNOWLEDGE_BASE } from '../../data/knowledge';
+import { AGRI_EXPERT_V1 } from '../../utils/prompts';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES & CONSTANTS
@@ -439,8 +441,28 @@ const VoiceAssistant = ({
       src.connect(inA); src.connect(wk); wk.connect(mute).connect(inCtx.destination);
       const apiKey = getGenAIKey(); if (!apiKey) throw new Error("API Key missing");
       const ai = new GoogleGenAI({ apiKey });
-      const langName = LANGUAGES.find(l => l.code === lang)?.label || 'English';
-      const systemPrompt = `You are KRUSHI MITRA AI, a highly advanced agricultural robotic assistant. ROLE: Friendly, expert agronomist speaking ${langName}. STYLE: Concise, natural spoken voice.`;
+
+      // Client-side RAG context matching based on active user crops
+      const userCrops = user.crops || (user.crop ? [user.crop] : []);
+      const filteredKb = KNOWLEDGE_BASE.filter(art => 
+        userCrops.some(crop => 
+          art.title.toLowerCase().includes(crop.toLowerCase()) || 
+          art.category.toLowerCase().includes(crop.toLowerCase())
+        )
+      );
+      const ragContext = filteredKb.map(art => `[Source: ${art.title}]\n${art.content.slice(0, 500)}`).join('\n\n');
+      
+      const systemPrompt = AGRI_EXPERT_V1
+        .replace(/{user_language}/g, lang || 'mr')
+        .replace(/{user_district}/g, user.district || 'Yavatmal')
+        .replace(/{user_state}/g, user.state || 'maharashtra')
+        .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
+        .replace(/{user_name}/g, user.name || 'शेतकरी मित्र')
+        .replace(/{user_land_size}/g, user.landSize || 'N/A')
+        .replace(/{current_season}/g, 'खरीप (Kharif)')
+        .replace(/{weather_summary}/g, 'अंशत: ढगाळ हवामान, मध्यम पावसाची शक्यता')
+        .replace(/{rag_context}/g, ragContext || 'माहिती उपलब्ध नाही.');
+
       const session = await ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         config: {

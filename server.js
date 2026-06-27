@@ -5,7 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { WebSocketServer } from 'ws';
-import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1 } from './utils/prompts.js';
+import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1 } from './utils/prompts.js';
 import { retrieveContext } from './services/ragService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -461,6 +461,69 @@ app.post('/api/updates', async (req, res) => {
   }
 });
 
+// --- Weather Advisory ---
+app.post('/api/weather/advisory', async (req, res) => {
+  try {
+    const { user, weatherForecast } = req.body;
+    if (!user || !weatherForecast) {
+      return res.status(400).json({ error: 'Missing user or weatherForecast' });
+    }
+    const ai = getAIClient();
+    
+    const userCrops = user.crops || (user.crop ? [user.crop] : []);
+    const prompt = WEATHER_ADVISORY_V1
+      .replace(/{weather_json}/g, JSON.stringify(weatherForecast))
+      .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
+      .replace(/{user_district}/g, user.district || 'Yavatmal')
+      .replace(/{user_state}/g, user.state || 'maharashtra')
+      .replace(/{irrigation_type}/g, user.irrigationType || 'rainfed')
+      .replace(/{crop_stage}/g, 'Growing Stage')
+      .replace(/{user_language}/g, user.language || 'mr');
+      
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt
+    });
+    
+    return res.json({ text: response.text });
+  } catch (error) {
+    console.error('❌ Weather Advisory Error:', error.message);
+    return res.status(500).json({ error: 'Failed to generate weather advisory', details: error.message });
+  }
+});
+
+// --- Scheme Matcher ---
+app.post('/api/schemes/match', async (req, res) => {
+  try {
+    const { user, schemes } = req.body;
+    if (!user) {
+      return res.status(400).json({ error: 'Missing user' });
+    }
+    const ai = getAIClient();
+    
+    const userCrops = user.crops || (user.crop ? [user.crop] : []);
+    const prompt = SCHEME_MATCHER_V1
+      .replace(/{schemes_context}/g, JSON.stringify(schemes || []))
+      .replace(/{user_state}/g, user.state || 'maharashtra')
+      .replace(/{user_district}/g, user.district || 'Yavatmal')
+      .replace(/{user_land_size}/g, user.landSize || '3')
+      .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
+      .replace(/{category_if_known}/g, 'General')
+      .replace(/{income_if_known}/g, 'N/A')
+      .replace(/{user_language}/g, user.language || 'mr');
+      
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt
+    });
+    
+    return res.json({ text: response.text });
+  } catch (error) {
+    console.error('❌ Scheme Matcher Error:', error.message);
+    return res.status(500).json({ error: 'Failed to match schemes', details: error.message });
+  }
+});
+
 // =============================================================================
 // API 404 CATCH-ALL
 // Must be AFTER all API routes, BEFORE static file serving
@@ -616,7 +679,34 @@ wss.on('connection', async (clientWs, req) => {
         }
 
         const config = parsed.config || {};
+        const user = config.user;
         console.log(`⚙️ WS ${clientId}: Setting up session with voice: ${config.voiceName || 'Puck'}`);
+
+        let systemInstructionText = config.systemInstruction || 'You are a helpful assistant.';
+        if (user && typeof user === 'object') {
+          try {
+            const userCrops = user.crops || (user.crop ? [user.crop] : []);
+            const ragResults = await retrieveContext('पिकांची माहिती', {
+              crops: userCrops,
+              state: user.state || 'maharashtra',
+              district: user.district || 'Yavatmal'
+            }, API_KEY);
+
+            const season = getSeason();
+            systemInstructionText = AGRI_EXPERT_V1
+              .replace(/{user_language}/g, user.language || 'mr')
+              .replace(/{user_district}/g, user.district || 'Yavatmal')
+              .replace(/{user_state}/g, user.state || 'maharashtra')
+              .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
+              .replace(/{user_name}/g, user.name || 'शेतकरी मित्र')
+              .replace(/{user_land_size}/g, user.landSize || 'N/A')
+              .replace(/{current_season}/g, season)
+              .replace(/{weather_summary}/g, 'अंशत: ढगाळ हवामान, मध्यम पावसाची शक्यता')
+              .replace(/{rag_context}/g, ragResults.contextText || 'माहिती उपलब्ध नाही.');
+          } catch (ragErr) {
+            console.warn(`⚠️ WS ${clientId}: WebSocket RAG fetch failed:`, ragErr.message);
+          }
+        }
 
         try {
           session = await ai.live.connect({
@@ -632,7 +722,7 @@ wss.on('connection', async (clientWs, req) => {
               },
               systemInstruction: {
                 parts: [{
-                  text: config.systemInstruction || 'You are a helpful assistant.'
+                  text: systemInstructionText
                 }]
               },
               ...(config.enableInputTranscription && { inputAudioTranscription: {} }),
