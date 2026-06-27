@@ -1,6 +1,3 @@
-
-import 'react';
-
 export type Language = 'mr' | 'hi' | 'en' | 'te' | 'ta' | 'kn' | 'bn' | 'gu' | 'pa' | 'ml' | 'or' | 'as';
 
 export type ViewState = 
@@ -87,51 +84,4 @@ export interface ActivityLog {
   device?: string;
   os?: string;
   provider?: 'google' | 'guest' | 'unknown';
-}
-
-declare global {
-  interface Window {
-    ENV: {
-      API_KEY: string;
-    }
-  }
-
-  interface ImportMetaEnv {
-    readonly VITE_GOOGLE_CLIENT_ID: string;
-    readonly [key: string]: string;
-  }
-
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-
-  // Augment global JSX namespace for custom elements (e.g. from R3F)
-  namespace JSX {
-    interface IntrinsicElements {
-      group: any;
-      mesh: any;
-      circleGeometry: any;
-      meshBasicMaterial: any;
-      planeGeometry: any;
-      shaderMaterial: any;
-      pointLight: any;
-      sphereGeometry: any;
-      primitive: any;
-      coneGeometry: any;
-      meshStandardMaterial: any;
-      boxGeometry: any;
-      torusGeometry: any;
-      ambientLight: any;
-      directionalLight: any;
-      fog: any;
-      color: any;
-      bufferGeometry: any;
-      bufferAttribute: any;
-      points: any;
-      pointsMaterial: any;
-    }
-    interface IntrinsicAttributes {
-      key?: any;
-    }
-  }
 }

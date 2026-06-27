@@ -220,8 +220,8 @@ export const getLiveAgriUpdates = async (lang: string) => {
 // Helper for Live API key injection if client-side logic requires it
 export const getGenAIKey = () => {
   // 1. Check for runtime injection (Cloud Run / Docker production environment)
-  if (typeof window !== 'undefined' && window.ENV?.API_KEY) {
-    return window.ENV.API_KEY;
+  if (typeof window !== 'undefined' && (window as any).ENV?.API_KEY) {
+    return (window as any).ENV.API_KEY;
   }
   
   // 2. Fallback to build-time replacement (Vite local development)

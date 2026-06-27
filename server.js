@@ -5,8 +5,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { WebSocketServer } from 'ws';
-import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1, SOIL_INTERPRETER_V1 } from './utils/prompts.js';
-import { retrieveContext } from './services/ragService.js';
+import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1, SOIL_INTERPRETER_V1 } from './apps/web/utils/prompts.js';
+import { retrieveContext } from './apps/web/services/ragService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -586,11 +586,11 @@ const wss = new WebSocketServer({
 
 if (!isProduction) {
   // DEVELOPMENT: Next.js Middleware
-  console.log('🔧 Initializing Next.js middleware...');
+  console.log('🔧 Initializing Next.js middleware targeting apps/web...');
 
   try {
     const { default: next } = await import('next');
-    const nextApp = next({ dev: true });
+    const nextApp = next({ dev: true, dir: path.resolve(__dirname, 'apps/web') });
     const nextHandler = nextApp.getRequestHandler();
     await nextApp.prepare();
 
@@ -608,11 +608,11 @@ if (!isProduction) {
 
 } else {
   // PRODUCTION: Serve Built Assets
-  const outPath = path.resolve(__dirname, 'out');
+  const outPath = path.resolve(__dirname, 'apps/web/out');
   console.log(`🚀 Serving static assets from: ${outPath}`);
 
   if (!fs.existsSync(outPath)) {
-    console.error("❌ ERROR: 'out' directory not found. Run 'npm run build' first.");
+    console.error("❌ ERROR: 'apps/web/out' directory not found. Run 'npm run build' first.");
   }
 
   // Helper: Serve index.html with API key injection

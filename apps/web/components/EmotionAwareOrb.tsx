@@ -303,7 +303,7 @@ const BirdHead = memo(({
   blinkAmount: number;
 }) => {
   const headRef = useRef<THREE.Group>(null);
-  const beakRef = useRef<THREE.Mesh>(null);
+  const beakRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
