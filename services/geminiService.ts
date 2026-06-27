@@ -1,12 +1,13 @@
 
 import { GoogleGenAI } from '@google/genai';
 import firebaseConfig from '../firebase-applet-config.json';
+import { useUserStore } from '../store/useUserStore';
 
 // Initialize lazy GoogleGenAI client for client-side fallback
 let clientAI: any = null;
 const getClientAI = () => {
   if (!clientAI) {
-    const apiKey = getGenAIKey();
+    const apiKey = firebaseConfig.apiKey || '';
     if (!apiKey) {
       throw new Error("Gemini API key is missing. Please configure it in your environment or firebase-applet-config.json.");
     }
@@ -97,10 +98,12 @@ export const analyzeCropDisease = async (base64Image: string, lang: string) => {
       : "Identify this crop and disease. Speak like a friendly local agri-expert. Tell name, cause, and organic remedies in a warm, native conversational tone. Keep it concise as if talking face-to-face.";
 
     const base64Data = base64Image.split(',')[1];
+    const user = useUserStore.getState().user;
     
     return await postToProxy('/api/vision', {
       prompt,
-      imageBase64: base64Data
+      imageBase64: base64Data,
+      user
     });
 
   } catch (error) {
@@ -125,9 +128,12 @@ export const getAIFarmingAdvice = async (query: string, lang: string, cropContex
       - Native, warm, and realistic. 
       - Context: Farmer is tending to ${cropContext}.`;
 
+    const user = useUserStore.getState().user;
+
     return await postToProxy('/api/chat', {
       prompt: query,
-      systemInstruction
+      systemInstruction,
+      user
     });
 
   } catch (error) {

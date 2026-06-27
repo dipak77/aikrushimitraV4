@@ -5,6 +5,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { WebSocketServer } from 'ws';
+import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1 } from './utils/prompts.js';
+import { retrieveContext } from './services/ragService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -233,19 +235,53 @@ app.get('/api/analytics/stats', handleGetStats);
 // AI ROUTES
 // =============================================================================
 
+// Helper to determine agricultural season
+const getSeason = () => {
+  const month = new Date().getMonth() + 1; // 1-12
+  if (month >= 6 && month <= 10) return 'Kharif (खरीप)';
+  if (month >= 11 || month <= 2) return 'Rabi (रब्बी)';
+  return 'Zaid (उन्हाळी)';
+};
+
 // --- Chat ---
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, systemInstruction } = req.body;
+    const { prompt, systemInstruction, user } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing required field: prompt' });
     }
 
     const ai = getAIClient();
-
     const requestConfig = {};
-    if (systemInstruction) {
+
+    let citations = [];
+    if (user && typeof user === 'object') {
+      // 1. Fetch relevant RAG chunks
+      const userCrops = user.crops || (user.crop ? [user.crop] : []);
+      const ragResults = await retrieveContext(prompt, {
+        crops: userCrops,
+        state: user.state || 'maharashtra',
+        district: user.district || 'Yavatmal'
+      }, API_KEY);
+
+      citations = ragResults.citations;
+
+      // 2. Format the system instruction
+      const season = getSeason();
+      const compiledInstruction = AGRI_EXPERT_V1
+        .replace(/{user_language}/g, user.language || 'mr')
+        .replace(/{user_district}/g, user.district || 'Yavatmal')
+        .replace(/{user_state}/g, user.state || 'maharashtra')
+        .replace(/{user_crops}/g, userCrops.join(', ') || 'कापूस, सोयाबीन')
+        .replace(/{user_name}/g, user.name || 'शेतकरी मित्र')
+        .replace(/{user_land_size}/g, user.landSize || 'N/A')
+        .replace(/{current_season}/g, season)
+        .replace(/{weather_summary}/g, 'अंशत: ढगाळ हवामान, मध्यम पावसाची शक्यता')
+        .replace(/{rag_context}/g, ragResults.contextText || 'माहिती उपलब्ध नाही.');
+
+      requestConfig.systemInstruction = compiledInstruction;
+    } else if (systemInstruction) {
       requestConfig.systemInstruction = systemInstruction;
     }
 
@@ -255,7 +291,10 @@ app.post('/api/chat', async (req, res) => {
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
 
-    return res.json({ text: response.text });
+    return res.json({ 
+      text: response.text,
+      citations
+    });
   } catch (error) {
     console.error('❌ Chat API Error:', error.message);
     if (error.message?.includes('API_KEY')) {
@@ -268,7 +307,7 @@ app.post('/api/chat', async (req, res) => {
 // --- Vision ---
 app.post('/api/vision', async (req, res) => {
   try {
-    const { prompt, imageBase64, mimeType } = req.body;
+    const { prompt, imageBase64, mimeType, user, cropType } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing required field: prompt' });
@@ -278,24 +317,47 @@ app.post('/api/vision', async (req, res) => {
     }
 
     const ai = getAIClient();
+    const requestConfig = {};
+
+    if (user && typeof user === 'object') {
+      const season = getSeason();
+      const compiledInstruction = DISEASE_DIAGNOSIS_V1
+        .replace(/{user_language}/g, user.language || 'mr')
+        .replace(/{crop_type}/g, cropType || user.crop || 'cotton')
+        .replace(/{user_state}/g, user.state || 'maharashtra')
+        .replace(/{current_season}/g, season);
+
+      requestConfig.systemInstruction = compiledInstruction;
+      // Request structured output format for diagnosis
+      requestConfig.responseMimeType = "application/json";
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              // FIX: Allow dynamic mimeType instead of hardcoding jpeg
-              mimeType: mimeType || 'image/jpeg',
-              data: imageBase64
-            }
-          },
-          { text: prompt }
-        ]
-      }
+      contents: [
+        {
+          inlineData: {
+            mimeType: mimeType || 'image/jpeg',
+            data: imageBase64
+          }
+        },
+        { text: prompt }
+      ],
+      ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
 
-    return res.json({ text: response.text });
+    let rawText = response.text || '';
+    let parsedData = null;
+    try {
+      parsedData = JSON.parse(rawText.trim());
+    } catch {
+      // Return raw text if JSON parsing fails
+    }
+
+    return res.json({ 
+      text: rawText,
+      data: parsedData
+    });
   } catch (error) {
     console.error('❌ Vision API Error:', error.message);
     if (error.message?.includes('API_KEY')) {
