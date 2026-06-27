@@ -5,3 +5,5 @@ dist
 .next
 out
 .firebase
+*.tsbuildinfo
+tsconfig.tsbuildinfo

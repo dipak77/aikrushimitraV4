@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { ViewState, Language, UserProfile } from './types';
 import { logActivity } from './services/analyticsService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { useUserStore } from './store/useUserStore';
+import { useAppStore } from './store/useAppStore';
 
 // Layout
 import Sidebar from './components/layout/Sidebar';
@@ -30,15 +32,9 @@ import AgriKnowledgeView from './components/views/AgriKnowledgeView';
 import KnowledgeDetailView from './components/views/KnowledgeDetailView';
 
 const App = () => {
-  const [view, setView] = useState<ViewState>('SPLASH');
-  const [lang, setLang] = useState<Language>('mr');
+  const { user, login, logout, language: lang, setLanguage: setLang, updateProfile, setUser } = useUserStore();
+  const { currentView: view, navigate: setView, selectedScheme, setSelectedScheme, selectedKnowledgeItem, setSelectedKnowledgeItem } = useAppStore();
   
-  // Default user state is null until login/guest selection
-  const [user, setUser] = useState<UserProfile | null>(null);
-  
-  const [selectedScheme, setSelectedScheme] = useState<any>(null);
-  const [selectedKnowledgeItem, setSelectedKnowledgeItem] = useState<any>(null);
-
   // --- GOOGLE CLIENT ID ---
   const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID || "";
 
@@ -58,7 +54,7 @@ const App = () => {
           const savedSession = localStorage.getItem('user_session');
           if (savedSession) {
               const parsedUser = JSON.parse(savedSession);
-              setUser(parsedUser);
+              login(parsedUser, parsedUser.provider || 'unknown');
               hasSession = true;
           }
       } catch (e) {
@@ -67,10 +63,10 @@ const App = () => {
           // Route authenticated users to Dashboard, and guests to Login
           setView(hasSession ? 'DASHBOARD' : 'LOGIN');
       }
-  }, [setView, setUser]);
+  }, [setView, login]);
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
-      setUser(loggedInUser);
+      login(loggedInUser, 'google');
       setView('DASHBOARD');
   };
 
