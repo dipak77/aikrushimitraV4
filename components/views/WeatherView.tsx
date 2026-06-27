@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import { useUserStore } from '../../store/useUserStore';
+import { getApiUrl } from '../../services/geminiService';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -133,7 +134,7 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
         const fetchAdvisory = async () => {
             setLoadingAdvisory(true);
             try {
-                const res = await fetch('/api/weather/advisory', {
+                const res = await fetch(getApiUrl('/api/weather/advisory'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user, weatherForecast: weather.daily })

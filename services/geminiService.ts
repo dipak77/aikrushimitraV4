@@ -64,10 +64,21 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
   throw new Error(`Unsupported direct endpoint: ${endpoint}`);
 };
 
+export const getApiUrl = (endpoint: string) => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    if (hostname === 'localhost' && port === '3000') {
+      return `http://localhost:5000${endpoint}`;
+    }
+  }
+  return endpoint;
+};
+
 // Helper for backend calls with automatic client-side fallback
 const postToProxy = async (endpoint: string, body: any) => {
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(getApiUrl(endpoint), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

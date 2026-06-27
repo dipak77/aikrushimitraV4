@@ -5,6 +5,7 @@ import { TRANSLATIONS, SCHEMES_DATA } from '../../constants';
 import SimpleView from '../layout/SimpleView';
 import { Landmark, ArrowUpRight, Sparkles, X, Loader2 } from 'lucide-react';
 import { useUserStore } from '../../store/useUserStore';
+import { getApiUrl } from '../../services/geminiService';
 import clsx from 'clsx';
 
 const SchemesView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () => void, onSelect: (scheme: any) => void }) => {
@@ -20,7 +21,7 @@ const SchemesView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () =>
         setMatching(true);
         setMatchResult(null);
         try {
-            const res = await fetch('/api/schemes/match', {
+            const res = await fetch(getApiUrl('/api/schemes/match'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user, schemes })
