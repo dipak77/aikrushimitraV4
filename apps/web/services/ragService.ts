@@ -1,4 +1,5 @@
 import { KNOWLEDGE_BASE, KnowledgeItem } from '../data/knowledge';
+import { fetchCrops, fetchContent, fetchSchemes } from './dbService';
 
 const chunkEmbeddingCache: Record<string, number[]> = {};
 
@@ -69,8 +70,75 @@ export async function retrieveContext(
   userContext: { crops?: string[]; state?: string; district?: string } = {},
   apiKey?: string
 ): Promise<{ contextText: string; citations: { source: string; category: string }[] }> {
-  const articles: KnowledgeItem[] = KNOWLEDGE_BASE || [];
+  let articles: KnowledgeItem[] = [];
   
+  try {
+    const firestoreCrops = await fetchCrops();
+    const firestoreContent = await fetchContent();
+    const firestoreSchemes = await fetchSchemes();
+
+    // Map Crops
+    if (firestoreCrops && firestoreCrops.length > 0) {
+      firestoreCrops.forEach((c: any) => {
+        articles.push({
+          id: c.id,
+          category: 'crop',
+          title: c.name || { en: '', mr: '' },
+          subtitle: { en: c.scientificName || '', mr: '' },
+          image: c.imageUrl || '',
+          tags: c.tags || [],
+          stats: c.stats || [],
+          sections: c.sections || []
+        });
+      });
+    }
+
+    // Map Content
+    if (firestoreContent && firestoreContent.length > 0) {
+      firestoreContent.forEach((c: any) => {
+        articles.push({
+          id: c.id,
+          category: c.category || 'tech',
+          title: c.title || { en: '', mr: '' },
+          subtitle: c.subtitle || { en: '', mr: '' },
+          image: c.image || '',
+          tags: c.tags || [],
+          stats: c.stats || [],
+          sections: c.sections || []
+        });
+      });
+    }
+
+    // Map Schemes
+    const activeLang = 'mr';
+    const schemeDoc = firestoreSchemes?.find((doc: any) => doc.lang === activeLang) || firestoreSchemes?.[0];
+    if (schemeDoc && Array.isArray(schemeDoc.schemes)) {
+      schemeDoc.schemes.forEach((s: any, idx: number) => {
+        articles.push({
+          id: s.id || `scheme_${idx}`,
+          category: 'scheme',
+          title: { en: s.title || '', mr: s.title || '' },
+          subtitle: { en: s.dept || '', mr: s.dept || '' },
+          image: '',
+          tags: s.benefits ? [s.benefits] : [],
+          stats: [],
+          sections: [
+            {
+              title: { en: 'Details', mr: 'माहिती' },
+              content: { en: `${s.desc || ''} ${s.eligibility || ''}`, mr: `${s.desc || ''} ${s.eligibility || ''}` }
+            }
+          ]
+        });
+      });
+    }
+  } catch (err) {
+    console.warn("Firestore RAG fetch failed, falling back to static knowledge base:", err);
+  }
+
+  if (articles.length === 0) {
+    articles = KNOWLEDGE_BASE || [];
+  }
+
   // Filter by user's crops if specified
   const filteredArticles = articles.filter((art) => {
     if (!userContext.crops || userContext.crops.length === 0) return true;

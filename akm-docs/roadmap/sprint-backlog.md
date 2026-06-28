@@ -1,6 +1,6 @@
 # AI Krushi Mitra — Sprint Backlog Roadmap
 
-> **Version:** 1.0 | **Status:** Approved | **Owner:** Product Owner  
+> **Version:** 2.0 | **Status:** Approved | **Owner:** Product Owner  
 > **Last Updated:** 2026-06-28
 
 ---
@@ -11,6 +11,7 @@
 gantt
     title AI Krushi Mitra Rollout Schedule
     dateFormat  YYYY-MM-DD
+    
     section Phase 1: MVP Coding
     Sprint 1: Core Layout UI              :done, 2026-06-01, 2026-06-07
     Sprint 2: RAG Backend & Prompts      :done, 2026-06-08, 2026-06-14
@@ -18,14 +19,68 @@ gantt
     Sprint 4: Views dynamic integration   :done, 2026-06-22, 2026-06-28
 
     section Phase 2: Pilot Rollout
-    FPO Pilot Launch                      :active, 2026-06-29, 2026-07-15
-    User Feedback & Prompt Tuning         : 2026-07-16, 2026-07-30
-    Offline Sync Testing                  : 2026-07-31, 2026-08-15
+    Onboarding & OTP login                :done, 2026-06-29, 2026-07-05
+    Offline Caching & Sync Queue          :done, 2026-07-06, 2026-07-12
+    User Feedback & Prompt Tuning         :done, 2026-07-13, 2026-07-20
+    SMS & Network Integration             :done, 2026-07-21, 2026-07-30
+
+    section Phase 3: Growth & Monetization (P1 & P2)
+    Sprint 5: Soil & Yield Estimators     :active, 2026-08-01, 2026-08-15
+    Sprint 6: Community & Pest Alerts     : 2026-08-16, 2026-08-30
+    Sprint 7: FPO SaaS & Premium Advisors : 2026-09-01, 2026-09-15
+
+    section Phase 4: Innovation (P3)
+    Sprint 8: Drone & IoT Dashboards      : 2026-09-16, 2026-09-30
+    Sprint 9: NDVI Satellite & Ledger     : 2026-10-01, 2026-10-15
 ```
 
 ---
 
 ## 2. Sprint Backlog Details
 
-*   **Phase 1 (Complete):** High fidelity design systems, state persistence, RAG pipeline, vision diagnosis, live schemes matcher, and soil test advisors.
-*   **Phase 2 (Upcoming):** Focus on localized onboarding campaigns, telemetry tracking, offline sync validations, and SMS verification integration.
+### 🟢 Phase 1: MVP Coding (Complete)
+*   **Sprint 1: Core Layout UI**
+    *   *Reference:* [brand-identity.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/design-system/brand-identity.md), [design-tokens.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/design-system/design-tokens.md)
+    *   *Deliverables:* Establish bento layout grid, color tokens, and primary styles in `index.css`.
+*   **Sprint 2: RAG Backend & Prompts**
+    *   *Reference:* [pipeline-architecture.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/rag/pipeline-architecture.md), [prompt-library.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/ai/prompt-library.md)
+    *   *Deliverables:* Set up TF-IDF keyword lookup, cosine vector similarities matching `gemini-2.5-flash` model structure.
+*   **Sprint 3: Voice & Schemes API**
+    *   *Reference:* [api-contracts.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/api-contracts.md), [content-types.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/content/content-types.md)
+    *   *Deliverables:* Integrate live schemes fetching matching language contexts.
+*   **Sprint 4: Views Dynamic Integration**
+    *   *Reference:* [database-schema.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/database-schema.md)
+    *   *Deliverables:* Implement dynamic Firestore service mapping crops, calendars, and APMC market prices.
+
+### 🟢 Phase 2: Pilot Rollout (Complete)
+*   **Sprint 5a: Onboarding & OTP Login**
+    *   *Reference:* [auth-model.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/auth-model.md), [personas.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/personas.md)
+    *   *Deliverables:* Created 10-digit phone login layout, 30s count-down timer, and dynamic multilingual onboarding slide wizard.
+*   **Sprint 5b: Offline Caching & Sync Queue**
+    *   *Reference:* [offline-strategy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/offline-strategy.md)
+    *   *Deliverables:* Created browser IndexedDB offline caches (`weather_cache`, `mandi_cache`) and `diagnostic_queue` auto-uploading scans on online restore.
+*   **Sprint 5c: Text Chat & Output Filters**
+    *   *Reference:* [prompt-library.md (Section 3 disclaimers)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/ai/prompt-library.md)
+    *   *Deliverables:* Configured output filtering appending relevant disclaimers for scheme compliance and price forecasts.
+*   **Sprint 5d: CI/CD Pipeline Automation**
+    *   *Reference:* [ci-cd-pipeline.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/devops/ci-cd-pipeline.md)
+    *   *Deliverables:* Configured GitHub Actions lint, test, build, and deploy steps.
+
+### 🔵 Phase 3: Growth & Monetization (Upcoming)
+*   **Sprint 5: Soil & Yield Estimators**
+    *   *Reference:* [feature-hierarchy.md (P1 - Soil & Yield)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md), [api-contracts.md](/c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/api-contracts.md#L45-L60)
+    *   *Deliverables:* Connect Soil NPK analysis slider parameters to dynamic advisory recommendations.
+*   **Sprint 6: Community & Pest Alerts**
+    *   *Reference:* [feature-hierarchy.md (P1 - Community)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md), [database-schema.md (Section 2.2 Alerts)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/database-schema.md)
+    *   *Deliverables:* Set up farmer Q&A community boards and push-triggered local pest outbreak alerts.
+*   **Sprint 7: FPO SaaS & Premium Advisors**
+    *   *Reference:* [monetization.md (P2 features)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/monetization.md), [business-model.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/business-model.md)
+    *   *Deliverables:* Launch subscription gateway (Premium advisory) and FPO cooperative dashboard aggregate reports.
+
+### 🟡 Phase 4: Innovation (Upcoming)
+*   **Sprint 8: Drone & IoT Dashboards**
+    *   *Reference:* [feature-hierarchy.md (P3 features)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md)
+    *   *Deliverables:* Set up telemetry streams for soil moisture/pH IoT sensors and DJI drone visual diagnostics overlays.
+*   **Sprint 9: NDVI Satellite & Ledger**
+    *   *Reference:* [ontology.md (Knowledge graph dependencies)](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/knowledge-graph/ontology.md)
+    *   *Deliverables:* Implement Sentinel-2 satellite imagery indexes and block-chain crop provenance traceability ledger.
