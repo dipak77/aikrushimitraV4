@@ -30,6 +30,10 @@ import SabjiMandiView from './components/views/SabjiMandiView';
 import LoginView from './components/views/LoginView';
 import AgriKnowledgeView from './components/views/AgriKnowledgeView';
 import KnowledgeDetailView from './components/views/KnowledgeDetailView';
+import OnboardingView from './components/views/OnboardingView';
+import ChatView from './components/views/ChatView';
+import { OfflineDB } from './utils/offlineDb';
+import { analyzeCropDisease } from './services/geminiService';
 
 const App = () => {
   const { user, login, logout, language: lang, setLanguage: setLang, updateProfile, setUser } = useUserStore();
@@ -43,8 +47,38 @@ const App = () => {
     if (view !== 'SPLASH') {
        const location = user ? (localStorage.getItem('last_known_loc') || user.village) : 'Landing Page';
        logActivity(view, location, user || undefined);
-    }
+     }
   }, [view, user]);
+
+  // --- OFFLINE SYNC PROCESSING ---
+  const processOfflineQueue = useCallback(async () => {
+    if (!navigator.onLine) return;
+    try {
+      const queue = await OfflineDB.getQueuedDiagnostics();
+      if (queue.length === 0) return;
+
+      console.log(`📡 Offline Sync: Processing ${queue.length} queued diagnostics...`);
+      for (const item of queue) {
+        try {
+          await analyzeCropDisease(item.imageBase64, item.lang as Language);
+          await OfflineDB.removeQueuedDiagnostic(item.id!);
+          console.log(`✅ Background Sync complete for ${item.id}`);
+        } catch (syncErr) {
+          console.warn(`Failed to sync diagnostic ${item.id}:`, syncErr);
+        }
+      }
+    } catch (err) {
+      console.error("Offline Queue processing failed:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    processOfflineQueue();
+    window.addEventListener('online', processOfflineQueue);
+    return () => {
+      window.removeEventListener('online', processOfflineQueue);
+    };
+  }, [processOfflineQueue]);
 
   // --- AUTH CHECK ---
   const handleSplashComplete = useCallback(() => {
@@ -70,10 +104,20 @@ const App = () => {
       setView('DASHBOARD');
   };
 
+  const needsOnboarding = user && (!user.crop || user.crop === 'Not Selected' || user.crop === 'Select Crop' || user.village === 'Maharashtra');
+
   const getView = () => {
     // If no user is set (and not on Splash or Landing), force Login View
     if (!user && view !== 'SPLASH' && view !== 'LANDING') {
         return <LoginView onLoginSuccess={handleLoginSuccess} lang={lang} />;
+    }
+
+    // Force onboarding if details are incomplete
+    if (user && needsOnboarding && view !== 'SPLASH' && view !== 'LANDING' && view !== 'PROFILE') {
+        return <OnboardingView lang={lang} user={user} onComplete={(updatedUser) => {
+            updateProfile(updatedUser);
+            setView('DASHBOARD');
+        }} />;
     }
 
     switch(view) {
@@ -105,6 +149,8 @@ const App = () => {
          return <WeatherView lang={lang} onBack={() => setView('DASHBOARD')} />;
        case 'PROFILE':
          return user ? <ProfileView lang={lang} currentUser={user} onSave={(u) => { setUser(u); localStorage.setItem('user_session', JSON.stringify(u)); setView('DASHBOARD'); }} onBack={() => setView('DASHBOARD')} /> : null;
+       case 'CHAT':
+         return user ? <ChatView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        default: return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
     }
   };
