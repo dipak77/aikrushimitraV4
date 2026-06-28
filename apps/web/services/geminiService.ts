@@ -79,13 +79,7 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    if (hostname === 'localhost' && port === '3000') {
-      return `http://localhost:5000${endpoint}`;
-    }
-  }
+  // Always use root-relative endpoints so proxy requests hit Express directly on the active host/port
   return endpoint;
 };
 
@@ -234,15 +228,14 @@ export const getLiveAgriUpdates = async (lang: string) => {
 
 // Helper for Live API key injection if client-side logic requires it
 export const getGenAIKey = () => {
-  // 1. Check for runtime injection (Cloud Run / Docker production environment)
-  if (typeof window !== 'undefined' && (window as any).ENV?.API_KEY) {
+  // 1. Check for runtime injection
+  if (typeof window !== 'undefined' && (window as any).ENV?.API_KEY && (window as any).ENV?.API_KEY !== 'null') {
     return (window as any).ENV.API_KEY;
   }
   
-  // 2. Fallback to build-time replacement (Vite local development)
-  // The logic in vite.config.js ensures this value is populated
-  const buildTimeKey = process.env.API_KEY || '';
-  if (buildTimeKey) return buildTimeKey;
+  // 2. Fallback to build-time environment variables
+  const envKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.API_KEY || '';
+  if (envKey && envKey !== 'CONFIGURE_IN_GCP_SECRET_MANAGER') return envKey;
 
   // 3. Fallback to firebase applet configuration key
   return firebaseConfig?.apiKey || '';
