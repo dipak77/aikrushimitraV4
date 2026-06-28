@@ -20,11 +20,13 @@ import { AIRouter } from '../src/ai/router/AIRouter';
 import { RetryPolicy } from '../src/ai/retry/RetryPolicy';
 import { TimeoutManager } from '../src/ai/timeout/TimeoutManager';
 import { AITelemetry } from '../src/ai/telemetry/AITelemetry';
+import { AGRI_EXPERT_V1, DISEASE_DIAGNOSIS_V1, WEATHER_ADVISORY_V1, SCHEME_MATCHER_V1, SOIL_INTERPRETER_V1 } from '../utils/prompts';
 
 // Fallback direct call to AI Router when proxy server is unavailable
 const callGeminiDirectly = async (endpoint: string, body: any) => {
   const apiKey = getGenAIKey() || firebaseConfig.apiKey || '';
   const startTime = Date.now();
+  const user = body?.user || useUserStore.getState().user;
   
   try {
     const res = await RetryPolicy.execute(async () => {
@@ -36,12 +38,59 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
         }
 
         if (endpoint === '/api/vision') {
+          const compiledInstruction = user ? DISEASE_DIAGNOSIS_V1
+            .replace(/{user_language}/g, user.language || 'mr')
+            .replace(/{crop_type}/g, body.cropType || user.crop || 'cotton')
+            .replace(/{user_state}/g, user.state || 'maharashtra')
+            .replace(/{current_season}/g, 'Kharif') : undefined;
+
           const response = await AIRouter.routeVision({
             imageBase64: body.imageBase64,
             mimeType: body.mimeType,
-            prompt: body.prompt,
-            systemInstruction: body.systemInstruction
+            prompt: body.prompt || 'Analyze crop disease',
+            systemInstruction: body.systemInstruction || compiledInstruction
           }, apiKey);
+          return response.text;
+        }
+
+        if (endpoint === '/api/soil/advisory') {
+          const soilJson = JSON.stringify(body.npk || body);
+          const compiledInstruction = SOIL_INTERPRETER_V1
+            .replace(/{soil_report_json}/g, soilJson)
+            .replace(/{next_crop}/g, body.crop || 'cotton')
+            .replace(/{user_district}/g, user?.district || 'Yavatmal')
+            .replace(/{user_state}/g, user?.state || 'maharashtra')
+            .replace(/{soil_type}/g, user?.soilType || 'black')
+            .replace(/{previous_crop}/g, 'None')
+            .replace(/{user_language}/g, user?.language || 'mr');
+
+          const response = await AIRouter.routeChat(`Provide soil health analysis and NPK suggestions based on: ${soilJson} for ${body.crop || 'crop'}`, { systemInstruction: compiledInstruction }, apiKey);
+          return response.text;
+        }
+
+        if (endpoint === '/api/weather/advisory') {
+          const weatherJson = JSON.stringify(body.weatherForecast || body);
+          const compiledInstruction = WEATHER_ADVISORY_V1
+            .replace(/{weather_json}/g, weatherJson)
+            .replace(/{user_crops}/g, user?.crop || 'cotton')
+            .replace(/{user_district}/g, user?.district || 'Yavatmal')
+            .replace(/{user_state}/g, user?.state || 'maharashtra')
+            .replace(/{irrigation_type}/g, 'Rainfed')
+            .replace(/{crop_stage}/g, 'Vegetative Growth')
+            .replace(/{user_language}/g, user?.language || 'mr');
+
+          const response = await AIRouter.routeChat(`Generate weather crop advisory based on daily weather forecast JSON: ${weatherJson}`, { systemInstruction: compiledInstruction }, apiKey);
+          return response.text;
+        }
+
+        if (endpoint === '/api/schemes/match') {
+          const userJson = JSON.stringify(user || body);
+          const compiledInstruction = SCHEME_MATCHER_V1
+            .replace(/{farmer_profile_json}/g, userJson)
+            .replace(/{schemes_db_json}/g, '[]')
+            .replace(/{user_language}/g, user?.language || 'mr');
+
+          const response = await AIRouter.routeChat(`Match agricultural schemes for farmer profile: ${userJson}`, { systemInstruction: compiledInstruction }, apiKey);
           return response.text;
         }
 
