@@ -7,7 +7,7 @@ import { useUserStore } from '../store/useUserStore';
 let clientAI: any = null;
 const getClientAI = () => {
   if (!clientAI) {
-    const apiKey = firebaseConfig.apiKey || '';
+    const apiKey = getGenAIKey() || firebaseConfig.apiKey || '';
     if (!apiKey) {
       throw new Error("Gemini API key is missing. Please configure it in your environment or firebase-applet-config.json.");
     }
