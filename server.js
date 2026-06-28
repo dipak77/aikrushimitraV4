@@ -327,9 +327,30 @@ app.post('/api/chat', async (req, res) => {
       requestConfig.systemInstruction = systemInstruction;
     }
 
+    const { history } = req.body;
+    let contents = [];
+    if (Array.isArray(history) && history.length > 0) {
+      // Slice to last 10 messages (5 turns max) for token budgeting
+      const rollingHistory = history.slice(-10);
+      contents = rollingHistory.map(msg => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.text || '' }]
+      }));
+      // Append current prompt if not already present in history
+      const lastMsg = rollingHistory[rollingHistory.length - 1];
+      if (!lastMsg || lastMsg.text !== prompt) {
+        contents.push({
+          role: 'user',
+          parts: [{ text: prompt }]
+        });
+      }
+    } else {
+      contents = prompt;
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
-      contents: prompt,
+      contents: contents,
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
 
@@ -462,6 +483,48 @@ app.post('/api/soil/advisory', async (req, res) => {
       return res.status(401).json({ error: 'API key invalid or not configured.' });
     }
     return res.status(500).json({ error: 'Failed to generate soil advice.', details: error.message });
+  }
+});
+
+// --- Weather Crop Advisory ---
+app.post('/api/weather/advisory', async (req, res) => {
+  try {
+    const { user, weatherForecast } = req.body;
+    if (!weatherForecast) {
+      return res.status(400).json({ error: 'Missing required field: weatherForecast' });
+    }
+
+    const ai = getAIClient();
+    const weatherJson = JSON.stringify(weatherForecast);
+
+    const compiledInstruction = WEATHER_ADVISORY_V1
+      .replace(/{weather_json}/g, weatherJson)
+      .replace(/{user_crops}/g, user?.crop || 'cotton')
+      .replace(/{user_district}/g, user?.district || 'Yavatmal')
+      .replace(/{user_state}/g, user?.state || 'maharashtra')
+      .replace(/{irrigation_type}/g, 'Rainfed')
+      .replace(/{crop_stage}/g, 'Vegetative Growth')
+      .replace(/{user_language}/g, user?.language || 'mr');
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: `Generate weather crop advisory based on daily weather forecast JSON: ${weatherJson}`,
+      config: {
+        systemInstruction: compiledInstruction
+      }
+    });
+
+    const filteredText = filterOutput(response.text, user?.language || 'mr');
+
+    return res.json({
+      text: filteredText
+    });
+  } catch (error) {
+    console.error('❌ Weather Advisory API Error:', error.message);
+    if (error.message?.includes('API_KEY')) {
+      return res.status(401).json({ error: 'API key invalid or not configured.' });
+    }
+    return res.status(500).json({ error: 'Failed to generate weather advisory.', details: error.message });
   }
 });
 

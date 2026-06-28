@@ -123,7 +123,7 @@ export const analyzeCropDisease = async (base64Image: string, lang: string) => {
 };
 
 // Function to get general farming advice via text chat
-export const getAIFarmingAdvice = async (query: string, lang: string, cropContext: string) => {
+export const getAIFarmingAdvice = async (query: string, lang: string, cropContext: string, history: any[] = []) => {
   try {
     const systemInstruction = lang === 'mr' 
       ? `तुला 'AI कृषी मित्र' म्हणून बोलायचे आहे. तू रोबोट नाहीस, तर गावातील एक अनुभवी, कष्टाळू आणि प्रेमळ जाणकार शेतकरी आहेस. 
@@ -144,7 +144,8 @@ export const getAIFarmingAdvice = async (query: string, lang: string, cropContex
     return await postToProxy('/api/chat', {
       prompt: query,
       systemInstruction,
-      user
+      user,
+      history
     });
 
   } catch (error) {

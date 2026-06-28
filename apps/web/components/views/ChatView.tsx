@@ -231,7 +231,7 @@ const ChatView = ({ lang, user, onBack }: { lang: Language; user: UserProfile; o
 
     try {
       // Call Gemini advice API (RAG augmented context mapping)
-      const response = await getAIFarmingAdvice(queryText, lang, user.crop || 'cotton');
+      const response = await getAIFarmingAdvice(queryText, lang, user.crop || 'cotton', messages);
       
       const assistantMessage: Message = {
         id: `msg_ai_${Date.now()}`,
