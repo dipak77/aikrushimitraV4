@@ -84,6 +84,21 @@ const App = () => {
     };
   }, [processOfflineQueue]);
 
+  // --- SERVICE WORKER REGISTRATION (system-context.md §4) ---
+  useEffect(() => {
+    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => {
+            console.log('📦 Service Worker registered:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('⚠️ Service Worker registration failed:', err);
+          });
+      });
+    }
+  }, []);
+
   // --- AUTH CHECK ---
   const handleSplashComplete = useCallback(() => {
       let hasSession = false;
