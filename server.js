@@ -889,23 +889,9 @@ app.all('/api/*', (req, res) => {
   });
 });
 
-// =============================================================================
-// SERVER & WEBSOCKET SETUP
-// =============================================================================
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 URL: ${isProduction ? 'https' : 'http'}://localhost:${PORT}`);
-});
-
-const wss = new WebSocketServer({
-  server,
-  path: '/ws/live',
-  maxPayload: 20 * 1024 * 1024 // 20MB
-});
-
-// =============================================================================
+// ============================================================
 // FRONTEND SERVING
-// =============================================================================
+// ============================================================
 
 if (!isProduction) {
   // DEVELOPMENT: Next.js Middleware
@@ -985,6 +971,20 @@ if (!isProduction) {
   app.get('/index.html', serveIndexWithInjection);
   app.get('*', serveIndexWithInjection);
 }
+
+// ============================================================
+// SERVER & WEBSOCKET SETUP
+// ============================================================
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 URL: ${isProduction ? 'https' : 'http'}://localhost:${PORT}`);
+});
+
+const wss = new WebSocketServer({
+  server,
+  path: '/ws/live',
+  maxPayload: 20 * 1024 * 1024 // 20MB
+});
 
 // =============================================================================
 // WEBSOCKET LOGIC
