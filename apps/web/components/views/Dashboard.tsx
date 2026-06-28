@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Language, ViewState } from '../../types';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
-import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2, MessageSquare, Users, Crown } from 'lucide-react';
+import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2, MessageSquare, Users, Crown, Cpu } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -308,6 +308,13 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         variant="advisor"
                         onClick={() => onNavigate('PREMIUM')} 
                         delay={310}
+                    />
+                    <FeatureCard 
+                        icon={Cpu} 
+                        title={lang === 'mr' ? 'तंत्रज्ञान हब' : 'Innovation'} 
+                        variant="area"
+                        onClick={() => onNavigate('INNOVATION')} 
+                        delay={320}
                     />
                 </div>
                 

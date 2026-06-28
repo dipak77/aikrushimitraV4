@@ -26,6 +26,7 @@ export type ViewState =
   | 'CHAT'
   | 'COMMUNITY'
   | 'PREMIUM'
+  | 'INNOVATION'
   | 'ADMIN';
 
 export interface UserProfile {
