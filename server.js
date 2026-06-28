@@ -153,6 +153,80 @@ const getAIClient = () => {
 };
 
 // =============================================================================
+// RATE LIMITER MIDDLEWARE (system-context.md §3.1-3.2)
+// In-memory sliding window rate limiter — configurable per-route
+// =============================================================================
+const rateLimitStore = new Map(); // key: ip:route → { timestamps: number[] }
+
+const rateLimiter = (maxRequests, windowMs) => (req, res, next) => {
+  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const key = `${ip}:${req.path}`;
+  const now = Date.now();
+  
+  if (!rateLimitStore.has(key)) {
+    rateLimitStore.set(key, { timestamps: [] });
+  }
+  
+  const entry = rateLimitStore.get(key);
+  // Remove timestamps outside the window
+  entry.timestamps = entry.timestamps.filter(t => now - t < windowMs);
+  
+  if (entry.timestamps.length >= maxRequests) {
+    const retryAfter = Math.ceil((entry.timestamps[0] + windowMs - now) / 1000);
+    res.set('Retry-After', String(retryAfter));
+    return res.status(429).json({
+      error: 'Too many requests',
+      message: 'कृपया काही सेकंदांनी पुन्हा प्रयत्न करा',
+      retryAfterSeconds: retryAfter
+    });
+  }
+  
+  entry.timestamps.push(now);
+  next();
+};
+
+// Clean up stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore) {
+    entry.timestamps = entry.timestamps.filter(t => now - t < 120000);
+    if (entry.timestamps.length === 0) rateLimitStore.delete(key);
+  }
+}, 300000);
+
+// =============================================================================
+// REQUEST VALIDATION MIDDLEWARE (api-contracts.md)
+// =============================================================================
+const validateBody = (requiredFields) => (req, res, next) => {
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ error: 'Request body must be a JSON object' });
+  }
+  const missing = requiredFields.filter(f => !(f in req.body) || req.body[f] === undefined || req.body[f] === '');
+  if (missing.length > 0) {
+    return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
+  }
+  next();
+};
+
+// =============================================================================
+// API LATENCY LOGGING MIDDLEWARE (system-context.md §6)
+// =============================================================================
+app.use('/api', (req, res, next) => {
+  req._apiStartTime = Date.now();
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    const latencyMs = Date.now() - req._apiStartTime;
+    if (!isProduction) {
+      console.log(`⏱️ ${req.method} ${req.path} → ${res.statusCode} (${latencyMs}ms)`);
+    }
+    // Inject latency header for client-side performance monitoring
+    res.set('X-Response-Time', `${latencyMs}ms`);
+    return originalJson(body);
+  };
+  next();
+});
+
+// =============================================================================
 // HEALTH CHECK
 // =============================================================================
 app.get('/api/health', (req, res) => {
@@ -685,34 +759,77 @@ app.post('/api/schemes/match', async (req, res) => {
   }
 });
 
-// --- Soil Advisory ---
-app.post('/api/soil/advisory', async (req, res) => {
+// =============================================================================
+// KNOWLEDGE SEARCH ENDPOINT (api-contracts.md — /api/v1/knowledge)
+// =============================================================================
+app.post('/api/v1/knowledge', rateLimiter(30, 60000), validateBody(['query']), async (req, res) => {
   try {
-    const { npk, crop, user } = req.body;
-    if (!npk || !crop) {
-      return res.status(400).json({ error: 'Missing NPK values or crop' });
+    const { query, lang, filters } = req.body;
+    
+    // Use RAG service to retrieve relevant agricultural knowledge chunks
+    const ragResults = retrieveContext(query);
+    
+    // If user wants AI-enhanced summary, call Gemini
+    if (req.body.summarize) {
+      const ai = getAIClient();
+      const contextText = ragResults.map(r => r.text).join('\n');
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: `Based on this agricultural knowledge base context:\n${contextText}\n\nAnswer this question concisely in ${lang || 'mr'}: ${query}`,
+        config: {
+          systemInstruction: AGRI_EXPERT_V1
+        }
+      });
+      return res.json({
+        text: filterOutput(response.text, lang || 'mr'),
+        sources: ragResults.map(r => ({ source: r.source, category: r.category, score: r.score }))
+      });
     }
-    const ai = getAIClient();
     
-    const prompt = SOIL_INTERPRETER_V1
-      .replace(/{soil_report_json}/g, JSON.stringify(npk))
-      .replace(/{next_crop}/g, crop)
-      .replace(/{user_district}/g, user?.district || 'Yavatmal')
-      .replace(/{user_state}/g, user?.state || 'maharashtra')
-      .replace(/{soil_type}/g, user?.soilType || 'black')
-      .replace(/{previous_crop}/g, 'soybean')
-      .replace(/{user_language}/g, user?.language || 'mr');
-      
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: prompt
+    return res.json({
+      results: ragResults,
+      total: ragResults.length
     });
-    
-    return res.json({ text: response.text });
   } catch (error) {
-    console.error('❌ Soil Advisory Error:', error.message);
-    return res.status(500).json({ error: 'Failed to interpret soil card', details: error.message });
+    console.error('❌ Knowledge Search Error:', error.message);
+    return res.status(500).json({ error: 'Knowledge search failed', details: error.message });
   }
+});
+
+// =============================================================================
+// USER PROFILE ENDPOINT (api-contracts.md — /api/v1/user)
+// =============================================================================
+app.get('/api/v1/user/:userId', rateLimiter(60, 60000), (req, res) => {
+  // In production this would read from Firestore; for now return from localStorage session sync
+  const { userId } = req.params;
+  if (!userId || userId.length > 128) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  // Return placeholder — real implementation connects to Firestore Admin SDK
+  return res.json({
+    message: 'User profile endpoint ready. Connect Firestore Admin SDK for production reads.',
+    userId,
+    status: 'placeholder'
+  });
+});
+
+app.put('/api/v1/user/:userId', rateLimiter(10, 60000), validateBody(['name', 'village', 'district']), (req, res) => {
+  const { userId } = req.params;
+  if (!userId || userId.length > 128) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  // Validate profile fields
+  const { name, village, district, landSize, crop } = req.body;
+  if (name && name.length > 100) return res.status(400).json({ error: 'Name too long (max 100 chars)' });
+  if (village && village.length > 100) return res.status(400).json({ error: 'Village name too long' });
+  
+  // Return placeholder — real implementation writes to Firestore via Admin SDK
+  return res.json({
+    message: 'User profile update endpoint ready. Connect Firestore Admin SDK for production writes.',
+    userId,
+    updated: req.body,
+    status: 'placeholder'
+  });
 });
 
 // =============================================================================
