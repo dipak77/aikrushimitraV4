@@ -893,84 +893,60 @@ app.all('/api/*', (req, res) => {
 // FRONTEND SERVING
 // ============================================================
 
-if (!isProduction) {
-  // DEVELOPMENT: Next.js Middleware
-  console.log('🔧 Initializing Next.js middleware targeting apps/web...');
+// Serve Built Assets (apps/web/out) for both local development and production
+const outPath = path.resolve(__dirname, 'apps/web/out');
+console.log(`🚀 Serving static application assets from: ${outPath}`);
+
+if (!fs.existsSync(outPath)) {
+  console.warn("⚠️ 'apps/web/out' directory not found. Run 'npm run build' to generate static assets.");
+}
+
+// Helper: Serve index.html with API key injection
+const serveIndexWithInjection = (req, res) => {
+  const isAppRoute = req.path === '/app' || req.path.startsWith('/app/');
+  const indexPath = isAppRoute
+    ? path.resolve(outPath, 'app/index.html')
+    : path.resolve(outPath, 'index.html');
+
+  if (!fs.existsSync(indexPath)) {
+    return res.status(404).send('Application build output not found. Please run npm run build.');
+  }
 
   try {
-    const { default: next } = await import('next');
-    const nextApp = next({ dev: true, dir: path.resolve(__dirname, 'apps/web') });
-    const nextHandler = nextApp.getRequestHandler();
-    await nextApp.prepare();
+    let html = fs.readFileSync(indexPath, 'utf-8');
 
-    app.use((req, res, nextMiddleware) => {
-      const url = req.originalUrl;
-      if (url.startsWith('/api') || url.startsWith('/ws')) {
-        return nextMiddleware();
-      }
-      return nextHandler(req, res);
-    });
+    // Inject ENV variables for frontend
+    const envScript = `<script>
+      window.ENV = {
+        API_KEY: ${API_KEY ? `"${API_KEY}"` : 'null'}
+      };
+    </script>`;
 
+    html = html.replace('</head>', `${envScript}</head>`);
+
+    return res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
   } catch (e) {
-    console.error('❌ Failed to initialize Next.js middleware:', e.message);
+    console.error('❌ Error serving index.html:', e.message);
+    return res.status(500).send('Failed to load application.');
   }
+};
 
-} else {
-  // PRODUCTION: Serve Built Assets
-  const outPath = path.resolve(__dirname, 'apps/web/out');
-  console.log(`🚀 Serving static assets from: ${outPath}`);
+// Serve static files (JS, CSS, images etc.) - exclude index.html
+app.use(express.static(outPath, { index: false }));
 
-  if (!fs.existsSync(outPath)) {
-    console.error("❌ ERROR: 'apps/web/out' directory not found. Run 'npm run build' first.");
+// Return 404 for missing static assets (files with extensions)
+app.use((req, res, next) => {
+  const ext = path.extname(req.path);
+  if (ext.length > 0 && ext !== '.html') {
+    return res.status(404).end();
   }
+  next();
+});
 
-  // Helper: Serve index.html with API key injection
-  const serveIndexWithInjection = (req, res) => {
-    const isAppRoute = req.path === '/app' || req.path.startsWith('/app/');
-    const indexPath = isAppRoute
-      ? path.resolve(outPath, 'app/index.html')
-      : path.resolve(outPath, 'index.html');
-
-    if (!fs.existsSync(indexPath)) {
-      return res.status(404).send('Application not built. Run npm run build.');
-    }
-
-    try {
-      let html = fs.readFileSync(indexPath, 'utf-8');
-
-      // Inject ENV variables for frontend
-      const envScript = `<script>
-        window.ENV = {
-          API_KEY: ${API_KEY ? `"${API_KEY}"` : 'null'}
-        };
-      </script>`;
-
-      html = html.replace('</head>', `${envScript}</head>`);
-
-      return res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
-    } catch (e) {
-      console.error('❌ Error serving index.html:', e.message);
-      return res.status(500).send('Failed to load application.');
-    }
-  };
-
-  // Serve static files (JS, CSS, images etc.) - exclude index.html
-  app.use(express.static(outPath, { index: false }));
-
-  // Return 404 for missing static assets (files with extensions)
-  app.use((req, res, next) => {
-    const ext = path.extname(req.path);
-    if (ext.length > 0 && ext !== '.html') {
-      return res.status(404).end();
-    }
-    next();
-  });
-
-  // SPA Fallback - serve index.html for all non-asset routes
-  app.get('/', serveIndexWithInjection);
-  app.get('/index.html', serveIndexWithInjection);
-  app.get('*', serveIndexWithInjection);
-}
+// SPA Fallback - serve index.html for all non-asset routes
+app.get('/', serveIndexWithInjection);
+app.get('/index.html', serveIndexWithInjection);
+app.get('*', serveIndexWithInjection);
 
 // ============================================================
 // SERVER & WEBSOCKET SETUP

@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "start": "node server.js",
-    "dev": "powershell -Command \"if (Test-Path apps/web/.next) { Remove-Item -Recurse -Force apps/web/.next }\" && node server.js",
+    "dev": "npm run build && node server.js",
     "clean": "powershell -Command \"if (Test-Path apps/web/.next) { Remove-Item -Recurse -Force apps/web/.next }; if (Test-Path apps/web/out) { Remove-Item -Recurse -Force apps/web/out }\"",
     "build": "npm run build --workspace=@akm/web",
     "lint": "npm run lint --workspaces --if-present",
