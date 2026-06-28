@@ -100,7 +100,7 @@ const Header = ({
   lang, setLang, t, handleScrollTo, handleGetStarted
 }: any) => {
   const navLinks = [
-    { name: t.menu_dashboard, href: '#home' },
+    { name: t.menu_dashboard, href: '#dashboard', isApp: true },
     { name: t.landing_nav_about, href: '#about' },
     { name: t.landing_btn_explore, href: '#features' },
     { name: t.landing_how_title, href: '#how-it-works' },
@@ -152,8 +152,15 @@ const Header = ({
             {navLinks.map((link: any) => (
               <a
                 key={link.name}
-                href={link.href}
-                onClick={(e) => handleScrollTo(e, link.href)}
+                href={link.isApp ? '/app/' : link.href}
+                onClick={(e) => {
+                  if (link.isApp) {
+                    e.preventDefault();
+                    handleGetStarted();
+                  } else {
+                    handleScrollTo(e, link.href);
+                  }
+                }}
                 className="px-3.5 py-2 text-[13.5px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-300 rounded-lg"
               >
                 {link.name}
@@ -1517,7 +1524,7 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
   }, [onGetStarted]);
 
   const navLinks = [
-    { name: t.menu_dashboard, href: '#home' },
+    { name: t.menu_dashboard, href: '#dashboard', isApp: true },
     { name: t.landing_nav_about, href: '#about' },
     { name: t.landing_btn_explore, href: '#features' },
     { name: t.landing_how_title, href: '#how-it-works' },

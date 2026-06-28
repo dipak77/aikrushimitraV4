@@ -9,8 +9,10 @@ export default function Home() {
   const [lang, setLang] = useState<Language>('mr');
 
   const handleGetStarted = () => {
-    // Redirect to the client-only SPA app space
-    window.location.href = '/app';
+    // Redirect to the client-only SPA app space with trailing slash for cleanUrl compatibility
+    if (typeof window !== 'undefined') {
+      window.location.href = '/app/';
+    }
   };
 
   return (
