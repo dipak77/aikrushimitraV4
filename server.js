@@ -422,6 +422,15 @@ app.post('/api/chat', async (req, res) => {
       contents = prompt;
     }
 
+    // Token Budget Validation (memory-strategy.md: max 3,200 tokens)
+    const estimatedTokens = typeof contents === 'string' 
+      ? Math.ceil(contents.length / 4) 
+      : contents.reduce((acc, curr) => acc + Math.ceil((curr.parts[0]?.text?.length || 0) / 4), 0);
+    
+    if (estimatedTokens > 3200) {
+      console.warn(`⚠️ Token budget warning: Estimated ${estimatedTokens} tokens exceeds 3,200 allocation limit.`);
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
       contents: contents,
