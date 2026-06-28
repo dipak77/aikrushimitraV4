@@ -113,8 +113,8 @@ const App = () => {
       } catch (e) {
           console.error("Session load error:", e);
       } finally {
-          // Route authenticated users to Dashboard, and guests to Login
-          setView(hasSession ? 'DASHBOARD' : 'LOGIN');
+          // Route authenticated users to Dashboard, and guests to Landing Page
+          setView(hasSession ? 'DASHBOARD' : 'LANDING');
       }
   }, [setView, login]);
 
