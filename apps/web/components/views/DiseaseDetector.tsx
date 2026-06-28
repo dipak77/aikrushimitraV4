@@ -3,9 +3,10 @@ import React, { useState, useRef } from 'react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import SimpleView from '../layout/SimpleView';
-import { X, Camera, ScanLine, Loader2, CheckCircle2, Share2 } from 'lucide-react';
+import { X, Camera, ScanLine, Loader2, CheckCircle2, Share2, CloudOff } from 'lucide-react';
 import { Button } from '../Button';
 import { analyzeCropDisease } from '../../services/geminiService';
+import { OfflineDB } from '../../utils/offlineDb';
 
 const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void }) => {
   const t = TRANSLATIONS[lang];
@@ -27,6 +28,32 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
   const analyze = async () => {
     if (!image) return;
     setAnalyzing(true);
+    
+    // Check if offline
+    if (!navigator.onLine) {
+      try {
+        const offlineId = await OfflineDB.queueDiagnostic({
+          imageBase64: image,
+          mimeType: 'image/jpeg',
+          cropType: 'general',
+          lang: lang,
+          timestamp: Date.now()
+        });
+        
+        const offlineMessage = lang === 'mr'
+          ? `इंटरनेट कनेक्शन उपलब्ध नाही. तुमचे चित्र जतन केले गेले आहे (ID: ${offlineId}). तुम्ही ऑनलाइन आल्यावर ते स्वयंचलितपणे स्कॅन केले जाईल.`
+          : `No internet connection. Your leaf scan has been saved locally (ID: ${offlineId}) and will auto-upload when you are online.`;
+        
+        setResult(offlineMessage);
+      } catch (err) {
+        console.error("Failed to queue scan:", err);
+        setResult(lang === 'mr' ? "ऑफलाइन जतन करण्यात अयशस्वी." : "Failed to save diagnostic locally.");
+      } finally {
+        setAnalyzing(false);
+      }
+      return;
+    }
+
     const res = await analyzeCropDisease(image, lang);
     setResult(res || t.error_analyzing);
     setAnalyzing(false);
@@ -87,15 +114,26 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
 
           {result && (
              <div className="glass-panel p-6 rounded-[2rem] border border-emerald-500/20 bg-gradient-to-b from-emerald-900/10 to-transparent animate-enter shadow-2xl shadow-emerald-900/10">
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                      <CheckCircle2 size={24}/>
-                   </div>
-                   <div>
-                       <h3 className="text-xl font-black text-white">{t.analysis_report}</h3>
-                       <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider">{t.ai_diagnosis_complete}</p>
-                   </div>
-                </div>
+                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+                    {(() => {
+                      const isOfflineSave = result && (result.includes('saved locally') || result.includes('जतन केले गेले आहे'));
+                      return (
+                        <>
+                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${isOfflineSave ? 'from-amber-500 to-orange-600 shadow-amber-500/20' : 'from-emerald-500 to-teal-600 shadow-emerald-500/20'} flex items-center justify-center text-white shadow-lg`}>
+                            {isOfflineSave ? <CloudOff size={24}/> : <CheckCircle2 size={24}/>}
+                          </div>
+                          <div>
+                              <h3 className="text-xl font-black text-white">{t.analysis_report}</h3>
+                              <p className={`text-xs font-bold uppercase tracking-wider ${isOfflineSave ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                {isOfflineSave 
+                                  ? (lang === 'mr' ? 'ऑफलाइन क्यु जतन केले' : 'Saved to Offline Queue') 
+                                  : t.ai_diagnosis_complete}
+                              </p>
+                          </div>
+                        </>
+                      );
+                    })()}
+                 </div>
                 <div className="prose prose-invert prose-lg max-w-none">
                    <p className="whitespace-pre-wrap leading-relaxed text-slate-200 font-medium">{result}</p>
                 </div>

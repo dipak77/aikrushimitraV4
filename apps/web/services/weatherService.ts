@@ -1,5 +1,6 @@
 
 import { Language } from '../types';
+import { OfflineDB } from '../utils/offlineDb';
 
 export interface WeatherData {
   current: {
@@ -29,13 +30,43 @@ export interface WeatherData {
 }
 
 export const fetchWeather = async (lat: number, lng: number): Promise<WeatherData> => {
+  const cacheKey = `weather_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  
+  // Try retrieving from IndexedDB cache first
+  try {
+    const cached = await OfflineDB.getItem<{ data: WeatherData; timestamp: number }>('weather_cache', cacheKey);
+    if (cached) {
+      const isFresh = Date.now() - cached.timestamp < 3600 * 1000; // 1 hour
+      if (!navigator.onLine || isFresh) {
+        console.log("🌦️ Weather: Loaded from Offline Cache");
+        return cached.data;
+      }
+    }
+  } catch (err) {
+    console.warn("Weather offline cache check failed", err);
+  }
+
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,apparent_temperature,visibility,uv_index&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Weather fetch failed');
-    return await res.json();
+    const data = await res.json();
+    
+    // Store in IndexedDB cache
+    try {
+      await OfflineDB.setItem('weather_cache', cacheKey, { data, timestamp: Date.now() });
+    } catch (cacheErr) {
+      console.warn("Failed to cache weather data", cacheErr);
+    }
+    
+    return data;
   } catch (e) {
-    console.error("Weather fetch error, using mock", e);
+    console.error("Weather fetch error, using mock/cache fallback", e);
+    // Return stale cache if available
+    try {
+      const cached = await OfflineDB.getItem<{ data: WeatherData }>('weather_cache', cacheKey);
+      if (cached) return cached.data;
+    } catch (err) {}
     return MOCK_WEATHER;
   }
 };
