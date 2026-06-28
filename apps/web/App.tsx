@@ -4,6 +4,7 @@ import { logActivity } from './services/analyticsService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useUserStore } from './store/useUserStore';
 import { useAppStore } from './store/useAppStore';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Layout
 import Sidebar from './components/layout/Sidebar';
@@ -167,6 +168,7 @@ const App = () => {
   const isFullScreen = view === 'VOICE_ASSISTANT' || view === 'AREA_CALCULATOR' || view === 'SPLASH' || view === 'LANDING' || view === 'ADMIN' || view === 'LOGIN';
 
   return (
+    <ErrorBoundary lang={lang}>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <div className={`relative w-full ${view === 'LANDING' ? 'min-h-screen' : 'h-[100dvh]'} bg-transparent ${view === 'LANDING' ? '' : 'overflow-hidden'} text-slate-100 font-jakarta`}>
         
@@ -193,6 +195,7 @@ const App = () => {
         {!isFullScreen && <MobileNav view={view} setView={setView} />}
         </div>
     </GoogleOAuthProvider>
+    </ErrorBoundary>
   );
 };
 
