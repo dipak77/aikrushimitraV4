@@ -33,6 +33,7 @@ import KnowledgeDetailView from './components/views/KnowledgeDetailView';
 import OnboardingView from './components/views/OnboardingView';
 import ChatView from './components/views/ChatView';
 import CommunityForumView from './components/views/CommunityForumView';
+import PremiumServicesView from './components/views/PremiumServicesView';
 import { OfflineDB } from './utils/offlineDb';
 import { analyzeCropDisease } from './services/geminiService';
 
@@ -154,6 +155,8 @@ const App = () => {
          return user ? <ChatView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        case 'COMMUNITY':
          return user ? <CommunityForumView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
+       case 'PREMIUM':
+         return user ? <PremiumServicesView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        default: return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
     }
   };

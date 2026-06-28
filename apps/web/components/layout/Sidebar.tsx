@@ -30,6 +30,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'DASHBOARD', icon: LayoutDashboard, color: 'emerald', gradient: 'from-emerald-400 to-teal-500' },
     { id: 'CHAT', icon: MessageSquare, color: 'emerald', gradient: 'from-emerald-400 to-teal-500' },
     { id: 'COMMUNITY', icon: Users, color: 'blue', gradient: 'from-blue-400 to-indigo-500' },
+    { id: 'PREMIUM', icon: Crown, color: 'amber', gradient: 'from-amber-400 to-orange-500' },
     { id: 'AGRI_KNOWLEDGE', icon: BookOpen, color: 'blue', gradient: 'from-blue-400 to-indigo-500' },
     { id: 'SABJI_MANDI', icon: ShoppingCart, color: 'green', gradient: 'from-green-400 to-emerald-500' },
     { id: 'MARKET', icon: Store, color: 'violet', gradient: 'from-violet-400 to-purple-500' },
