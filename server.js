@@ -243,6 +243,48 @@ const getSeason = () => {
   return 'Zaid (उन्हाळी)';
 };
 
+// Output filtering and disclaimer injection
+const filterOutput = (response, lang) => {
+  let filtered = response || '';
+  if (!filtered) return '';
+
+  const isMarathi = lang === 'mr' || /[\u0900-\u097F]/.test(filtered);
+
+  // 1. Price prediction disclaimer
+  const priceKeywords = ['price', 'mandi', 'sell', 'hold', 'bhav', 'भाव', 'बाजार', 'विक्री', 'दर', 'खरेदी'];
+  const hasPriceTerms = priceKeywords.some(kw => filtered.toLowerCase().includes(kw));
+  if (hasPriceTerms) {
+    const disclaimer = isMarathi
+      ? "\n\nटीप: बाजारभावाचा अंदाज हे केवळ मार्गदर्शन आहे. प्रत्यक्ष भाव वेगळे असू शकतात."
+      : "\n\nNote: Market price predictions are for guidance only. Actual prices may vary.";
+    if (!filtered.includes(disclaimer)) {
+      filtered += disclaimer;
+    }
+  }
+
+  // 2. Scheme disclaimer
+  const schemeKeywords = ['scheme', 'yojana', 'eligible', 'apply', 'योजना', 'पात्रता', 'अर्ज', 'लाभ'];
+  const hasSchemeTerms = schemeKeywords.some(kw => filtered.toLowerCase().includes(kw));
+  if (hasSchemeTerms) {
+    const disclaimer = isMarathi
+      ? "\n\nटीप: योजनांची पात्रता अंतिम नाही. कृपया तहसील कार्यालयात खात्री करा."
+      : "\n\nNote: Scheme eligibility is not final. Please verify at your local government office.";
+    if (!filtered.includes(disclaimer)) {
+      filtered += disclaimer;
+    }
+  }
+
+  // 3. General AI disclaimer
+  const generalDisclaimer = isMarathi
+    ? "\n\nटीप: हे AI-आधारित मार्गदर्शन आहे. महत्त्वाच्या निर्णयांसाठी कृषी विज्ञान केंद्राचा सल्ला घ्या."
+    : "\n\nNote: This is an AI-based guidance. Consult your nearest KVK for critical farming decisions.";
+  if (!filtered.includes(generalDisclaimer)) {
+    filtered += generalDisclaimer;
+  }
+
+  return filtered;
+};
+
 // --- Chat ---
 app.post('/api/chat', async (req, res) => {
   try {
@@ -291,8 +333,10 @@ app.post('/api/chat', async (req, res) => {
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
 
+    const filteredText = filterOutput(response.text, user?.language || 'mr');
+
     return res.json({ 
-      text: response.text,
+      text: filteredText,
       citations
     });
   } catch (error) {
@@ -350,6 +394,18 @@ app.post('/api/vision', async (req, res) => {
     let parsedData = null;
     try {
       parsedData = JSON.parse(rawText.trim());
+      if (parsedData && typeof parsedData === 'object') {
+        const lang = user?.language || 'mr';
+        const disclaimer = lang === 'mr'
+          ? "टीप: हे AI-आधारित मार्गदर्शन आहे. महत्त्वाच्या निर्णयांसाठी कृषी विज्ञान केंद्राचा सल्ला घ्या."
+          : "Note: This is an AI-based guidance. Consult your nearest KVK for critical farming decisions.";
+        parsedData.disclaimer = disclaimer;
+        if (parsedData.treatment && typeof parsedData.treatment === 'object') {
+          if (typeof parsedData.treatment.immediate === 'string') {
+            parsedData.treatment.immediate += ` (${disclaimer})`;
+          }
+        }
+      }
     } catch {
       // Return raw text if JSON parsing fails
     }
@@ -364,6 +420,48 @@ app.post('/api/vision', async (req, res) => {
       return res.status(401).json({ error: 'API key invalid or not configured.' });
     }
     return res.status(500).json({ error: 'Failed to analyze image.', details: error.message });
+  }
+});
+
+// --- Soil Health Advisory ---
+app.post('/api/soil/advisory', async (req, res) => {
+  try {
+    const { npk, crop, user } = req.body;
+    if (!npk || !crop) {
+      return res.status(400).json({ error: 'Missing required field: npk or crop' });
+    }
+
+    const ai = getAIClient();
+    const soilJson = JSON.stringify(npk);
+    
+    const compiledInstruction = SOIL_INTERPRETER_V1
+      .replace(/{soil_report_json}/g, soilJson)
+      .replace(/{next_crop}/g, crop)
+      .replace(/{user_district}/g, user?.district || 'Yavatmal')
+      .replace(/{user_state}/g, user?.state || 'maharashtra')
+      .replace(/{soil_type}/g, user?.soilType || 'black')
+      .replace(/{previous_crop}/g, 'None')
+      .replace(/{user_language}/g, user?.language || 'mr');
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: `Provide soil health analysis and NPK suggestions based on: ${soilJson} for ${crop}`,
+      config: {
+        systemInstruction: compiledInstruction
+      }
+    });
+
+    const filteredText = filterOutput(response.text, user?.language || 'mr');
+
+    return res.json({
+      text: filteredText
+    });
+  } catch (error) {
+    console.error('❌ Soil Advisory API Error:', error.message);
+    if (error.message?.includes('API_KEY')) {
+      return res.status(401).json({ error: 'API key invalid or not configured.' });
+    }
+    return res.status(500).json({ error: 'Failed to generate soil advice.', details: error.message });
   }
 });
 
