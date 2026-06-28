@@ -16,67 +16,66 @@ const getClientAI = () => {
   return clientAI;
 };
 
-// Fallback direct call to Gemini API when proxy server is unavailable
-const callGeminiDirectly = async (endpoint: string, body: any) => {
-  const ai = getClientAI();
-  
-  if (endpoint === '/api/chat' || endpoint === '/api/support/enquiry') {
-    const requestConfig: any = {};
-    if (body.systemInstruction) {
-      requestConfig.systemInstruction = body.systemInstruction;
-    }
-    const promptText = body.prompt || body.enquiry || 'Hello';
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: promptText,
-      ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
-    });
-    return response.text;
-  }
-  
-  if (endpoint === '/api/vision') {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          inlineData: {
-            mimeType: body.mimeType || 'image/jpeg',
-            data: body.imageBase64
-          }
-        },
-        { text: body.prompt || 'Analyze this crop disease image' }
-      ]
-    });
-    return response.text;
-  }
-  
-  if (endpoint === '/api/updates') {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: body.prompt,
-      config: {
-        tools: [{ googleSearch: {} }]
-      }
-    });
-    return response.text;
-  }
+import { AIRouter } from '../src/ai/router/AIRouter';
+import { RetryPolicy } from '../src/ai/retry/RetryPolicy';
+import { TimeoutManager } from '../src/ai/timeout/TimeoutManager';
+import { AITelemetry } from '../src/ai/telemetry/AITelemetry';
 
-  if (endpoint === '/api/soil/advisory' || endpoint === '/api/weather/advisory' || endpoint === '/api/schemes/match') {
-    const promptText = typeof body === 'string' ? body : JSON.stringify(body);
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Provide agricultural expert analysis based on: ${promptText}`
-    });
-    return response.text;
-  }
+// Fallback direct call to AI Router when proxy server is unavailable
+const callGeminiDirectly = async (endpoint: string, body: any) => {
+  const apiKey = getGenAIKey() || firebaseConfig.apiKey || '';
+  const startTime = Date.now();
   
-  // Generic fallback for any unrecognized endpoint to ensure zero breaks
-  const fallbackPrompt = typeof body === 'object' ? JSON.stringify(body) : String(body);
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: fallbackPrompt
-  });
-  return response.text;
+  try {
+    const res = await RetryPolicy.execute(async () => {
+      return await TimeoutManager.withTimeout(async () => {
+        if (endpoint === '/api/chat' || endpoint === '/api/support/enquiry') {
+          const promptText = body.prompt || body.enquiry || 'Hello';
+          const response = await AIRouter.routeChat(promptText, { systemInstruction: body.systemInstruction }, apiKey);
+          return response.text;
+        }
+
+        if (endpoint === '/api/vision') {
+          const response = await AIRouter.routeVision({
+            imageBase64: body.imageBase64,
+            mimeType: body.mimeType,
+            prompt: body.prompt,
+            systemInstruction: body.systemInstruction
+          }, apiKey);
+          return response.text;
+        }
+
+        if (endpoint === '/api/updates') {
+          const response = await AIRouter.routeSearch(body.prompt, apiKey);
+          return response.text;
+        }
+
+        const promptText = typeof body === 'string' ? body : JSON.stringify(body);
+        const response = await AIRouter.routeChat(promptText, {}, apiKey);
+        return response.text;
+      }, 20000);
+    }, 3, 1000);
+
+    AITelemetry.logMetric({
+      provider: 'gemini',
+      model: 'gemini-2.5-flash',
+      task: endpoint,
+      latencyMs: Date.now() - startTime,
+      success: true
+    });
+
+    return res;
+  } catch (err: any) {
+    AITelemetry.logMetric({
+      provider: 'gemini',
+      model: 'gemini-2.5-flash',
+      task: endpoint,
+      latencyMs: Date.now() - startTime,
+      success: false,
+      error: err.message
+    });
+    throw err;
+  }
 };
 
 export const getApiUrl = (endpoint: string) => {
