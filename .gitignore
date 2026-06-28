@@ -7,3 +7,10 @@ out
 .firebase
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+# Secret Environment Files (Security Hardening)
+.env
+.env.*
+*.env
+.env.local
+.env.production

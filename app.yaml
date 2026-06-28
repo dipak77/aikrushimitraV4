@@ -11,6 +11,7 @@ entrypoint: node server.js
 
 env_variables:
   NODE_ENV: "production"
+  GEMINI_API_KEY: "CONFIGURE_IN_GCP_SECRET_MANAGER"
 
 handlers:
   - url: /api/.*
