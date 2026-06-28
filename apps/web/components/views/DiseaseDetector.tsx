@@ -113,8 +113,8 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
           )}
 
           {result && (
-             <div className="glass-panel p-6 rounded-[2rem] border border-emerald-500/20 bg-gradient-to-b from-emerald-900/10 to-transparent animate-enter shadow-2xl shadow-emerald-900/10">
-                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+             <div className="glass-panel p-6 rounded-[2rem] border border-emerald-500/20 bg-gradient-to-b from-emerald-900/10 to-transparent animate-enter shadow-2xl shadow-emerald-900/10 space-y-6">
+                 <div className="flex items-center gap-3 pb-4 border-b border-white/5">
                     {(() => {
                       const isOfflineSave = result && (result.includes('saved locally') || result.includes('जतन केले गेले आहे'));
                       return (
@@ -137,8 +137,39 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
                 <div className="prose prose-invert prose-lg max-w-none">
                    <p className="whitespace-pre-wrap leading-relaxed text-slate-200 font-medium">{result}</p>
                 </div>
-                <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
-                   <Button variant="primary" fullWidth icon={<Share2 size={18}/>}>{t.share_expert}</Button>
+
+                {/* Dosage Calculator Widget */}
+                <div className="glass-panel p-4 rounded-2xl border border-teal-500/20 bg-slate-900/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-teal-400">
+                      {lang === 'mr' ? 'ॲकरनिहाय फवारणी प्रमाण कॅल्क्युलेटर' : 'Field Spray Dosage Calculator'}
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">{acres} {lang === 'mr' ? 'एकरासाठी' : 'Acres'}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      value={acres}
+                      onChange={(e) => setAcres(Number(e.target.value))}
+                      className="w-full accent-teal-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center text-xs pt-1">
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                      <div className="text-slate-400">{lang === 'mr' ? 'पाण्याचे प्रमाण' : 'Water Needed'}</div>
+                      <div className="font-bold text-white text-sm">{acres * 200} Liters ({acres * 10} Pumps)</div>
+                    </div>
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                      <div className="text-slate-400">{lang === 'mr' ? 'औषध प्रमाण' : 'Est. Chemical'}</div>
+                      <div className="font-bold text-teal-300 text-sm">{acres * 500} gm / ml</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex flex-col gap-3">
+                   <Button onClick={handleWhatsAppShare} variant="primary" fullWidth icon={<Share2 size={18}/>} className="from-emerald-600 to-teal-600">{t.share_expert || 'WhatsApp वर पाठवा'}</Button>
                    <Button onClick={reset} variant="ghost" fullWidth>{t.scan_another}</Button>
                 </div>
              </div>

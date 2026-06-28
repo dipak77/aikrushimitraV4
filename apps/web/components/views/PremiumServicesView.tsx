@@ -298,6 +298,35 @@ const PremiumServicesView = ({ lang, user, onBack }: { lang: Language; user: Use
               </div>
             </div>
 
+            {/* Input Dealer Lead Portal (Priya Workflow) */}
+            <div className="glass-panel p-6 rounded-[2rem] border border-cyan-500/20 bg-slate-900/40 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <ShoppingBag size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-white text-md">{lang === 'mr' ? 'जवळचे कृषी सेवा केंद्र (Input Dealer)' : 'Nearby Krishi Seva Kendra'}</h3>
+                  <p className="text-xs text-slate-400">{lang === 'mr' ? 'अधिकृत खते व औषधे थेट दुकानातून मागवा' : 'Order verified seeds & chemicals directly from local shop'}</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5 space-y-2 text-xs">
+                <div className="flex justify-between font-bold text-white">
+                  <span>श्री गजानन कृषी सेवा केंद्र, यवतमाळ</span>
+                  <span className="text-emerald-400">Verified Partner</span>
+                </div>
+                <p className="text-slate-400">prop: प्रिया ताई | Contact: 98221XXXXX</p>
+                <Button 
+                  variant="secondary" 
+                  fullWidth 
+                  className="mt-2 py-2 text-xs font-bold border-cyan-500/30 text-cyan-300"
+                  onClick={() => alert(lang === 'mr' ? "कृषी सेवा केंद्राशी संपर्क जोडला गेला आहे!" : "Connected with local agri dealer!")}
+                >
+                  {lang === 'mr' ? 'खत / औषध मागणी नोंदवा' : 'Request Chemical / Seed Quote'}
+                </Button>
+              </div>
+            </div>
+
           </div>
         )}
 
