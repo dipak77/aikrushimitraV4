@@ -1,14 +1,13 @@
-
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
   content: [
-    "./index.html",
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
-    "./services/**/*.{js,ts,jsx,tsx}",
-    "./*.{js,ts,jsx,tsx}"
+    "./apps/web/index.html",
+    "./apps/web/app/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/src/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/components/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/services/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     extend: {
@@ -19,14 +18,12 @@ export default {
         devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
       },
       colors: {
-        void: '#020617', // Deep Space Background
-        
-        // New Semantic Palette
+        void: '#020617',
         agri: {
-          green: '#10b981', // Agriculture Green (Primary Brand)
-          gold: '#f59e0b',  // Earth Amber (Accent)
-          purple: '#7B61FF', // Calendar/AI
-          dark: '#050505',   // Card BG Base
+          green: '#10b981',
+          gold: '#f59e0b',
+          purple: '#7B61FF',
+          dark: '#050505',
           success: '#10b981',
           warning: '#f59e0b',
           error: '#ef4444',
