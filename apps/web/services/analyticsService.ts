@@ -1,7 +1,9 @@
 import { ActivityLog, UserProfile } from "../types";
 import { generateUUID } from "../utils/common";
-import { analytics } from "../utils/firebase";
+import { analytics, auth, db, handleFirestoreError, OperationType } from "../utils/firebase";
 import { logEvent, setUserId, setUserProperties } from "firebase/analytics";
+import { signInAnonymously } from "firebase/auth";
+import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 
 const SESSION_KEY = 'app_current_session';
 
@@ -126,61 +128,31 @@ export const logActivity = async (
     }
   }
 
-  try {
-    const response = await fetch('/api/activity/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newLog),
-      cache: 'no-store'
-    });
-
-    if (!response.ok && response.status === 404) {
-      await fetch('/api/analytics/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newLog),
-        cache: 'no-store'
-      });
+  // Ensure user/session has active authentication before writing to Firestore
+  if (!auth.currentUser) {
+    try {
+      await signInAnonymously(auth);
+    } catch (authErr) {
+      console.warn("Anonymous auth failed during logging:", authErr);
     }
+  }
+
+  try {
+    const logDocRef = doc(db, 'activityLogs', newLog.id);
+    await setDoc(logDocRef, newLog);
   } catch (e) {
-    console.error("Failed to sync log to server", e);
+    console.error("Failed to write activity log to Firestore:", e);
   }
 };
 
 const fetchLogsFromServer = async (): Promise<ActivityLog[]> => {
-  const endpoints = ['/api/activity/stats', '/api/analytics/stats'];
-
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
-
-      if (response.status === 404) continue; // Try next endpoint
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get("content-type") || '';
-      if (!contentType.includes("application/json")) {
-        const text = await response.text();
-        console.warn(`Non-JSON from ${endpoint}:`, text.substring(0, 150));
-        continue;
-      }
-
-      const data = await response.json();
-      if (Array.isArray(data)) return data;
-
-      console.warn(`Unexpected data shape from ${endpoint}:`, data);
-    } catch (e) {
-      console.error(`Error fetching from ${endpoint}:`, e);
-    }
+  try {
+    const querySnapshot = await getDocs(collection(db, 'activityLogs'));
+    return querySnapshot.docs.map(doc => doc.data() as ActivityLog);
+  } catch (e) {
+    console.error("Error fetching logs from Firestore:", e);
+    return [];
   }
-
-  console.warn("All analytics endpoints failed. Returning empty logs.");
-  return [];
 };
 
 export const getAnalyticsStats = async () => {

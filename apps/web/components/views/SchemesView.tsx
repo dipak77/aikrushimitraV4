@@ -1,20 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Language } from '../../types';
-import { TRANSLATIONS, SCHEMES_DATA } from '../../constants';
+import { TRANSLATIONS } from '../../constants';
 import SimpleView from '../layout/SimpleView';
 import { Landmark, ArrowUpRight, Sparkles, X, Loader2 } from 'lucide-react';
 import { useUserStore } from '../../store/useUserStore';
 import { getApiUrl } from '../../services/geminiService';
+import { fetchSchemes } from '../../services/dbService';
 import clsx from 'clsx';
 
 const SchemesView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () => void, onSelect: (scheme: any) => void }) => {
     const t = TRANSLATIONS[lang];
-    const schemes = SCHEMES_DATA[lang as Language] || SCHEMES_DATA['en'];
     const user = useUserStore((state) => state.user);
 
+    const [schemes, setSchemes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [matching, setMatching] = useState(false);
     const [matchResult, setMatchResult] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadSchemes() {
+            try {
+                const allSchemes = await fetchSchemes();
+                const langSchemes = allSchemes?.find((s: any) => s.lang === lang)?.schemes 
+                    || allSchemes?.find((s: any) => s.lang === 'en')?.schemes 
+                    || [];
+                setSchemes(langSchemes);
+            } catch (err) {
+                console.error("Failed to load schemes from Firestore:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadSchemes();
+    }, [lang]);
 
     const handleAIMatch = async () => {
         if (!user) return;
@@ -66,7 +85,20 @@ const SchemesView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () =>
                 )}
 
                 {/* Schemes list */}
-                {schemes.map((s: any) => (
+                {loading ? (
+                    <div className="space-y-4 animate-pulse">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-white/5 rounded-[2.5rem] p-5 h-40 border border-white/10 flex flex-col gap-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-800"></div>
+                                    <div className="w-16 h-6 rounded bg-slate-800"></div>
+                                </div>
+                                <div className="h-6 bg-slate-800 rounded w-3/4"></div>
+                                <div className="h-4 bg-slate-800 rounded w-1/2"></div>
+                            </div>
+                        ))}
+                    </div>
+                ) : schemes.map((s: any) => (
                     <div onClick={() => onSelect(s)} key={s.id} className="glass-panel rounded-[2rem] p-5 relative overflow-hidden cursor-pointer group active:scale-[0.98] transition-all border border-white/10 flex flex-col gap-4">
                         <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${s.grad} opacity-10 blur-3xl rounded-full`}></div>
                         <div className="flex justify-between items-start relative z-10">

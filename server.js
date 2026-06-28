@@ -617,7 +617,10 @@ if (!isProduction) {
 
   // Helper: Serve index.html with API key injection
   const serveIndexWithInjection = (req, res) => {
-    const indexPath = path.resolve(outPath, 'index.html');
+    const isAppRoute = req.path === '/app' || req.path.startsWith('/app/');
+    const indexPath = isAppRoute
+      ? path.resolve(outPath, 'app/index.html')
+      : path.resolve(outPath, 'index.html');
 
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('Application not built. Run npm run build.');

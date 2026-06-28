@@ -2,21 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import SimpleView from '../layout/SimpleView';
-import { CROP_SCHEDULES } from '../../data/mock';
-import { CheckCircle2, Circle, Clock, ChevronDown, Calendar, Sprout, Leaf, Droplets, ArrowRight } from 'lucide-react';
+import { fetchCropSchedules } from '../../services/dbService';
+import { CheckCircle2, Circle, Clock, ChevronDown, Calendar, Sprout, Leaf, Droplets, ArrowRight, Scissors, Bug, CloudRain, ShoppingBasket, Citrus, Cherry, Ruler, Loader2, LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { triggerHaptic } from '../../utils/common';
 
+const calendarIconMap: Record<string, LucideIcon> = {
+    'Sprout': Sprout,
+    'Leaf': Leaf,
+    'Scissors': Scissors,
+    'Bug': Bug,
+    'Droplets': Droplets,
+    'CloudRain': CloudRain,
+    'ShoppingBasket': ShoppingBasket,
+    'Citrus': Citrus,
+    'Cherry': Cherry,
+    'Ruler': Ruler,
+    'Circle': Circle
+};
+
 const CropCalendarView = ({ lang, onBack }: { lang: Language, onBack: () => void }) => {
     const t = TRANSLATIONS[lang];
-    const schedules = CROP_SCHEDULES[lang as keyof typeof CROP_SCHEDULES] || CROP_SCHEDULES['en'];
+    const [schedules, setSchedules] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedCropIdx, setSelectedCropIdx] = useState(0);
     const [animatedDay, setAnimatedDay] = useState(0);
+
+    useEffect(() => {
+        async function loadSchedules() {
+            try {
+                const data = await fetchCropSchedules(lang);
+                setSchedules(data || []);
+            } catch (err) {
+                console.error("Failed to load crop schedules from Firestore:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadSchedules();
+    }, [lang]);
 
     const crop = schedules[selectedCropIdx];
     
     // Animate the day counter on mount or crop change
     useEffect(() => {
+        if (!crop) return;
         let start = 0;
         const end = crop.currentDay;
         const timer = setInterval(() => {
@@ -25,7 +55,32 @@ const CropCalendarView = ({ lang, onBack }: { lang: Language, onBack: () => void
             if (start >= end) clearInterval(timer);
         }, 20);
         return () => clearInterval(timer);
-    }, [selectedCropIdx, crop.currentDay]);
+    }, [selectedCropIdx, crop?.currentDay]);
+
+    if (loading) {
+        return (
+            <SimpleView title={t.crop_schedule || "Crop Schedule"} onBack={onBack}>
+                <div className="h-full w-full flex flex-col items-center justify-center p-12 text-[#10b981]">
+                    <Loader2 size={36} className="animate-spin mb-4" />
+                    <p className="text-sm font-bold uppercase tracking-widest opacity-75">Loading calendar...</p>
+                </div>
+            </SimpleView>
+        );
+    }
+
+    if (!schedules || schedules.length === 0) {
+        return (
+            <SimpleView title={t.crop_schedule || "Crop Schedule"} onBack={onBack}>
+                <div className="h-full w-full flex flex-col items-center justify-center p-12 text-slate-400 text-center">
+                    <Calendar size={48} className="mb-4 opacity-50" />
+                    <p className="text-sm font-bold tracking-wide">No schedules configured for this language.</p>
+                    <button onClick={onBack} className="mt-6 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors">
+                        Go Back
+                    </button>
+                </div>
+            </SimpleView>
+        );
+    }
 
     return (
         <SimpleView title={t.crop_schedule || "Crop Schedule"} onBack={onBack}>
@@ -89,7 +144,7 @@ const CropCalendarView = ({ lang, onBack }: { lang: Language, onBack: () => void
                     {crop.stages.map((stage: any, i: number) => {
                         const isActive = stage.status === 'active';
                         const isCompleted = stage.status === 'completed';
-                        const Icon = stage.icon || Circle;
+                        const Icon = calendarIconMap[stage.icon] || Circle;
 
                         return (
                             <div key={stage.id} className={clsx("relative pl-10 transition-all duration-500", isActive ? "opacity-100 scale-100" : isCompleted ? "opacity-70" : "opacity-50")}>
@@ -124,7 +179,7 @@ const CropCalendarView = ({ lang, onBack }: { lang: Language, onBack: () => void
                                     {/* Tasks */}
                                     <div className="space-y-3">
                                         {stage.tasks.map((task: any, idx: number) => {
-                                            const TaskIcon = task.i || Circle;
+                                            const TaskIcon = calendarIconMap[task.i] || Circle;
                                             return (
                                                 <div key={idx} className="flex items-center gap-3 text-sm text-slate-300">
                                                     <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0">

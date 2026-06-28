@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Language } from '../../types';
-import { KNOWLEDGE_BASE, CATEGORIES, KnowledgeItem } from '../../data/knowledge';
+import { CATEGORIES, KnowledgeItem } from '../../data/knowledge';
+import { fetchCrops, fetchContent, fetchSchemes } from '../../services/dbService';
 import {
   Clock, Droplets, Sun, TrendingUp, IndianRupee, Percent, Sprout,
   Search, X, Wheat, Settings, Milk, Landmark, LayoutGrid, BookOpen,
@@ -146,12 +147,12 @@ function CropCard({ item, lang, onClick }: { item: KnowledgeItem; lang: Language
   );
 }
 
-function StatsOverview({ lang }: { lang: Language }) {
+function StatsOverview({ lang, items }: { lang: Language, items: KnowledgeItem[] }) {
   const stats = [
-    { label: lang === 'mr' ? 'पिके' : 'Crops', count: KNOWLEDGE_BASE.filter(i => i.category === 'crop').length, icon: <Wheat className="w-5 h-5" />, color: 'from-emerald-400 to-green-600', bg: 'bg-emerald-50/50' },
-    { label: lang === 'mr' ? 'तंत्रज्ञान' : 'Tech', count: KNOWLEDGE_BASE.filter(i => i.category === 'tech').length, icon: <Settings className="w-5 h-5" />, color: 'from-blue-400 to-indigo-600', bg: 'bg-blue-50/50' },
-    { label: lang === 'mr' ? 'पशुपालन' : 'Livestock', count: KNOWLEDGE_BASE.filter(i => i.category === 'livestock').length, icon: <Milk className="w-5 h-5" />, color: 'from-amber-400 to-orange-500', bg: 'bg-amber-50/50' },
-    { label: lang === 'mr' ? 'योजना' : 'Schemes', count: KNOWLEDGE_BASE.filter(i => i.category === 'scheme').length, icon: <Landmark className="w-5 h-5" />, color: 'from-purple-400 to-violet-600', bg: 'bg-purple-50/50' },
+    { label: lang === 'mr' ? 'पिके' : 'Crops', count: items.filter(i => i.category === 'crop').length, icon: <Wheat className="w-5 h-5" />, color: 'from-emerald-400 to-green-600', bg: 'bg-emerald-50/50' },
+    { label: lang === 'mr' ? 'तंत्रज्ञान' : 'Tech', count: items.filter(i => i.category === 'tech').length, icon: <Settings className="w-5 h-5" />, color: 'from-blue-400 to-indigo-600', bg: 'bg-blue-50/50' },
+    { label: lang === 'mr' ? 'पशुपालन' : 'Livestock', count: items.filter(i => i.category === 'livestock').length, icon: <Milk className="w-5 h-5" />, color: 'from-amber-400 to-orange-500', bg: 'bg-amber-50/50' },
+    { label: lang === 'mr' ? 'योजना' : 'Schemes', count: items.filter(i => i.category === 'scheme').length, icon: <Landmark className="w-5 h-5" />, color: 'from-purple-400 to-violet-600', bg: 'bg-purple-50/50' },
   ];
 
   return (
@@ -179,13 +180,52 @@ function StatsOverview({ lang }: { lang: Language }) {
 const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () => void, onSelect: (item: KnowledgeItem) => void }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = KNOWLEDGE_BASE.filter((item) => {
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [cropsData, contentData, schemesData] = await Promise.all([
+          fetchCrops(),
+          fetchContent(),
+          fetchSchemes()
+        ]);
+        
+        const cropsMapped = (cropsData || []).map((c: any) => ({
+          ...c,
+          category: 'crop',
+          title: c.name || { mr: '', en: '' },
+          subtitle: c.subtitle || { mr: '', en: '' }
+        }));
+        
+        const contentMapped = (contentData || []).map((c: any) => ({
+          ...c,
+        }));
+        
+        const schemesMapped = (schemesData || []).map((s: any) => ({
+          ...s,
+          category: 'scheme',
+          title: s.name || { mr: '', en: '' },
+          subtitle: s.benefits?.[0]?.description || { mr: '', en: '' }
+        }));
+        
+        setKnowledgeBase([...cropsMapped, ...contentMapped, ...schemesMapped] as any);
+      } catch (err) {
+        console.error("Failed to load knowledge hub data from Firestore:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const filtered = knowledgeBase.filter((item) => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const query = searchQuery.toLowerCase();
-    const titleEn = item.title.en.toLowerCase();
-    const titleMr = item.title.mr;
-    const titleHi = item.title.hi || '';
+    const titleEn = (item.title?.en || '').toLowerCase();
+    const titleMr = item.title?.mr || '';
+    const titleHi = item.title?.hi || '';
     
     return matchesCategory && (!query || titleEn.includes(query) || titleMr.includes(query) || titleHi.includes(query) || item.tags.some(t => t.toLowerCase().includes(query)));
   });
@@ -263,7 +303,7 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
         <div className="max-w-7xl mx-auto">
             
             {/* Stats Overview */}
-            <StatsOverview lang={lang} />
+            <StatsOverview lang={lang} items={knowledgeBase} />
 
             {/* Category Filter */}
             <div className="mb-8 relative">
@@ -280,8 +320,26 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
               </p>
             </div>
 
-            {/* Grid */}
-            {filtered.length > 0 ? (
+            {/* Grid / Shimmer loader */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="bg-white rounded-[24px] border border-gray-100 shadow-sm h-96 flex flex-col overflow-hidden">
+                    <div className="bg-gray-200 h-56 w-full" />
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="h-5 bg-gray-200 rounded-md w-3/4 mb-3" />
+                        <div className="h-4 bg-gray-200 rounded-md w-1/2" />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-6 bg-gray-200 rounded w-16" />
+                        <div className="h-6 bg-gray-200 rounded w-16" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filtered.map((item) => (
                 <CropCard
