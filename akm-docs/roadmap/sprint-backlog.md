@@ -100,25 +100,36 @@ gantt
 *   **Sprint 14: Deployment Topology & ADR Compliance** *(deployment-topology.md + adr/*.md)*
     *   *Reference:* [deployment-topology.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/deployment-topology.md)
 
-### 🟣 Phase 6: Design System Implementation (akm-docs/design-system)
+### 🟣 Phase 6: Design System Implementation (Complete)
 
 > **Goal:** Synchronize core design tokens, accessibility specs (WCAG 2.1 AAA), and brand guidelines across the UI.
 
 *   **Sprint 15: Design Tokens & CSS Architecture** *(design-tokens.md)*
     *   *Reference:* [design-tokens.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/design-system/design-tokens.md)
-    *   *Deliverables:* Import `styles/tokens.css` into `index.css`, align CSS custom properties for agriculture primary green (`#10b981`), earth amber (`#f59e0b`), and glassmorphic surface dynamics.
 *   **Sprint 16: Rural Accessibility & Brand Tone** *(accessibility.md + brand-identity.md)*
     *   *Reference:* [accessibility.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/design-system/accessibility.md), [brand-identity.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/design-system/brand-identity.md)
-    *   *Deliverables:* Enforce 48x48px touch targets, high-contrast outdoor elements, icon-heavy low-literacy card headers, and respectful empathetic Marathi greetings ("शेतकरी मित्र").
 
-### 🟢 Phase 7: Product Strategy & User Journeys (akm-docs/product)
+### 🟢 Phase 7: Product Strategy & User Journeys (Complete)
 
 > **Goal:** Validate end-to-end product flows for all 5 personas and monetize services cleanly.
 
 *   **Sprint 17: Persona Workflows & Feature Hierarchy** *(personas.md + feature-hierarchy.md + user-journeys.md)*
     *   *Reference:* [personas.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/personas.md), [feature-hierarchy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md), [user-journeys.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/user-journeys.md)
-    *   *Deliverables:* Verify single-tap camera diagnostic launch for Ramesh, multi-market comparison and alerts for Sunita, FPO bulk advisory & outbreak maps for Rajesh.
 *   **Sprint 18: Monetization & Business Model Integration** *(business-model.md + monetization.md + vision.md)*
     *   *Reference:* [business-model.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/business-model.md), [monetization.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/monetization.md), [vision.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/vision.md)
-    *   *Deliverables:* Integrate subscription tier upgrades, premium advisor triggers, FPO SaaS enterprise widgets, and input marketplace lead forms.
+
+### 💙 Phase 8: Product Roadmap Completion & Resiliency (Complete)
+
+> **Goal:** Finalize platform resilience, verify AI/RAG limits, risk mitigation matrices, and CI/CD pipelines across all remaining documentation.
+
+*   **Sprint 19: AI & RAG Pipeline Optimization** *(memory-strategy.md + prompt-library.md + pipeline-architecture.md)*
+    *   *Reference:* [memory-strategy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/ai/memory-strategy.md), [prompt-library.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/ai/prompt-library.md)
+*   **Sprint 20: Knowledge Graph & Content Localization** *(ontology.md + content-types.md + localization.md)*
+    *   *Reference:* [ontology.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/knowledge-graph/ontology.md), [localization.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/content/localization.md)
+*   **Sprint 21: Risk Mitigation & System Resiliency** *(risk-register.md)*
+    *   *Reference:* [risk-register.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/roadmap/risk-register.md)
+*   **Sprint 22: DevOps CI/CD & Programmatic SEO** *(ci-cd-pipeline.md + rendering-strategy.md)*
+    *   *Reference:* [ci-cd-pipeline.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/devops/ci-cd-pipeline.md), [rendering-strategy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/seo/rendering-strategy.md)
+
+
 
