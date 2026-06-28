@@ -23,6 +23,7 @@ export type ViewState =
   | 'BLOG'
   | 'BLOG_DETAIL'
   | 'SABJI_MANDI'
+  | 'CHAT'
   | 'ADMIN';
 
 export interface UserProfile {
