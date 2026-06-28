@@ -7,10 +7,11 @@ import {
   Factory, Coins, Clock, Mail, Phone, MapPin, ChevronDown,
   Menu, X, ShieldCheck, Heart, HelpCircle, Star, Award,
   Smartphone, Play, Send, ExternalLink,
-  IndianRupee, Sun, Bug
+  IndianRupee, Sun, Bug, MessageSquare, Headphones, UserCheck, Loader2
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
+import { getAIFarmingAdvice } from '../../services/geminiService';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -1230,6 +1231,237 @@ const Footer = ({ t, navLinks, handleScrollTo }: any) => {
 };
 
 // ============================================================
+// LIVE AI SUPPORT AGENT WIDGET
+// ============================================================
+const SupportAgentWidget = ({ lang }: { lang: Language }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [step, setStep] = useState<'form' | 'chat'>('form');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [village, setVillage] = useState('');
+  const [enquiry, setEnquiry] = useState('');
+  const [messages, setMessages] = useState<{ role: 'user' | 'agent'; text: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [ticketId, setTicketId] = useState<string | null>(null);
+  const [inputMessage, setInputMessage] = useState('');
+
+  const isMarathi = lang === 'mr';
+
+  const handleSubmitEnquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone || !enquiry) return;
+
+    setLoading(true);
+    triggerHaptic();
+
+    try {
+      // 1. Log details for future communication via backend support API
+      const res = await fetch('/api/support/enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, village, enquiry, lang })
+      });
+      const data = await res.json();
+      const newTicketId = data.id || `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
+      setTicketId(newTicketId);
+
+      // 2. Initial agent greeting + response
+      const initialUserText = enquiry;
+      const agentGreeting = isMarathi 
+        ? `नमस्कार ${name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. तुमचा सपोर्ट आयडी आहे: ${newTicketId}. आम्ही तुमची माहिती नोंदवली आहे.\n\nतुमच्या प्रश्नाचे उत्तर:`
+        : `Hello ${name}! Welcome to AI Krushi Mitra Live Support (ID: ${newTicketId}). Your details have been registered for follow-up.\n\nHere is immediate guidance for your query:`;
+
+      const aiAnswer = await getAIFarmingAdvice(enquiry, lang, 'Customer Support Enquiry');
+      
+      setMessages([
+        { role: 'user', text: initialUserText },
+        { role: 'agent', text: `${agentGreeting}\n\n${aiAnswer}` }
+      ]);
+      setStep('chat');
+    } catch (err) {
+      console.error("Support enquiry error:", err);
+      setMessages([
+        { role: 'user', text: enquiry },
+        { role: 'agent', text: isMarathi ? 'तुमचा प्रश्न नोंदवला गेला आहे. आमचे प्रतिनिधी लवकरच संपर्क करतील.' : 'Your query has been registered. Our representative will contact you soon.' }
+      ]);
+      setStep('chat');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputMessage.trim() || loading) return;
+
+    const userText = inputMessage.trim();
+    setInputMessage('');
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setLoading(true);
+    triggerHaptic();
+
+    try {
+      const aiResponse = await getAIFarmingAdvice(userText, lang, 'Live Customer Support');
+      setMessages(prev => [...prev, { role: 'agent', text: aiResponse }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'agent', text: isMarathi ? 'क्षमस्व, संपर्क साधण्यात अडचण आली.' : 'Sorry, failed to connect to support assistant.' }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Floating Support Trigger Button */}
+      <div className="fixed bottom-6 right-6 z-[999] flex flex-col items-end gap-2">
+        {!isOpen && (
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs px-3 py-1.5 rounded-full shadow-lg shadow-emerald-500/30 animate-bounce flex items-center gap-1.5 border border-white/20">
+            <Sparkles size={12} /> {isMarathi ? '24/7 लाइव्ह सपोर्ट' : '24/7 Live Support'}
+          </div>
+        )}
+        <button
+          onClick={() => { triggerHaptic(); setIsOpen(!isOpen); }}
+          className="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 shadow-2xl shadow-emerald-500/40 border-2 border-white/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
+          aria-label="Customer Support"
+        >
+          <Headphones size={26} className="drop-shadow-md" />
+        </button>
+      </div>
+
+      {/* Support Drawer / Modal */}
+      {isOpen && (
+        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[420px] max-h-[80vh] bg-slate-950/95 backdrop-blur-2xl border border-emerald-500/30 rounded-[2.5rem] shadow-2xl z-[999] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+          
+          {/* Header */}
+          <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <Headphones size={20} />
+              </div>
+              <div>
+                <h3 className="font-black text-white text-sm flex items-center gap-1.5">
+                  AI Krushi Mitra Support <UserCheck size={14} className="text-emerald-400" />
+                </h3>
+                <p className="text-[10px] text-slate-400">{isMarathi ? 'ग्राहक सहाय्यता व थेट चौकशी' : 'Customer Support & Enquiry'}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsOpen(false)} 
+              className="w-8 h-8 rounded-full bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div className="p-5 overflow-y-auto max-h-[55vh] space-y-4">
+            {step === 'form' ? (
+              <form onSubmit={handleSubmitEnquiry} className="space-y-3">
+                <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-xs text-emerald-300">
+                  {isMarathi ? 'कृपया आपली अचूक माहिती द्या जेणेकरून भविष्यातील संवादासाठी नोंद राहील.' : 'Please provide details so we can log your inquiry for future assistance.'}
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400">{isMarathi ? 'तुमचे नाव *' : 'Full Name *'}</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder={isMarathi ? 'उदा. रमेश पाटील' : 'e.g. Ramesh Patil'}
+                    className="w-full mt-1 bg-slate-900 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400">{isMarathi ? 'मोबाईल / WhatsApp नंबर *' : 'Mobile / WhatsApp No. *'}</label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="98221XXXXX"
+                    className="w-full mt-1 bg-slate-900 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400">{isMarathi ? 'गाव / जिल्हा' : 'Village / District'}</label>
+                  <input
+                    type="text"
+                    value={village}
+                    onChange={e => setVillage(e.target.value)}
+                    placeholder={isMarathi ? 'उदा. यवतमाळ' : 'e.g. Yavatmal'}
+                    className="w-full mt-1 bg-slate-900 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400">{isMarathi ? 'तुमचा प्रश्न / अडचण *' : 'Your Query / Problem *'}</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={enquiry}
+                    onChange={e => setEnquiry(e.target.value)}
+                    placeholder={isMarathi ? 'शेतविषयक किंवा ॲपबाबत काय मदत हवी आहे?' : 'Describe your farming query or support request'}
+                    className="w-full mt-1 bg-slate-900 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+                >
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  {isMarathi ? 'नोंदवा व संवाद सुरू करा' : 'Register & Start Live Chat'}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/5 text-[10px] text-slate-400">
+                  <span>Customer: <strong className="text-white">{name}</strong></span>
+                  <span>Ticket: <strong className="text-emerald-400">{ticketId}</strong></span>
+                </div>
+                {messages.map((m, idx) => (
+                  <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] p-3 rounded-2xl text-xs whitespace-pre-wrap leading-relaxed ${m.role === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-slate-900 border border-white/10 text-slate-200 rounded-bl-none'}`}>
+                      {m.text}
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl text-xs text-emerald-400 flex items-center gap-2">
+                      <Loader2 size={14} className="animate-spin" /> {isMarathi ? 'सपोर्ट एजंट उत्तर तयार करत आहे...' : 'Support agent typing...'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Chat Input Footer */}
+          {step === 'chat' && (
+            <form onSubmit={handleSendFollowUp} className="p-3 bg-slate-900 border-t border-white/10 flex gap-2">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={e => setInputMessage(e.target.value)}
+                placeholder={isMarathi ? 'अजून काही विचारायचे आहे?' : 'Type follow-up query...'}
+                className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center hover:bg-emerald-400 active:scale-95 transition-all"
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+    </>
+  );
+};
+
+// ============================================================
 // MAIN
 // ============================================================
 export default function LandingPage({ onGetStarted, lang, setLang }: LandingPageProps) {
@@ -1341,6 +1573,7 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
       <FAQSection t={t} />
       <CTASection t={t} lang={lang} handleGetStarted={handleGetStarted} />
       <Footer t={t} navLinks={navLinks} handleScrollTo={handleScrollTo} />
+      <SupportAgentWidget lang={lang} />
 
       {/* Progress Bar Update Script */}
       <script dangerouslySetInnerHTML={{ __html: `

@@ -298,9 +298,45 @@ const handleGetStats = (req, res) => {
   }
 };
 
+const handleSupportEnquiry = (req, res) => {
+  try {
+    const { name, phone, village, enquiry, lang } = req.body;
+    if (!name || !phone || !enquiry) {
+      return res.status(400).json({ error: 'Missing required fields: name, phone, enquiry' });
+    }
+    const rawIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+    const ip = rawIp.split(',')[0].trim();
+
+    const supportLog = {
+      id: `sup_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      type: 'SUPPORT_ENQUIRY',
+      userEmail: phone || 'anonymous',
+      userName: name,
+      village: village || 'N/A',
+      enquiry,
+      lang: lang || 'mr',
+      timestamp: Date.now(),
+      serverTimestamp: Date.now(),
+      ip,
+      userAgent: req.headers['user-agent'] || 'unknown'
+    };
+
+    GLOBAL_ACTIVITY_LOGS.unshift(supportLog);
+    if (GLOBAL_ACTIVITY_LOGS.length > MAX_LOGS) GLOBAL_ACTIVITY_LOGS.pop();
+    saveLogsToDisk();
+
+    console.log(`📞 Support Enquiry Logged from ${name} (${phone}): ${enquiry}`);
+    return res.status(200).json({ success: true, message: 'Enquiry logged successfully', id: supportLog.id });
+  } catch (e) {
+    console.error('❌ Support Enquiry Error:', e.message);
+    return res.status(500).json({ error: 'Failed to log support enquiry' });
+  }
+};
+
 // Register both new and legacy endpoints
 app.post('/api/activity/log', handleLogActivity);
 app.post('/api/analytics/log', handleLogActivity);
+app.post('/api/support/enquiry', handleSupportEnquiry);
 
 app.get('/api/activity/stats', handleGetStats);
 app.get('/api/analytics/stats', handleGetStats);
