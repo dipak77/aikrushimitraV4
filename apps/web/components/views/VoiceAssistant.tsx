@@ -472,7 +472,7 @@ const VoiceAssistant = ({
         .replace(/{rag_context}/g, ragContext || 'माहिती उपलब्ध नाही.');
 
       const session = await ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        model: 'gemini-2.5-flash',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },

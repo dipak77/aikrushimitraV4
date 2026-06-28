@@ -468,7 +468,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: contents,
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
@@ -517,7 +517,7 @@ app.post('/api/vision', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           inlineData: {
@@ -584,7 +584,7 @@ app.post('/api/soil/advisory', async (req, res) => {
       .replace(/{user_language}/g, user?.language || 'mr');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: `Provide soil health analysis and NPK suggestions based on: ${soilJson} for ${crop}`,
       config: {
         systemInstruction: compiledInstruction
@@ -626,7 +626,7 @@ app.post('/api/weather/advisory', async (req, res) => {
       .replace(/{user_language}/g, user?.language || 'mr');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: `Generate weather crop advisory based on daily weather forecast JSON: ${weatherJson}`,
       config: {
         systemInstruction: compiledInstruction
@@ -666,7 +666,7 @@ app.post('/api/updates', async (req, res) => {
     // Google Search grounding is incompatible with forced JSON mime type.
     // The model returns plain text/markdown with citations when grounding is active.
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }]
@@ -761,7 +761,7 @@ app.post('/api/weather/advisory', async (req, res) => {
       .replace(/{user_language}/g, user.language || 'mr');
       
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt
     });
     
@@ -793,7 +793,7 @@ app.post('/api/schemes/match', async (req, res) => {
       .replace(/{user_language}/g, user.language || 'mr');
       
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt
     });
     
@@ -819,7 +819,7 @@ app.post('/api/v1/knowledge', rateLimiter(30, 60000), validateBody(['query']), a
       const ai = getAIClient();
       const contextText = ragResults.map(r => r.text).join('\n');
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         contents: `Based on this agricultural knowledge base context:\n${contextText}\n\nAnswer this question concisely in ${lang || 'mr'}: ${query}`,
         config: {
           systemInstruction: AGRI_EXPERT_V1
@@ -1066,7 +1066,7 @@ wss.on('connection', async (clientWs, req) => {
 
         try {
           session = await ai.live.connect({
-            model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+            model: 'gemini-2.5-flash',
             config: {
               responseModalities: ['AUDIO'],
               speechConfig: {
