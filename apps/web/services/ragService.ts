@@ -156,6 +156,10 @@ export async function retrieveContext(
     text: string;
     source: string;
     category: string;
+    authorityScore: number;
+    expertReviewed: boolean;
+    crops: string[];
+    regions: string[];
   }
   
   const allChunks: ChunkItem[] = [];
@@ -167,13 +171,18 @@ export async function retrieveContext(
     
     const textChunks = chunkText(contentText, 250, 40);
     const sourceTitle = art.title.mr || art.title.en;
+    const isExpert = (sourceTitle.toLowerCase().includes('icar') || sourceTitle.toLowerCase().includes('kvk') || art.category === 'crop');
     
     textChunks.forEach((chunk, chunkIdx) => {
       allChunks.push({
         id: `art_${artIdx}_chunk_${chunkIdx}`,
         text: chunk,
         source: sourceTitle,
-        category: art.category
+        category: art.category,
+        authorityScore: isExpert ? 1.0 : 0.8,
+        expertReviewed: isExpert,
+        crops: art.tags || [],
+        regions: ['maharashtra', 'vidarbha', 'yavatmal', 'nashik', 'pune', 'nagpur']
       });
     });
   });
@@ -182,11 +191,23 @@ export async function retrieveContext(
     return { contextText: '', citations: [] };
   }
 
+  // Domain Reranker (§4.3 of pipeline-architecture.md)
+  const rerankChunk = (chunk: ChunkItem, baseScore: number) => {
+    let score = baseScore;
+    if (chunk.expertReviewed) score *= 1.2;
+    score *= chunk.authorityScore;
+    if (userContext.state && chunk.regions.includes(userContext.state.toLowerCase())) score *= 1.3;
+    if (userContext.crops && userContext.crops.some(c => chunk.crops.includes(c.toLowerCase()) || chunk.text.toLowerCase().includes(c.toLowerCase()))) {
+      score *= 1.4;
+    }
+    return score;
+  };
+
   // Keyword pre-filter to narrow candidates down to top 12
   const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   const scoredChunks = allChunks.map((chunk) => ({
     chunk,
-    score: getKeywordScore(chunk.text, queryWords)
+    score: rerankChunk(chunk, getKeywordScore(chunk.text, queryWords))
   }));
   
   scoredChunks.sort((a, b) => b.score - a.score);
@@ -219,30 +240,34 @@ export async function retrieveContext(
               if (vector) {
                 chunkEmbeddingCache[c.id] = vector;
               }
-            }).catch(() => {
-              // Ignore
-            })
+            }).catch(() => {})
           );
           await Promise.all(embedPromises);
         }
 
-        // Calculate cosine similarity for all candidates
+        // Calculate reranked semantic similarity for all candidates
         const semanticScores = candidates.map(c => {
           const vector = chunkEmbeddingCache[c.id];
+          const baseSim = vector ? cosineSimilarity(queryVector, vector) : 0;
           return {
             chunk: c,
-            score: vector ? cosineSimilarity(queryVector, vector) : 0
+            score: rerankChunk(c, baseSim),
+            rawSim: baseSim
           };
         });
 
-        // Sort by semantic similarity
+        // Sort by final reranked score
         semanticScores.sort((a, b) => b.score - a.score);
         
         // Take top 3 best matching chunks
-        const topMatches = semanticScores.slice(0, 3).filter(m => m.score > 0.45).map(m => m.chunk);
+        const topMatches = semanticScores.slice(0, 3).filter(m => m.rawSim > 0.40 || m.score > 0.50);
         if (topMatches.length > 0) {
-          const contextText = topMatches.map(m => `[Source: ${m.source}]\n${m.text}`).join('\n\n');
-          const citations = topMatches.map(m => ({ source: m.source, category: m.category }));
+          const contextText = topMatches.map(m => `[Source: ${m.chunk.source}]\n${m.chunk.text}`).join('\n\n');
+          const citations = topMatches.map(m => ({ 
+            source: m.chunk.source, 
+            category: m.chunk.category,
+            score: Math.min(99, Math.round(m.score * 100))
+          }));
           return { contextText, citations };
         }
       }
@@ -251,9 +276,13 @@ export async function retrieveContext(
     }
   }
 
-  // Fallback: Return top 2 keyword-matched chunks if vector search fails/is bypassed
-  const bestKeywordChunks = candidates.slice(0, 2);
-  const contextText = bestKeywordChunks.map(c => `[Source: ${c.source}]\n${c.text}`).join('\n\n');
-  const citations = bestKeywordChunks.map(c => ({ source: c.source, category: c.category }));
+  // Fallback: Return top 2 reranked keyword-matched chunks if vector search fails/is bypassed
+  const bestKeywordChunks = scoredChunks.slice(0, 2);
+  const contextText = bestKeywordChunks.map(c => `[Source: ${c.chunk.source}]\n${c.chunk.text}`).join('\n\n');
+  const citations = bestKeywordChunks.map(c => ({ 
+    source: c.chunk.source, 
+    category: c.chunk.category,
+    score: Math.min(95, Math.round(c.score * 10))
+  }));
   return { contextText, citations };
 }
