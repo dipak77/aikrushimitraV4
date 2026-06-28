@@ -488,15 +488,25 @@ const VoiceAssistant = ({
               if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
               videoIntervalRef.current = setInterval(async () => {
                 if (!setupDone.current || !sessionRef.current || !hiddenVideoRef.current) return;
-                const b = await captureFrame(hiddenVideoRef.current);
-                if (b) sessionRef.current.sendRealtimeInput({ media: { mimeType: 'image/jpeg', data: b } });
+                try {
+                  const b = await captureFrame(hiddenVideoRef.current);
+                  if (b && setupDone.current && sessionRef.current) {
+                    sessionRef.current.sendRealtimeInput({ media: { mimeType: 'image/jpeg', data: b } });
+                  }
+                } catch (err) {
+                  console.warn('⚠️ Camera frame streaming skipped:', err);
+                }
               }, 2000);
             }
           },
           onmessage: async (msg: LiveServerMessage) => {
             if (msg.toolCall) {
               const r = await handleToolCall(msg.toolCall.functionCalls || []);
-              if (r.length > 0 && sessionRef.current) sessionRef.current.sendToolResponse({ functionResponses: r });
+              if (r.length > 0 && setupDone.current && sessionRef.current) {
+                try {
+                  sessionRef.current.sendToolResponse({ functionResponses: r });
+                } catch {}
+              }
             }
             const ad = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
             if (ad && outputCtxRef.current && compressorRef.current) {
@@ -528,8 +538,12 @@ const VoiceAssistant = ({
         if (!chunk || !setupDone.current || !sessionRef.current) return;
         try {
           const b = createPCMChunkBase64(chunk, inputCtxRef.current?.sampleRate || 16000);
-          session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: b } });
-        } catch {}
+          if (setupDone.current && sessionRef.current) {
+            sessionRef.current.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: b } });
+          }
+        } catch (err) {
+          // Ignore transient disconnect buffer sends
+        }
       };
     } catch (e: any) {
       setErrorMessage(e?.message || 'Permission Denied.');
