@@ -24,6 +24,7 @@ export type ViewState =
   | 'BLOG_DETAIL'
   | 'SABJI_MANDI'
   | 'CHAT'
+  | 'COMMUNITY'
   | 'ADMIN';
 
 export interface UserProfile {

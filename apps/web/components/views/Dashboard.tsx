@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Language, ViewState } from '../../types';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
-import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2, MessageSquare } from 'lucide-react';
+import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2, MessageSquare, Users } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -294,6 +294,13 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         variant="yield"
                         onClick={() => onNavigate('CHAT')} 
                         delay={290}
+                    />
+                    <FeatureCard 
+                        icon={Users} 
+                        title={lang === 'mr' ? 'शेतकरी मंच' : 'Community'} 
+                        variant="advisor"
+                        onClick={() => onNavigate('COMMUNITY')} 
+                        delay={300}
                     />
                 </div>
                 
