@@ -1,9 +1,10 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ViewState } from '../types';
 
 // ═══════════════════════════════════════════════════════════════
 // APP STORE — Navigation, UI state, and global controls
-// Replaces: useState<ViewState> and UI state scattered in App.tsx
+// ADR-004: Zustand with persist middleware for localStorage
 // ═══════════════════════════════════════════════════════════════
 
 interface AppState {
@@ -55,7 +56,7 @@ const FULLSCREEN_VIEWS: ViewState[] = [
   'LOGIN',
 ];
 
-export const useAppStore = create<AppState>()((set, get) => ({
+export const useAppStore = create<AppState>()(persist((set, get) => ({
   // Initial state
   currentView: 'SPLASH',
   previousView: null,
@@ -113,6 +114,16 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setOnline: (isOnline) => set({
     isOnline,
     showOfflineBanner: !isOnline,
+  }),
+}), {
+  name: 'akm-app-store',
+  storage: createJSONStorage(() => localStorage),
+  // Only persist navigation state — transient UI state resets on reload
+  partialize: (state) => ({
+    currentView: state.currentView,
+    previousView: state.previousView,
+    navigationHistory: state.navigationHistory,
+    sidebarCollapsed: state.sidebarCollapsed,
   }),
 }));
 
