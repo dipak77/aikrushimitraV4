@@ -1,9 +1,0 @@
-{
-  "name": "AI Krushi Mitra 4 V3",
-  "description": "Smart farming assistant for Indian farmers with Marathi support, disease detection, and AI advice.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone",
-    "geolocation"
-  ]
-}
