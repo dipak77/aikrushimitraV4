@@ -265,8 +265,16 @@ const MobileMenu = ({ mobileMenuOpen, setMobileMenuOpen, navLinks, handleScrollT
           {navLinks.map((link: any) => (
             <a
               key={link.name}
-              href={link.href}
-              onClick={(e) => { setMobileMenuOpen(false); handleScrollTo(e, link.href); }}
+              href={link.isApp ? '/app/' : link.href}
+              onClick={(e) => { 
+                setMobileMenuOpen(false); 
+                if (link.isApp) {
+                  e.preventDefault();
+                  handleGetStarted();
+                } else {
+                  handleScrollTo(e, link.href); 
+                }
+              }}
               className="block px-4 py-3 text-base font-medium text-slate-200 hover:text-white hover:bg-white/5 rounded-xl transition-all"
             >
               {link.name}

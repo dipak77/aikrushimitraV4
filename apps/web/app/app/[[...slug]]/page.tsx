@@ -13,7 +13,10 @@ const ClientApp = dynamic(() => import('../../../components/ClientApp'), {
 
 export async function generateStaticParams() {
   return [
-    { slug: [] }
+    { slug: [] },
+    { slug: ['dashboard'] },
+    { slug: ['login'] },
+    { slug: ['profile'] }
   ];
 }
 
