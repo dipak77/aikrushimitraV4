@@ -1262,17 +1262,25 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
     triggerHaptic();
 
     try {
-      // 1. Log details for future communication via backend support API
-      const res = await fetch('/api/support/enquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, village, enquiry, lang })
-      });
-      const data = await res.json();
-      const newTicketId = data.id || `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
+      // 1. Log details for future communication via backend support API (safely handled on static hosting)
+      let newTicketId = `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
+      try {
+        const res = await fetch('/api/support/enquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, phone, village, enquiry, lang })
+        });
+        const contentType = res.headers.get("content-type") || '';
+        if (res.ok && contentType.includes("application/json")) {
+          const data = await res.json();
+          if (data.id) newTicketId = data.id;
+        }
+      } catch (logErr) {
+        console.warn("Backend logging skipped on static hosting platform:", logErr);
+      }
       setTicketId(newTicketId);
 
-      // 2. Initial agent greeting + response
+      // 2. Initial agent greeting + AI response with client-side fallback support
       const initialUserText = enquiry;
       const agentGreeting = isMarathi 
         ? `नमस्कार ${name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. तुमचा सपोर्ट आयडी आहे: ${newTicketId}. आम्ही तुमची माहिती नोंदवली आहे.\n\nतुमच्या प्रश्नाचे उत्तर:`
