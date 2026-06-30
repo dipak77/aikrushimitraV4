@@ -30,7 +30,7 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
   
   try {
     const res = await RetryPolicy.execute(async () => {
-      return await TimeoutManager.withTimeout(async () => {
+      return await TimeoutManager.withTimeout((async () => {
         if (endpoint === '/api/chat' || endpoint === '/api/support/enquiry') {
           const promptText = body.prompt || body.enquiry || 'Hello';
           const response = await AIRouter.routeChat(promptText, { systemInstruction: body.systemInstruction }, apiKey);
@@ -102,7 +102,7 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
         const promptText = typeof body === 'string' ? body : JSON.stringify(body);
         const response = await AIRouter.routeChat(promptText, {}, apiKey);
         return response.text;
-      }, 20000);
+      })(), 20000);
     }, 3, 1000);
 
     AITelemetry.logMetric({
