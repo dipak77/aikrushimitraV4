@@ -1,65 +1,131 @@
 import { ActivityLog, UserProfile } from "../types";
 import { generateUUID } from "../utils/common";
-import { analytics, auth, db, handleFirestoreError, OperationType } from "../utils/firebase";
+import { analytics, auth, db, handleFirestoreError } from "../utils/firebase";
 import { logEvent, setUserId, setUserProperties } from "firebase/analytics";
 import { signInAnonymously } from "firebase/auth";
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 
-const SESSION_KEY = 'app_current_session';
 
-export const TARGET_HASH = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
+// ─── Constants ───────────────────────────────────────────────────────────────
+const SESSION_KEY = "app_current_session";
+const MAX_LOG_RESULTS = 500;
+const ACTIVE_THRESHOLD_MS = 30 * 60 * 1000;  // 30 min
+const MIN_SESSION_DURATION_MS = 30 * 1000;  // 30 sec
+const MAX_STRING_LEN = 200;
+
+/**
+ * Backwards-compatible password hash export.
+ *
+ * SECURITY NOTE: This is intentionally kept to avoid breaking existing
+ * import sites, but real authentication should be handled via Firebase
+ * Auth on the server. The returned hash is a non-reversible token,
+ * NOT a secure password store.
+ */
+export const TARGET_HASH =
+  "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
 
 export const hashPassword = async (password: string): Promise<string> => {
-  if (password === "Dpk#2026") return TARGET_HASH;
-
-  if (window.crypto && window.crypto.subtle) {
+  if (window.crypto?.subtle) {
     try {
       const encoder = new TextEncoder();
       const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
     } catch (e) {
-      console.error("Crypto Error:", e);
+      console.error("[hashPassword] Crypto error:", e);
     }
   }
   return "invalid_hash_fallback";
 };
 
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+const sanitize = (
+  str: string | undefined | null,
+  fallback = "Unknown"
+): string => {
+  if (!str || typeof str !== "string") return fallback;
+  return str.slice(0, MAX_STRING_LEN).replace(/[<>]/g, "").trim() || fallback;
+};
+
 const getDeviceDetails = () => {
   const ua = navigator.userAgent;
-  let device = 'Desktop';
-  if (/Mobi|Android/i.test(ua)) device = 'Mobile';
-  else if (/Tablet|iPad/i.test(ua)) device = 'Tablet';
+  const platform = navigator.platform || "";
+  let device = "Desktop";
+  let os = "Unknown";
 
-  let os = 'Unknown';
-  if (/Windows/i.test(ua)) os = "Windows";
-  if (/Macintosh/i.test(ua)) os = "MacOS";       // FIX: was ua.indexOf("Mac")
-  if (/Linux/i.test(ua)) os = "Linux";
-  if (/Android/i.test(ua)) os = "Android";
-  if (/like Mac OS X/i.test(ua)) os = "iOS";      // FIX: was "like Mac" - too broad
+  if (/Android/i.test(ua)) {
+    os = "Android";
+    device = /Mobile/i.test(ua) ? "Mobile" : "Tablet";
+  } else if (/iPhone/i.test(ua)) {
+    os = "iOS";
+    device = "Mobile";
+  } else if (/iPad/i.test(ua) ||
+    (platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+    // iPadOS 13+ reports as desktop MacIntel
+    os = "iOS";
+    device = "Tablet";
+  } else if (/Windows/i.test(ua)) {
+    os = "Windows";
+  } else if (/Macintosh/i.test(ua)) {
+    os = "MacOS";
+  } else if (/Linux/i.test(ua)) {
+    os = "Linux";
+  }
 
   return { device, os };
 };
 
-// FIX: Improved provider detection
-const detectProvider = (user?: UserProfile): 'google' | 'guest' | 'unknown' => {
-  if (!user?.email) return 'unknown';
-  // Guest users typically have no real email or a generated placeholder
+const detectProvider = (
+  user?: UserProfile
+): "google" | "guest" | "unknown" => {
+  if (!user?.email) return "unknown";
+  const email = user.email.toLowerCase();
   if (
-    user.email === 'N/A' ||
-    user.email.toLowerCase().includes('guest') ||
-    user.email.toLowerCase().includes('anonymous') ||
-    !user.email.includes('@')
-  ) return 'guest';
-  return 'google';
+    email === "n/a" ||
+    email.includes("guest") ||
+    email.includes("anonymous") ||
+    !email.includes("@")
+  ) {
+    return "guest";
+  }
+  return "google";
 };
 
+/**
+ * Produces a privacy-safe analytics-safe user identifier.
+ * Never sends raw email or name to Firebase Analytics.
+ * Falls back to a session-based ID for guests.
+ */
+const getAnalyticsUserId = (
+  userEmail: string,
+  sessionId: string,
+  authUid?: string | null
+): string => {
+  if (authUid) return authUid;
+  if (!userEmail.startsWith("guest_"))
+    return `u_${btoa(userEmail).slice(0, 16)}`;
+  return `anon_${sessionId}`;
+};
+
+
+// ─── Core: logActivity ───────────────────────────────────────────────────────
 export const logActivity = async (
   view: string,
   location: string,
   user?: UserProfile,
-  action: string = 'VIEW'
+  action: string = "VIEW"
 ) => {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   if (!sessionId) {
@@ -70,247 +136,294 @@ export const logActivity = async (
   const { device, os } = getDeviceDetails();
   const provider = detectProvider(user);
 
-  // FIX: Use a stable identifier for guests instead of 'N/A'
-  const userEmail = user?.email && user.email !== 'N/A'
-    ? user.email
-    : `guest_${sessionId}`;  // Unique per session so guests ARE tracked
+  // Stable identifier — guests get a session-scoped email so they are tracked
+  const userEmail =
+    user?.email && user.email !== "N/A"
+      ? user.email
+      : `guest_${sessionId}`;
 
   const userName = user?.name || `Guest_${sessionId.substring(0, 6)}`;
 
   const newLog: ActivityLog = {
     id: generateUUID(),
     timestamp: Date.now(),
-    view,
-    action,
-    location: location || "Unknown",
-    userAgent: navigator.userAgent,
-    userName,
+    view: sanitize(view),
+    action: sanitize(action),
+    location: sanitize(location),
+    userAgent: navigator.userAgent.slice(0, MAX_STRING_LEN),
+    userName: sanitize(userName),
     userEmail,
     sessionId,
     device,
     os,
-    provider
+    provider,
   };
 
-  // --- SYNC TO FIREBASE GOOGLE ANALYTICS ---
+  // ── Firebase Analytics (privacy-safe — no PII) ──
   if (analytics) {
     try {
-      if (userEmail) {
-        setUserId(analytics, userEmail);
-      }
-      
+      const analyticsUid = getAnalyticsUserId(
+        userEmail,
+        sessionId,
+        auth.currentUser?.uid
+      );
+
+      setUserId(analytics, analyticsUid);
+
       setUserProperties(analytics, {
-        user_name: userName,
-        user_email: userEmail || "anonymous",
         device_type: device,
         operating_system: os,
         auth_provider: provider,
-        user_location: location || "unknown"
+        // Do NOT send user_email or user_name — PII violation
       });
 
-      logEvent(analytics, 'activity_log', {
-        view_name: view,
-        action_name: action,
-        user_location: location || "unknown",
+      logEvent(analytics, "activity_log", {
+        view_name: sanitize(view),
+        action_name: sanitize(action),
         device_type: device,
         operating_system: os,
-        session_id: sessionId
+        session_id: sessionId,
       });
 
-      // Also register a standard page view
-      logEvent(analytics, 'page_view', {
-        page_title: view,
+      logEvent(analytics, "page_view", {
+        page_title: sanitize(view),
         page_location: window.location.href,
-        page_path: `/${view.toLowerCase()}`
+        page_path: `/${sanitize(view, "").toLowerCase()}`,
       });
     } catch (err) {
-      console.warn("Firebase Analytics Logging Error:", err);
+      console.warn("[logActivity] Analytics error:", err);
     }
   }
 
-  // Ensure user/session has active authentication before writing to Firestore
+  // ── Firestore write ──
   if (!auth.currentUser) {
     try {
       await signInAnonymously(auth);
     } catch (authErr) {
-      console.warn("Anonymous auth failed during logging:", authErr);
+      console.warn("[logActivity] Anonymous auth failed:", authErr);
     }
   }
 
   try {
-    const logDocRef = doc(db, 'activityLogs', newLog.id);
+    const logDocRef = doc(db, "activityLogs", newLog.id);
     await setDoc(logDocRef, newLog);
   } catch (e) {
-    console.error("Failed to write activity log to Firestore:", e);
+    handleFirestoreError?.(e);
+    console.error("[logActivity] Firestore write failed:", e);
   }
 };
 
+
+// ─── Core: fetchLogsFromServer (paginated) ──────────────────────────────────
 const fetchLogsFromServer = async (): Promise<ActivityLog[]> => {
   try {
-    const querySnapshot = await getDocs(collection(db, 'activityLogs'));
-    return querySnapshot.docs.map(doc => doc.data() as ActivityLog);
+    const q = query(
+      collection(db, "activityLogs"),
+      orderBy("timestamp", "desc"),
+      limit(MAX_LOG_RESULTS)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(
+      (d) => ({ id: d.id, ...d.data() }) as ActivityLog
+    );
   } catch (e) {
-    console.error("Error fetching logs from Firestore:", e);
-    return [];
+    // Fallback: if orderBy fails (e.g. missing index), try unsorted
+    try {
+      const fallbackSnapshot = await getDocs(
+        query(collection(db, "activityLogs"), limit(MAX_LOG_RESULTS))
+      );
+      return fallbackSnapshot.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as ActivityLog
+      );
+    } catch (e2) {
+      handleFirestoreError?.(e2);
+      console.error("[fetchLogsFromServer] Error:", e2);
+      return [];
+    }
   }
 };
 
+
+// ─── Core: getAnalyticsStats ────────────────────────────────────────────────
 export const getAnalyticsStats = async () => {
   const logs = await fetchLogsFromServer();
+
+  // Ensure descending order (safe even if Firestore returned unsorted)
+  logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
   const now = Date.now();
   const startOfDay = new Date().setHours(0, 0, 0, 0);
 
   const totalLogs = logs.length;
-  const dailyActivity = logs.filter(l => l.timestamp >= startOfDay).length;
+  const dailyActivity = logs.filter(
+    (l) => l.timestamp >= startOfDay
+  ).length;
 
-  // --- Session Duration Map ---
+  // ── Session Duration Map ──
   const sessionDurations = new Map<string, { start: number; end: number }>();
 
-  logs.forEach(l => {
+  logs.forEach((l) => {
     const sid = l.sessionId || `no_session_${l.userEmail}`;
-    if (!sessionDurations.has(sid)) {
+    const existing = sessionDurations.get(sid);
+    if (!existing) {
       sessionDurations.set(sid, { start: l.timestamp, end: l.timestamp });
+    } else {
+      existing.start = Math.min(existing.start, l.timestamp);
+      existing.end = Math.max(existing.end, l.timestamp);
     }
-    const s = sessionDurations.get(sid)!;
-    s.start = Math.min(s.start, l.timestamp);
-    s.end = Math.max(s.end, l.timestamp);
   });
 
-  // --- User Aggregation ---
-  // FIX: No longer skip 'N/A' emails — guests now have guest_<sessionId> emails
-  const userMap = new Map<string, any>();
-  let activeUsersCount = 0;
-  const activeThreshold = 30 * 60 * 1000; // 30 minutes
+  // ── User Aggregation ──
+  const userMap = new Map <
+    string,
+    {
+      name: string;
+  email: string;
+  provider: string;
+  firstSeen: firstSeen: number;
+  lastSeen: number;
+  lastLocation: string;
+  sessions: Set<string>;
+  locations: Set<string>;
+  devices: Set<string>;
+  osSet: Set<string>;
+  logsCount: number;
+}
+  > ();
 
-  logs.forEach(log => {
-    // FIX: Only skip truly empty/undefined emails
-    if (!log.userEmail) return;
+let activeUsersCount = 0;
 
-    const key = log.userEmail;
+logs.forEach((log) => {
+  if (!log.userEmail) return;
 
-    if (!userMap.has(key)) {
-      userMap.set(key, {
-        name: log.userName,
-        email: log.userEmail,
-        provider: log.provider || 'unknown',
-        firstSeen: log.timestamp,
-        lastSeen: log.timestamp,
-        lastLocation: log.location,
-        sessions: new Set<string>(),
-        locations: new Set<string>(),
-        devices: new Set<string>(),
-        osSet: new Set<string>(),        // FIX: renamed to avoid conflict with 'os' field
-        logsCount: 0
-      });
-    }
+  const key = log.userEmail;
 
-    const u = userMap.get(key);
-
-    // FIX: Update firstSeen/lastSeen BEFORE using them for location check
-    const newLastSeen = Math.max(u.lastSeen, log.timestamp);
-    const newFirstSeen = Math.min(u.firstSeen, log.timestamp);
-
-    // FIX: Correctly update lastLocation — track most recent log
-    if (log.timestamp >= u.lastSeen) {
-      u.lastSeen = log.timestamp;
-      u.lastLocation = log.location; // Always update when this log is newer
-    }
-    u.firstSeen = newFirstSeen;
-
-    // FIX: Update provider if currently unknown
-    if (u.provider === 'unknown' && log.provider && log.provider !== 'unknown') {
-      u.provider = log.provider;
-    }
-
-    if (log.sessionId) u.sessions.add(log.sessionId);
-    if (log.location) u.locations.add(log.location);
-    if (log.device) u.devices.add(log.device);
-    if (log.os) u.osSet.add(log.os);
-    u.logsCount++;
-  });
-
-  // --- Finalize Users ---
-  const users = Array.from(userMap.values()).map(u => {
-    let totalTimeMs = 0;
-
-    u.sessions.forEach((sid: string) => {
-      const s = sessionDurations.get(sid);
-      if (s) {
-        let duration = s.end - s.start;
-        // Minimum 30s engagement per session (single-log sessions)
-        if (duration === 0) duration = 30 * 1000;
-        totalTimeMs += duration;
-      }
+  if (!userMap.has(key)) {
+    userMap.set(key, {
+      name: log.userName || "Unknown",
+      email: log.userEmail,
+      provider: log.provider || "unknown",
+      firstSeen: log.timestamp,
+      lastSeen: log.timestamp,
+      lastLocation: log.location || "Unknown",
+      sessions: new Set<string>(),
+      locations: new Set<string>(),
+      devices: new Set<string>(),
+      osSet: new Set<string>(),
+      logsCount: 0,
     });
+  }
 
-    // FIX: Use serverTimestamp if available for active check (falls back to timestamp)
-    const isActive = (now - u.lastSeen) < activeThreshold;
-    if (isActive) activeUsersCount++;
+  const u = userMap.get(key)!;
 
-    return {
-      name: u.name,
-      email: u.email,
-      provider: u.provider,
-      firstSeen: u.firstSeen,
-      lastSeen: u.lastSeen,
-      lastLocation: u.lastLocation,
-      sessionsCount: u.sessions.size,
-      uniqueLocations: u.locations.size,
-      deviceList: Array.from(u.devices),
-      osList: Array.from(u.osSet),
-      logsCount: u.logsCount,
-      totalTimeFormatted: formatDuration(totalTimeMs),
-      totalTimeMs,
-      isActive,
-      status: isActive ? '🟢 Online' : '⚫ Offline'
-    };
+  // Update firstSeen / lastSeen
+  u.firstSeen = Math.min(u.firstSeen, log.timestamp);
+  u.lastSeen = Math.max(u.lastSeen, log.timestamp);
+
+  // Update lastLocation only when this log is the most recent so far
+  if (log.timestamp >= u.lastSeen) {
+    u.lastLocation = log.location || "Unknown";
+  }
+
+  // Upgrade provider from unknown to a known value
+  if (u.provider === "unknown" && log.provider && log.provider !== "unknown") {
+    u.provider = log.provider;
+  }
+
+  if (log.sessionId) u.sessions.add(log.sessionId);
+  if (log.location) u.locations.add(log.location);
+  if (log.log.device) u.devices.add(log.device);
+  if (log.os) u.osSet.add(log.os);
+  u.logsCount++;
+});
+
+// ── Finalize Users ──
+const users = Array.from(userMap.values()).map((u) => {
+  let totalTimeMs = 0;
+
+  u.sessions.forEach((sid: string) => {
+    const s = sessionDurations.get(sid);
+    if (s) {
+      let duration = s.end - s.start;
+      if (duration <= 0) duration = MIN_SESSION_DURATION_MS;
+      totalTimeMs += duration;
+    }
   });
 
-  // --- Provider Split ---
-  const googleUsers = users.filter(u => u.provider === 'google').length;
-  const guestUsers = users.filter(u => u.provider === 'guest').length;
-  const unknownUsers = users.filter(u => u.provider === 'unknown').length;
-
-  // --- View Analytics ---
-  const views: Record<string, number> = {};
-  logs.forEach(l => {
-    if (l.view) views[l.view] = (views[l.view] || 0) + 1;
-  });
-
-  // --- Average Session Time ---
-  const totalSessionTime = Array.from(sessionDurations.values())
-    .reduce((acc, val) => acc + (val.end - val.start), 0);
-  const avgSessionTime = sessionDurations.size > 0
-    ? formatDuration(totalSessionTime / sessionDurations.size)
-    : '0s';
+  const isActive = now - u.lastSeen < ACTIVE_THRESHOLD_MS;
+  if (isActive) activeUsersCount++;
 
   return {
-    overview: {
-      totalLogs,
-      totalUsers: users.length,
-      activeUsers: activeUsersCount,
-      googleUsers,
-      guestUsers,
-      unknownUsers,     // NEW: track unknowns separately
-      dailyActivity,
-      avgSessionTime,
-      totalSessions: sessionDurations.size
-    },
-    users: users.sort((a, b) => b.lastSeen - a.lastSeen),
-    views,
-    recentLogs: logs.slice(0, 100)
+    name: u.name,
+    email: u.email,
+    provider: u.provider,
+    firstSeen: u.firstSeen,
+    lastSeen: u.lastSeen,
+    lastLocation: u.lastLocation,
+    sessionsCount: u.sessions.size,
+    uniqueLocations: u.locations.size,
+    deviceList: Array.from(u.devices),
+    osList: Array.from(u.osSet),
+    logsCount: u.logsCount,
+    totalTimeFormatted: formatDuration(totalTimeMs),
+    totalTimeMs,
+    isActive,
+    status: isActive ? "🟢 Online" : "⚫ Offline",
   };
+});
+
+// ── Provider Split ──
+const googleUsers = users.filter((u) => u.provider === "google").length;
+const guestUsers = users.filter((u) => u.provider === "guest").length;
+const unknownUsers = users.filter(
+  (u) => u.provider === "unknown"
+).length;
+
+// ── View Analytics ──
+const views: Record<string, number> = {};
+logs.forEach((l) => {
+  if (l.view) views[l.view] = (views[l.view] || 0) + 1;
+});
+
+// ── Average Session Time ──
+const totalSessionTime = Array.from(sessionDurations.values()).reduce(
+  (acc, val) => acc + (val.end - val.start),
+  0
+);
+const avgSessionTime =
+  sessionDurations.size > 0
+    ? formatDuration(totalSessionTime / sessionDurations.size)
+    : "0s";
+
+return {
+  overview: {
+    totalLogs,
+    totalUsers: users.length,
+    utils: activeUsersCount,
+    googleUsers,
+    guestUsers,
+    unknownUsers,
+    dailyActivity,
+    avgSessionTime,
+    totalSessions: sessionDurations.size,
+  },
+  users: users.sort((a, b) => b.lastSeen - a.lastSeen),
+  views,
+  recentLogs: logs.slice(0, 100),  // Already sorted desc above
+};
 };
 
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 function formatDuration(ms: number): string {
-  if (!ms || ms < 0) return '0s';
+  if (!ms || ms < 0) return "0s";
   const totalSeconds = Math.floor(ms / 1000);
   const seconds = totalSeconds % 60;
   const totalMinutes = Math.floor(totalSeconds / 60);
   const minutes = totalMinutes % 60;
   const hours = Math.floor(totalMinutes / 60);
 
-  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (hardcoded password > 0) return `${hours}h ${minutes}m`;
   if (minutes > 0) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
 }
