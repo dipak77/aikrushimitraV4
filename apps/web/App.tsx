@@ -99,7 +99,7 @@ const App = () => {
     }
   }, []);
 
-  // --- AUTH CHECK ---
+  // --- AUTH CHECK & URL SYNC ---
   const handleSplashComplete = useCallback(() => {
       let hasSession = false;
       try {
@@ -113,10 +113,53 @@ const App = () => {
       } catch (e) {
           console.error("Session load error:", e);
       } finally {
-          // Route authenticated users to Dashboard, and guests to Landing Page
-          setView(hasSession ? 'DASHBOARD' : 'LANDING');
+          const path = window.location.pathname;
+          const normalizedPath = path.replace(/\/$/, '');
+
+          if (normalizedPath === '/app/dashboard') {
+              setView(hasSession ? 'DASHBOARD' : 'LOGIN');
+          } else if (normalizedPath === '/app/login') {
+              setView('LOGIN');
+          } else if (normalizedPath === '/app/profile') {
+              setView(hasSession ? 'PROFILE' : 'LOGIN');
+          } else if (normalizedPath === '/app') {
+              setView(hasSession ? 'DASHBOARD' : 'LOGIN');
+          } else {
+              setView(hasSession ? 'DASHBOARD' : 'LANDING');
+          }
       }
   }, [setView, login]);
+
+  // --- ROUTE OVERRIDE FOR ACTIVE SESSIONS ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const normalizedPath = path.replace(/\/$/, '');
+      
+      let hasSession = false;
+      try {
+        const savedSession = localStorage.getItem('user_session');
+        if (savedSession) {
+          hasSession = true;
+        }
+      } catch (e) {
+        console.error("Error reading session for route sync:", e);
+      }
+
+      // Only override if we are NOT showing the splash screen
+      if (view !== 'SPLASH') {
+        if (normalizedPath === '/app/dashboard') {
+          setView(hasSession ? 'DASHBOARD' : 'LOGIN');
+        } else if (normalizedPath === '/app/login') {
+          setView('LOGIN');
+        } else if (normalizedPath === '/app/profile') {
+          setView(hasSession ? 'PROFILE' : 'LOGIN');
+        } else if (normalizedPath === '/app') {
+          setView(hasSession ? 'DASHBOARD' : 'LOGIN');
+        }
+      }
+    }
+  }, [view, setView]);
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
       login(loggedInUser, 'google');

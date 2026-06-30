@@ -10,7 +10,7 @@ const API_CACHE = `${CACHE_VERSION}-api`;
 // Assets to pre-cache on install (Cache-First strategy)
 const STATIC_ASSETS = [
   '/',
-  '/app',
+  '/app/',
   '/manifest.json',
 ];
 
@@ -53,18 +53,20 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/ws/')) return;
 
   // ── Strategy 1: Cache-First for static assets, fonts, icons, crop images ──
+  const isAppPath = url.pathname === '/app' || url.pathname === '/app/';
   if (
     url.pathname.match(/\.(js|css|woff2?|ttf|svg|png|jpg|jpeg|webp|ico)$/) ||
     url.pathname === '/' ||
-    url.pathname === '/app'
+    isAppPath
   ) {
+    const cacheKey = isAppPath ? '/app/' : event.request;
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
+      caches.match(cacheKey).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
         return fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(event.request, responseClone));
+            caches.open(STATIC_CACHE).then((cache) => cache.put(cacheKey, responseClone));
           }
           return networkResponse;
         });

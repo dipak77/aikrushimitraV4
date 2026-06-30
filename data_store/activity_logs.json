@@ -1,0 +1,28 @@
+[
+  {
+    "id": "sup_1782703157352_sirp7",
+    "type": "SUPPORT_ENQUIRY",
+    "userEmail": "8877665544",
+    "userName": "Tejas Harane",
+    "village": "Pune",
+    "enquiry": "app baddal mahiti sanga",
+    "lang": "mr",
+    "timestamp": 1782703157352,
+    "serverTimestamp": 1782703157352,
+    "ip": "127.0.0.1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
+  },
+  {
+    "id": "sup_1782676091152_rccmo",
+    "type": "SUPPORT_ENQUIRY",
+    "userEmail": "8877990066",
+    "userName": "Dipak Harane",
+    "village": "Pune",
+    "enquiry": "share app complete detail",
+    "lang": "mr",
+    "timestamp": 1782676091152,
+    "serverTimestamp": 1782676091152,
+    "ip": "127.0.0.1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
+  }
+]
