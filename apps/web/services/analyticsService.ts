@@ -30,7 +30,7 @@ const MAX_STRING_LEN = 200;
  * NOT a secure password store.
  */
 export const TARGET_HASH =
-  "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
+  "2cbe8647b64b21c8594834a08de83034f1ba340d443741a0c3c1e8e946a576d9";
 
 export const hashPassword = async (password: string): Promise<string> => {
   if (window.crypto?.subtle) {
