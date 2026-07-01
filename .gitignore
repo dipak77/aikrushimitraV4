@@ -11,6 +11,7 @@ tsconfig.tsbuildinfo
 # Secret Environment Files (Security Hardening)
 .env
 .env.*
+!.env.local.example
 *.env
 .env.local
 .env.production

@@ -1,7 +1,7 @@
 # AI Krushi Mitra — Sprint Backlog Roadmap
 
-> **Version:** 2.0 | **Status:** Approved | **Owner:** Product Owner  
-> **Last Updated:** 2026-06-28
+> **Version:** 3.0 | **Status:** Approved | **Owner:** Product Owner  
+> **Last Updated:** 2026-07-01
 
 ---
 
@@ -32,6 +32,12 @@ gantt
     section Phase 4: Innovation (P3)
     Sprint 8: Drone & IoT Dashboards      : 2026-09-16, 2026-09-30
     Sprint 9: NDVI Satellite & Ledger     : 2026-10-01, 2026-10-15
+
+    section Phase 9: Hardening & Action Plan
+    Sprint 23: Security & Critical       :active, 2026-07-01, 2026-07-15
+    Sprint 24: Backend & Observability    : 2026-07-16, 2026-07-30
+    Sprint 25: DB & RAG Enhancements     : 2026-08-01, 2026-08-15
+    Sprint 26: Soil, Yield & i18n        : 2026-08-16, 2026-08-30
 ```
 
 ---
@@ -130,6 +136,23 @@ gantt
     *   *Reference:* [risk-register.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/roadmap/risk-register.md)
 *   **Sprint 22: DevOps CI/CD & Programmatic SEO** *(ci-cd-pipeline.md + rendering-strategy.md)*
     *   *Reference:* [ci-cd-pipeline.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/devops/ci-cd-pipeline.md), [rendering-strategy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/seo/rendering-strategy.md)
+
+### 🔴 Phase 9: Hardening & Action Plan (Active)
+
+> **Goal:** Address all security vulnerabilities, modularize the monolith server, migrate static knowledge to database, improve RAG pipeline metadata/retrieval, and implement next phase features.
+
+*   **Sprint 23: Security & Critical Hardening (Active)**
+    *   *Reference:* [implementation_plan.md](file:///C:/Users/haran/.gemini/antigravity-ide/brain/5130362a-eb9f-4e2f-9da3-df21195a6808/implementation_plan.md)
+    *   *Deliverables:* Remove exposed client-side API keys in Vite and Express serving layer. Add rate limiting to AI routes, verify React Error Boundaries, and create `.env.local.example`.
+*   **Sprint 24: Backend Refactoring & Observability**
+    *   *Reference:* [system-context.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/system-context.md)
+    *   *Deliverables:* Modularize `server.js` (extract routes, socket, and logs). Setup `winston` structured logging, error handling, strict TS checks, and API docs.
+*   **Sprint 25: Database Migration & RAG Enhancements**
+    *   *Reference:* [pipeline-architecture.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/rag/pipeline-architecture.md)
+    *   *Deliverables:* Migrate crops, schemes, and markets data to Firestore. Implement RAG metadata, hybrid search, citation tracking, and service worker offline caching.
+*   **Sprint 26: Next Feature Works & UX Optimization**
+    *   *Reference:* [feature-hierarchy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md)
+    *   *Deliverables:* Integrate Soil NPK parameter slider dynamic AI advisory, push-triggered pest alerts, `i18next` localized resource routing, bundle size optimization, and a11y audit.
 
 
 

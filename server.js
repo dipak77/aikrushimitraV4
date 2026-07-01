@@ -396,7 +396,7 @@ const filterOutput = (response, lang) => {
 };
 
 // --- Chat ---
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', rateLimiter(30, 60000), async (req, res) => {
   try {
     const { prompt, systemInstruction, user } = req.body;
 
@@ -489,7 +489,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // --- Vision ---
-app.post('/api/vision', async (req, res) => {
+app.post('/api/vision', rateLimiter(20, 60000), async (req, res) => {
   try {
     const { prompt, imageBase64, mimeType, user, cropType } = req.body;
 
@@ -918,7 +918,7 @@ const serveIndexWithInjection = (req, res) => {
     // Inject ENV variables for frontend
     const envScript = `<script>
       window.ENV = {
-        API_KEY: ${API_KEY ? `"${API_KEY}"` : 'null'}
+        API_KEY: null
       };
     </script>`;
 

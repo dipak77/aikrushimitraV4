@@ -280,7 +280,7 @@ export const getAnalyticsStats = async () => {
       name: string;
   email: string;
   provider: string;
-  firstSeen: firstSeen: number;
+  firstSeen: number;
   lastSeen: number;
   lastLocation: string;
   sessions: Set<string>;
@@ -423,7 +423,7 @@ function formatDuration(ms: number): string {
   const minutes = totalMinutes % 60;
   const hours = Math.floor(totalMinutes / 60);
 
-  if (hardcoded password > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
   if (minutes > 0) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
 }

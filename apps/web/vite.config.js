@@ -21,8 +21,6 @@ export default defineConfig(({ mode }) => {
     define: {
       // Prevents "process is not defined" in browser
       'process.env': {},
-      // Injects the resolved key directly as a string literal
-      'process.env.API_KEY': JSON.stringify(apiKey),
       'process.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(googleClientId),
     },
     server: {
