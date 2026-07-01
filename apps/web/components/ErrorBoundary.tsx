@@ -117,13 +117,21 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               <h3 className="text-lg font-black text-white">{errorConfig.title}</h3>
               <p className="text-sm text-slate-400 leading-relaxed font-medium">{errorConfig.message}</p>
             </div>
-            <button
-              onClick={this.handleRetry}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl text-sm active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
-            >
-              <RefreshCw size={14} />
-              {lang === 'mr' ? 'पुन्हा प्रयत्न करा' : lang === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={this.handleRetry}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl text-sm active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
+              >
+                <RefreshCw size={14} />
+                {lang === 'mr' ? 'पुन्हा प्रयत्न करा' : lang === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
+              </button>
+              <button
+                onClick={() => { window.location.href = '/app'; }}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold rounded-xl text-sm active:scale-95 transition-all"
+              >
+                {lang === 'mr' ? 'मुख्यपृष्ठ' : lang === 'hi' ? 'मुख्य पृष्ठ' : 'Go to Dashboard'}
+              </button>
+            </div>
           </div>
         </div>
       );

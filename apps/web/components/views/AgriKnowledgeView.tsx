@@ -192,22 +192,36 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
           fetchSchemes()
         ]);
         
+        const normalizeText = (val: any) => {
+          if (!val) return { mr: '', en: '' };
+          if (typeof val === 'string') return { mr: val, en: val };
+          return { mr: val.mr || val.en || '', en: val.en || val.mr || '' };
+        };
+
         const cropsMapped = (cropsData || []).map((c: any) => ({
           ...c,
           category: 'crop',
-          title: c.name || { mr: '', en: '' },
-          subtitle: c.subtitle || { mr: '', en: '' }
+          title: normalizeText(c.title || c.name),
+          subtitle: normalizeText(c.subtitle || c.scientificName),
+          stats: Array.isArray(c.stats) ? c.stats : [],
+          tags: Array.isArray(c.tags) ? c.tags : []
         }));
         
         const contentMapped = (contentData || []).map((c: any) => ({
           ...c,
+          title: normalizeText(c.title),
+          subtitle: normalizeText(c.subtitle),
+          stats: Array.isArray(c.stats) ? c.stats : [],
+          tags: Array.isArray(c.tags) ? c.tags : []
         }));
         
         const schemesMapped = (schemesData || []).map((s: any) => ({
           ...s,
           category: 'scheme',
-          title: s.name || { mr: '', en: '' },
-          subtitle: s.benefits?.[0]?.description || { mr: '', en: '' }
+          title: normalizeText(s.title || s.name),
+          subtitle: normalizeText(s.subtitle || s.benefits),
+          stats: Array.isArray(s.stats) ? s.stats : [],
+          tags: Array.isArray(s.tags) ? s.tags : []
         }));
         
         setKnowledgeBase([...cropsMapped, ...contentMapped, ...schemesMapped] as any);
@@ -223,11 +237,19 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
   const filtered = knowledgeBase.filter((item) => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const query = searchQuery.toLowerCase();
-    const titleEn = (item.title?.en || '').toLowerCase();
-    const titleMr = item.title?.mr || '';
-    const titleHi = item.title?.hi || '';
+    const titleObj = item.title || { mr: '', en: '' };
+    const titleEn = (titleObj.en || '').toLowerCase();
+    const titleMr = (titleObj.mr || '').toLowerCase();
+    const titleHi = (titleObj.hi || '').toLowerCase();
+    const tags = Array.isArray(item.tags) ? item.tags : [];
     
-    return matchesCategory && (!query || titleEn.includes(query) || titleMr.includes(query) || titleHi.includes(query) || item.tags.some(t => t.toLowerCase().includes(query)));
+    return matchesCategory && (
+      !query || 
+      titleEn.includes(query) || 
+      titleMr.includes(query) || 
+      titleHi.includes(query) || 
+      tags.some(t => String(t).toLowerCase().includes(query))
+    );
   });
 
   return (

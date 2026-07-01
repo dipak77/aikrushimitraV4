@@ -246,171 +246,191 @@ const fetchLogsFromServer = async (): Promise<ActivityLog[]> => {
 
 // ─── Core: getAnalyticsStats ────────────────────────────────────────────────
 export const getAnalyticsStats = async () => {
-  const logs = await fetchLogsFromServer();
+  try {
+    const logs = await fetchLogsFromServer();
 
-  // Ensure descending order (safe even if Firestore returned unsorted)
-  logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    // Ensure descending order (safe even if Firestore returned unsorted)
+    logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-  const now = Date.now();
-  const startOfDay = new Date().setHours(0, 0, 0, 0);
+    const now = Date.now();
+    const startOfDay = new Date().setHours(0, 0, 0, 0);
 
-  const totalLogs = logs.length;
-  const dailyActivity = logs.filter(
-    (l) => l.timestamp >= startOfDay
-  ).length;
+    const totalLogs = logs.length;
+    const dailyActivity = logs.filter(
+      (l) => l.timestamp >= startOfDay
+    ).length;
 
-  // ── Session Duration Map ──
-  const sessionDurations = new Map<string, { start: number; end: number }>();
+    // ── Session Duration Map ──
+    const sessionDurations = new Map<string, { start: number; end: number }>();
 
-  logs.forEach((l) => {
-    const sid = l.sessionId || `no_session_${l.userEmail}`;
-    const existing = sessionDurations.get(sid);
-    if (!existing) {
-      sessionDurations.set(sid, { start: l.timestamp, end: l.timestamp });
-    } else {
-      existing.start = Math.min(existing.start, l.timestamp);
-      existing.end = Math.max(existing.end, l.timestamp);
-    }
-  });
-
-  // ── User Aggregation ──
-  const userMap = new Map <
-    string,
-    {
-      name: string;
-  email: string;
-  provider: string;
-  firstSeen: number;
-  lastSeen: number;
-  lastLocation: string;
-  sessions: Set<string>;
-  locations: Set<string>;
-  devices: Set<string>;
-  osSet: Set<string>;
-  logsCount: number;
-}
-  > ();
-
-let activeUsersCount = 0;
-
-logs.forEach((log) => {
-  if (!log.userEmail) return;
-
-  const key = log.userEmail;
-
-  if (!userMap.has(key)) {
-    userMap.set(key, {
-      name: log.userName || "Unknown",
-      email: log.userEmail,
-      provider: log.provider || "unknown",
-      firstSeen: log.timestamp,
-      lastSeen: log.timestamp,
-      lastLocation: log.location || "Unknown",
-      sessions: new Set<string>(),
-      locations: new Set<string>(),
-      devices: new Set<string>(),
-      osSet: new Set<string>(),
-      logsCount: 0,
+    logs.forEach((l) => {
+      const sid = l.sessionId || `no_session_${l.userEmail}`;
+      const existing = sessionDurations.get(sid);
+      if (!existing) {
+        sessionDurations.set(sid, { start: l.timestamp, end: l.timestamp });
+      } else {
+        existing.start = Math.min(existing.start, l.timestamp);
+        existing.end = Math.max(existing.end, l.timestamp);
+      }
     });
+
+    // ── User Aggregation ──
+    const userMap = new Map <
+      string,
+      {
+        name: string;
+        email: string;
+        provider: string;
+        firstSeen: number;
+        lastSeen: number;
+        lastLocation: string;
+        sessions: Set<string>;
+        locations: Set<string>;
+        devices: Set<string>;
+        osSet: Set<string>;
+        logsCount: number;
+      }
+    > ();
+
+    let activeUsersCount = 0;
+
+    logs.forEach((log) => {
+      if (!log.userEmail) return;
+
+      const key = log.userEmail;
+
+      if (!userMap.has(key)) {
+        userMap.set(key, {
+          name: log.userName || "Unknown",
+          email: log.userEmail,
+          provider: log.provider || "unknown",
+          firstSeen: log.timestamp,
+          lastSeen: log.timestamp,
+          lastLocation: log.location || "Unknown",
+          sessions: new Set<string>(),
+          locations: new Set<string>(),
+          devices: new Set<string>(),
+          osSet: new Set<string>(),
+          logsCount: 0,
+        });
+      }
+
+      const u = userMap.get(key)!;
+
+      // Update firstSeen / lastSeen
+      u.firstSeen = Math.min(u.firstSeen, log.timestamp);
+      u.lastSeen = Math.max(u.lastSeen, log.timestamp);
+
+      // Update lastLocation only when this log is the most recent so far
+      if (log.timestamp >= u.lastSeen) {
+        u.lastLocation = log.location || "Unknown";
+      }
+
+      // Upgrade provider from unknown to a known value
+      if (u.provider === "unknown" && log.provider && log.provider !== "unknown") {
+        u.provider = log.provider;
+      }
+
+      if (log.sessionId) u.sessions.add(log.sessionId);
+      if (log.location) u.locations.add(log.location);
+      if (log.device) u.devices.add(log.device);
+      if (log.os) u.osSet.add(log.os);
+      u.logsCount++;
+    });
+
+    // ── Finalize Users ──
+    const users = Array.from(userMap.values()).map((u) => {
+      let totalTimeMs = 0;
+
+      u.sessions.forEach((sid: string) => {
+        const s = sessionDurations.get(sid);
+        if (s) {
+          let duration = s.end - s.start;
+          if (duration <= 0) duration = MIN_SESSION_DURATION_MS;
+          totalTimeMs += duration;
+        }
+      });
+
+      const isActive = now - u.lastSeen < ACTIVE_THRESHOLD_MS;
+      if (isActive) activeUsersCount++;
+
+      return {
+        name: u.name,
+        email: u.email,
+        provider: u.provider,
+        firstSeen: u.firstSeen,
+        lastSeen: u.lastSeen,
+        lastLocation: u.lastLocation,
+        sessionsCount: u.sessions.size,
+        uniqueLocations: u.locations.size,
+        deviceList: Array.from(u.devices),
+        osList: Array.from(u.osSet),
+        logsCount: u.logsCount,
+        totalTimeFormatted: formatDuration(totalTimeMs),
+        totalTimeMs,
+        isActive,
+        status: isActive ? "🟢 Online" : "⚫ Offline",
+      };
+    });
+
+    // ── Provider Split ──
+    const googleUsers = users.filter((u) => u.provider === "google").length;
+    const guestUsers = users.filter((u) => u.provider === "guest").length;
+    const unknownUsers = users.filter(
+      (u) => u.provider === "unknown"
+    ).length;
+
+    // ── View Analytics ──
+    const views: Record<string, number> = {};
+    logs.forEach((l) => {
+      if (l.view) views[l.view] = (views[l.view] || 0) + 1;
+    });
+
+    // ── Average Session Time ──
+    const totalSessionTime = Array.from(sessionDurations.values()).reduce(
+      (acc, val) => acc + (val.end - val.start),
+      0
+    );
+    const avgSessionTime =
+      sessionDurations.size > 0
+        ? formatDuration(totalSessionTime / sessionDurations.size)
+        : "0s";
+
+    return {
+      overview: {
+        totalLogs,
+        totalUsers: users.length,
+        utils: activeUsersCount,
+        googleUsers,
+        guestUsers,
+        unknownUsers,
+        dailyActivity,
+        avgSessionTime,
+        totalSessions: sessionDurations.size,
+      },
+      users: users.sort((a, b) => b.lastSeen - a.lastSeen),
+      views,
+      recentLogs: logs.slice(0, 100),  // Already sorted desc above
+    };
+  } catch (err) {
+    console.error("Error in getAnalyticsStats:", err);
+    return {
+      overview: {
+        totalLogs: 0,
+        totalUsers: 0,
+        utils: 0,
+        googleUsers: 0,
+        guestUsers: 0,
+        unknownUsers: 0,
+        dailyActivity: 0,
+        avgSessionTime: "0s",
+        totalSessions: 0,
+      },
+      users: [],
+      views: {},
+      recentLogs: [],
+    };
   }
-
-  const u = userMap.get(key)!;
-
-  // Update firstSeen / lastSeen
-  u.firstSeen = Math.min(u.firstSeen, log.timestamp);
-  u.lastSeen = Math.max(u.lastSeen, log.timestamp);
-
-  // Update lastLocation only when this log is the most recent so far
-  if (log.timestamp >= u.lastSeen) {
-    u.lastLocation = log.location || "Unknown";
-  }
-
-  // Upgrade provider from unknown to a known value
-  if (u.provider === "unknown" && log.provider && log.provider !== "unknown") {
-    u.provider = log.provider;
-  }
-
-  if (log.sessionId) u.sessions.add(log.sessionId);
-  if (log.location) u.locations.add(log.location);
-  if (log.device) u.devices.add(log.device);
-  if (log.os) u.osSet.add(log.os);
-  u.logsCount++;
-});
-
-// ── Finalize Users ──
-const users = Array.from(userMap.values()).map((u) => {
-  let totalTimeMs = 0;
-
-  u.sessions.forEach((sid: string) => {
-    const s = sessionDurations.get(sid);
-    if (s) {
-      let duration = s.end - s.start;
-      if (duration <= 0) duration = MIN_SESSION_DURATION_MS;
-      totalTimeMs += duration;
-    }
-  });
-
-  const isActive = now - u.lastSeen < ACTIVE_THRESHOLD_MS;
-  if (isActive) activeUsersCount++;
-
-  return {
-    name: u.name,
-    email: u.email,
-    provider: u.provider,
-    firstSeen: u.firstSeen,
-    lastSeen: u.lastSeen,
-    lastLocation: u.lastLocation,
-    sessionsCount: u.sessions.size,
-    uniqueLocations: u.locations.size,
-    deviceList: Array.from(u.devices),
-    osList: Array.from(u.osSet),
-    logsCount: u.logsCount,
-    totalTimeFormatted: formatDuration(totalTimeMs),
-    totalTimeMs,
-    isActive,
-    status: isActive ? "🟢 Online" : "⚫ Offline",
-  };
-});
-
-// ── Provider Split ──
-const googleUsers = users.filter((u) => u.provider === "google").length;
-const guestUsers = users.filter((u) => u.provider === "guest").length;
-const unknownUsers = users.filter(
-  (u) => u.provider === "unknown"
-).length;
-
-// ── View Analytics ──
-const views: Record<string, number> = {};
-logs.forEach((l) => {
-  if (l.view) views[l.view] = (views[l.view] || 0) + 1;
-});
-
-// ── Average Session Time ──
-const totalSessionTime = Array.from(sessionDurations.values()).reduce(
-  (acc, val) => acc + (val.end - val.start),
-  0
-);
-const avgSessionTime =
-  sessionDurations.size > 0
-    ? formatDuration(totalSessionTime / sessionDurations.size)
-    : "0s";
-
-return {
-  overview: {
-    totalLogs,
-    totalUsers: users.length,
-    utils: activeUsersCount,
-    googleUsers,
-    guestUsers,
-    unknownUsers,
-    dailyActivity,
-    avgSessionTime,
-    totalSessions: sessionDurations.size,
-  },
-  users: users.sort((a, b) => b.lastSeen - a.lastSeen),
-  views,
-  recentLogs: logs.slice(0, 100),  // Already sorted desc above
-};
 };
 
 

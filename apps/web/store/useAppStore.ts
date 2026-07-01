@@ -118,11 +118,8 @@ export const useAppStore = create<AppState>()(persist((set, get) => ({
 }), {
   name: 'akm-app-store',
   storage: createJSONStorage(() => localStorage),
-  // Only persist navigation state — transient UI state resets on reload
+  // Only persist UI preference state — navigation resets to default on page load/refresh
   partialize: (state) => ({
-    currentView: state.currentView,
-    previousView: state.previousView,
-    navigationHistory: state.navigationHistory,
     sidebarCollapsed: state.sidebarCollapsed,
   }),
 }));

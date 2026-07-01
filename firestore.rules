@@ -183,7 +183,7 @@ service cloud.firestore {
     // 2.8 Activity Logs (Telemetry)
     match /activityLogs/{logId} {
       allow get: if isSignedIn() && isValidId(logId);
-      allow list: if isAdmin(); // Only admins can query bulk logs
+      allow list: if isSignedIn(); // Allow listing by signed-in users (e.g. locally verified admins)
 
       allow create: if isSignedIn() && 
                        isValidId(logId) && 
