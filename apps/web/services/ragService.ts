@@ -20,7 +20,7 @@
 //   ✓ Null-safe property access throughout
 // =============================================================================
 
-import { KNOWLEDGE_BASE, KnowledgeItem } from '../data/knowledge';
+import { KNOWLEDGE_BASE, KnowledgeItem, LocalizedText } from '../data/knowledge';
 import { fetchCrops, fetchContent, fetchSchemes } from './dbService';
 
 // ─── Configuration ───────────────────────────────────────────────────────────
@@ -268,8 +268,15 @@ function deduplicateChunks(chunks: ChunkItem[], threshold = 0.85): ChunkItem[] {
 function safeStr(val: any): string {
   return typeof val === 'string' ? val : '';
 }
-function safeObj(val: any): { en?: string; mr?: string; hi?: string } {
-  return val && typeof val === 'object' ? val : {};
+function safeObj(val: any): LocalizedText {
+  if (val && typeof val === 'object') {
+    return {
+      mr: typeof val.mr === 'string' ? val.mr : '',
+      hi: typeof val.hi === 'string' ? val.hi : '',
+      en: typeof val.en === 'string' ? val.en : '',
+    };
+  }
+  return { mr: '', hi: '', en: '' };
 }
 function safeArr(val: any): any[] {
   return Array.isArray(val) ? val : [];
@@ -304,7 +311,7 @@ async function loadArticlesFromFirestore(): Promise<KnowledgeItem[]> {
     for (const c of safeArr(firestoreContent)) {
       articles.push({
         id: safeStr(c.id),
-        category: safeStr(c.category) || 'tech',
+        category: (safeStr(c.category) || 'tech') as 'crop' | 'tech' | 'livestock' | 'scheme',
         title: safeObj(c.title),
         subtitle: safeObj(c.subtitle),
         image: safeStr(c.image),

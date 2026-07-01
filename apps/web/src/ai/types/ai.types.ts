@@ -6,6 +6,7 @@ export interface AIChatOptions {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  history?: any[];
 }
 
 export interface AIVisionOptions {

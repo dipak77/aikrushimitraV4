@@ -25,7 +25,7 @@ interface ChatSession {
   lastActive: number;
 }
 
-const QUICK_REPLIES = {
+const QUICK_REPLIES: Record<string, string[]> = {
   mr: [
     "सोयाबीन किडींचे नियंत्रण कसे करावे?",
     "कापूस पिकासाठी खत नियोजन सांगा.",
@@ -397,7 +397,7 @@ const ChatView = ({ lang, user, onBack }: { lang: Language; user: UserProfile; o
           {/* Quick Replies Row */}
           {messages.length <= 2 && !loading && (
             <div className="flex gap-2 overflow-x-auto pb-3 mb-2 shrink-0 hide-scrollbar -mx-2 px-2">
-              {currentReplies.map((r, idx) => (
+              {currentReplies.map((r: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(r)}

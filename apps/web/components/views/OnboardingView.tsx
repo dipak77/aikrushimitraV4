@@ -100,7 +100,7 @@ const OnboardingView: React.FC<OnboardingViewProps> = ({ lang, user, onComplete 
   };
 
   const handleFinish = () => {
-    triggerHaptic('success');
+    triggerHaptic('heavy');
     const primaryCropName = selectedCrops.length > 0 
       ? CROPS_LIST.find(c => c.id === selectedCrops[0])?.label.en || 'Soyabean' 
       : 'Soyabean';

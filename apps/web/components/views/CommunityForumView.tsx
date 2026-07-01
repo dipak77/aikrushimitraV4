@@ -41,7 +41,7 @@ interface PestAlert {
   recommendation: string;
 }
 
-const MOCK_FORUM_POSTS: Record<Language, ForumPost[]> = {
+const MOCK_FORUM_POSTS: Partial<Record<Language, ForumPost[]>> & { en: ForumPost[]; mr: ForumPost[]; hi: ForumPost[] } = {
   mr: [
     {
       id: "post_1",
@@ -133,7 +133,7 @@ const MOCK_FORUM_POSTS: Record<Language, ForumPost[]> = {
   ]
 };
 
-const MOCK_PEST_ALERTS: Record<Language, PestAlert[]> = {
+const MOCK_PEST_ALERTS: Partial<Record<Language, PestAlert[]>> & { en: PestAlert[]; mr: PestAlert[]; hi: PestAlert[] } = {
   mr: [
     {
       id: "alert_1",

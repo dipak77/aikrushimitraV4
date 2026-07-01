@@ -52,7 +52,7 @@ const extractBase64 = (imageData: string): string => {
   if (imageData.length > MAX_IMAGE_LEN) {
     throw new Error('Image data exceeds maximum allowed size.');
   }
-  return imageData.includes(',') ? imageData.split(',') : imageData;[1]
+  return imageData.includes(',') ? imageData.split(',')[1] : imageData;
 };
 
 /**

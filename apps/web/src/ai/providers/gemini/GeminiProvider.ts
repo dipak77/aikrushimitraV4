@@ -73,7 +73,8 @@ export class GeminiProvider implements IAIProvider {
       model,
       contents: options.text
     });
-    return response.embedding?.values || [];
+    const resp = response as any;
+    return resp.embeddings?.[0]?.values || resp.embedding?.values || [];
   }
 
   async search(options: AISearchOptions): Promise<AIProviderResponse> {

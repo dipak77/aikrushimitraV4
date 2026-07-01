@@ -1,9 +1,9 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Language } from '../../types';
+import { Language } from '../types';
 import { AlertTriangle, RefreshCw, WifiOff, Clock, ShieldAlert, KeyRound, Database, ImageOff, Monitor } from 'lucide-react';
 
 // Error messages matching system-context.md §5 Error Handling Strategy
-const ERROR_MESSAGES: Record<string, Record<Language, { title: string; message: string; icon: any }>> = {
+const ERROR_MESSAGES: Record<string, Record<string, { title: string; message: string; icon: any }>> = {
   network: {
     mr: { title: 'इंटरनेट कनेक्शन नाही', message: 'ऑफलाइन मोड — शेवटचे अपडेट पाहत आहे. इंटरनेट कनेक्शन तपासा.', icon: WifiOff },
     hi: { title: 'इंटरनेट कनेक्शन नहीं', message: 'ऑफलाइन मोड — अंतिम अपडेट देख रहे हैं।', icon: WifiOff },

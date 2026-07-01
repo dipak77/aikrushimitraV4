@@ -13,6 +13,7 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
   const [image, setImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [acres, setAcres] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,9 +60,20 @@ const DiseaseDetector = ({ lang, onBack }: { lang: Language, onBack: () => void 
     setAnalyzing(false);
   };
 
+  const handleWhatsAppShare = () => {
+    if (!result) return;
+    const shareText = encodeURIComponent(
+      lang === 'mr'
+        ? `*कृषी मित्र - पीक रोग निदान अहवाल*\n\n${result}`
+        : `*AI Krushi Mitra - Crop Diagnosis Report*\n\n${result}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${shareText}`, '_blank');
+  };
+
   const reset = () => {
     setImage(null);
     setResult(null);
+    setAcres(1);
   };
 
   return (

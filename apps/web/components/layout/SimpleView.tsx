@@ -7,9 +7,10 @@ interface SimpleViewProps {
   title: string;
   children?: React.ReactNode;
   onBack: () => void;
+  headerRight?: React.ReactNode;
 }
 
-const SimpleView = ({ title, children, onBack }: SimpleViewProps) => {
+const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) => {
   const orbsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -122,16 +123,20 @@ const SimpleView = ({ title, children, onBack }: SimpleViewProps) => {
             </h1>
           </div>
 
-          {/* Floating Indicator Dots */}
-          <div className="flex gap-2">
-            {[...Array(3)].map((_, i) => (
-              <div 
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 animate-pulse-sequence shadow-[0_0_8px_rgba(16,185,129,0.6)]"
-                style={{ animationDelay: `${i * 0.3}s` }}
-              ></div>
-            ))}
-          </div>
+          {/* Floating Indicator Dots or Custom Header Action */}
+          {headerRight ? (
+            <div className="flex items-center">{headerRight}</div>
+          ) : (
+            <div className="flex gap-2">
+              {[...Array(3)].map((_, i) => (
+                <div 
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 animate-pulse-sequence shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                  style={{ animationDelay: `${i * 0.3}s` }}
+                ></div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Premium Content Area with Fade Effects */}
