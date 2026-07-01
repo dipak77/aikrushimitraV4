@@ -141,13 +141,13 @@ gantt
 
 > **Goal:** Address all security vulnerabilities, modularize the monolith server, migrate static knowledge to database, improve RAG pipeline metadata/retrieval, and implement next phase features.
 
-*   **Sprint 23: Security & Critical Hardening (Active)**
+*   **Sprint 23: Security & Critical Hardening (COMPLETED)**
     *   *Reference:* [implementation_plan.md](file:///C:/Users/haran/.gemini/antigravity-ide/brain/5130362a-eb9f-4e2f-9da3-df21195a6808/implementation_plan.md)
     *   *Deliverables:* Remove exposed client-side API keys in Vite and Express serving layer. Add rate limiting to AI routes, verify React Error Boundaries, and create `.env.local.example`.
-*   **Sprint 24: Backend Refactoring & Observability**
+*   **Sprint 24: Backend Refactoring & Observability (COMPLETED)**
     *   *Reference:* [system-context.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/system-context.md)
     *   *Deliverables:* Modularize `server.js` (extract routes, socket, and logs). Setup `winston` structured logging, error handling, strict TS checks, and API docs.
-*   **Sprint 25: Database Migration & RAG Enhancements**
+*   **Sprint 25: Database Migration & RAG Enhancements (Active)**
     *   *Reference:* [pipeline-architecture.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/rag/pipeline-architecture.md)
     *   *Deliverables:* Migrate crops, schemes, and markets data to Firestore. Implement RAG metadata, hybrid search, citation tracking, and service worker offline caching.
 *   **Sprint 26: Next Feature Works & UX Optimization**
