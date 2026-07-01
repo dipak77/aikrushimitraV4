@@ -147,10 +147,10 @@ gantt
 *   **Sprint 24: Backend Refactoring & Observability (COMPLETED)**
     *   *Reference:* [system-context.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/system-context.md)
     *   *Deliverables:* Modularize `server.js` (extract routes, socket, and logs). Setup `winston` structured logging, error handling, strict TS checks, and API docs.
-*   **Sprint 25: Database Migration & RAG Enhancements (Active)**
+*   **Sprint 25: Database Migration & RAG Enhancements (COMPLETED)**
     *   *Reference:* [pipeline-architecture.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/rag/pipeline-architecture.md)
     *   *Deliverables:* Migrate crops, schemes, and markets data to Firestore. Implement RAG metadata, hybrid search, citation tracking, and service worker offline caching.
-*   **Sprint 26: Next Feature Works & UX Optimization**
+*   **Sprint 26: Next Feature Works & UX Optimization (Active)**
     *   *Reference:* [feature-hierarchy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md)
     *   *Deliverables:* Integrate Soil NPK parameter slider dynamic AI advisory, push-triggered pest alerts, `i18next` localized resource routing, bundle size optimization, and a11y audit.
 
