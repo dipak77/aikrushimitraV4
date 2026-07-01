@@ -15,7 +15,7 @@ interface Message {
   role: 'user' | 'model';
   text: string;
   timestamp: number;
-  citations?: { source: string; category: string }[];
+  citations?: { source: string; category: string; url?: string }[];
 }
 
 interface ChatSession {
@@ -365,14 +365,29 @@ const ChatView = ({ lang, user, onBack }: { lang: Language; user: UserProfile; o
                     {/* Citations block */}
                     {isAi && msg.citations && msg.citations.length > 0 && (
                       <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-wrap gap-2">
-                        {msg.citations.map((cite, cIdx) => (
-                          <div 
-                            key={cIdx} 
-                            className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-black tracking-wider uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full"
-                          >
-                            <BookOpen size={8} /> {cite.source}
-                          </div>
-                        ))}
+                        {msg.citations.map((cite, cIdx) => {
+                          const content = (
+                            <>
+                              <BookOpen size={8} /> {cite.source}
+                            </>
+                          );
+                          const classes = "inline-flex items-center gap-1 text-[10px] text-emerald-400 font-black tracking-wider uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full transition-all hover:bg-emerald-500/20";
+                          return cite.url ? (
+                            <a 
+                              key={cIdx} 
+                              href={cite.url} 
+                              target={cite.url.startsWith('http') ? '_blank' : '_self'}
+                              rel="noopener noreferrer"
+                              className={classes}
+                            >
+                              {content}
+                            </a>
+                          ) : (
+                            <div key={cIdx} className={classes}>
+                              {content}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

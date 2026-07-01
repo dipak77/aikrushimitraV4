@@ -267,24 +267,35 @@ async function loadArticlesFromFirestore() {
         stats: safeArr(c.stats), sections: safeArr(c.sections),
       });
     }
-    const activeLang = 'mr';
-    const schemeDoc = firestoreSchemes?.find(doc => doc?.lang === activeLang) || firestoreSchemes?.[0];
-    if (schemeDoc && Array.isArray(schemeDoc.schemes)) {
-      schemeDoc.schemes.forEach((s, idx) => {
-        const title = safeStr(s.title);
-        const desc = safeStr(s.desc);
-        const eligibility = safeStr(s.eligibility);
-        const dept = safeStr(s.dept);
-        articles.push({
-          id: safeStr(s.id) || `scheme_${idx}`, category: 'scheme',
-          title: { en: title, mr: title }, subtitle: { en: dept, mr: dept }, image: '',
-          tags: s.benefits ? [safeStr(s.benefits)] : [], stats: [],
-          sections: [{
-            title: { en: 'Details', mr: 'माहिती' },
-            content: { en: `${desc} ${eligibility}`, mr: `${desc} ${eligibility}` }
-          }],
+    for (const s of safeArr(firestoreSchemes)) {
+      if (s.schemes && Array.isArray(s.schemes)) {
+        s.schemes.forEach((subScheme, idx) => {
+          const title = safeStr(subScheme.title);
+          const desc = safeStr(subScheme.desc);
+          const eligibility = safeStr(subScheme.eligibility);
+          const dept = safeStr(subScheme.dept);
+          articles.push({
+            id: safeStr(subScheme.id) || `scheme_${idx}`, category: 'scheme',
+            title: { en: title, mr: title }, subtitle: { en: dept, mr: dept }, image: '',
+            tags: subScheme.benefits ? [safeStr(subScheme.benefits)] : [], stats: [],
+            sections: [{
+              title: { en: 'Details', mr: 'माहिती' },
+              content: { en: `${desc} ${eligibility}`, mr: `${desc} ${eligibility}` }
+            }],
+          });
         });
-      });
+      } else {
+        articles.push({
+          id: safeStr(s.id),
+          category: 'scheme',
+          title: safeObj(s.title),
+          subtitle: safeObj(s.subtitle),
+          image: safeStr(s.image),
+          tags: safeArr(s.tags),
+          stats: safeArr(s.stats),
+          sections: safeArr(s.sections),
+        });
+      }
     }
   } catch (err) {
     console.warn('[RAG] Firestore fetch failed:', err instanceof Error ? err.message : err);
@@ -318,9 +329,19 @@ function buildChunks(articles) {
     const sourceTitle = safeStr(titleObj.mr) || safeStr(titleObj.en) || 'Knowledge Base';
     const lowerTitle = sourceTitle.toLowerCase();
     const isExpert = lowerTitle.includes('icar') || lowerTitle.includes('kvk') || safeStr(art.category) === 'crop';
+    const sourceUrl =
+      art.category === 'crop'
+        ? `/crops/${art.id}`
+        : art.category === 'scheme'
+        ? art.id === 'pmkisan'
+          ? 'https://pmkisan.gov.in'
+          : 'https://pmfby.gov.in'
+        : '';
+
     textChunks.forEach((chunk, chunkIdx) => {
       chunks.push({
         id: `art_${artIdx}_chunk_${chunkIdx}`, text: chunk, source: sourceTitle,
+        sourceUrl,
         category: safeStr(art.category) || 'general', authorityScore: isExpert ? 1.0 : 0.8,
         expertReviewed: isExpert, crops: safeArr(art.tags),
         regions: ['maharashtra', 'vidarbha', 'yavatmal', 'nashik', 'pune', 'nagpur'],
@@ -577,12 +598,12 @@ export async function retrieveContext(query, userContext = {}, apiKey) {
     if (fallback.length === 0) return { contextText: '', citations: [] };
     return {
       contextText: fallback.map(m => `[Source: ${m.chunk.source}]\n${m.chunk.text}`).join('\n\n'),
-      citations: fallback.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(95, Math.round(m.score * 100)) })),
+      citations: fallback.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(95, Math.round(m.score * 100)), url: m.chunk.sourceUrl })),
     };
   }
   return {
     contextText: finalResults.map(m => `[Source: ${m.chunk.source}]\n${m.chunk.text}`).join('\n\n'),
-    citations: finalResults.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(99, Math.round(m.score * 100)) })),
+    citations: finalResults.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(99, Math.round(m.score * 100)), url: m.chunk.sourceUrl })),
   };
 }
 

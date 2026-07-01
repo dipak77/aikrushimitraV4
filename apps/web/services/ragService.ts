@@ -50,6 +50,7 @@ interface ChunkItem {
   id: string;
   text: string;
   source: string;
+  sourceUrl?: string;
   category: string;
   authorityScore: number;
   expertReviewed: boolean;
@@ -63,6 +64,7 @@ interface Citation {
   source: string;
   category: string;
   score: number;
+  url?: string;
 }
 
 interface RetrievalResult {
@@ -322,33 +324,39 @@ async function loadArticlesFromFirestore(): Promise<KnowledgeItem[]> {
     }
 
     // Map Schemes
-    const activeLang = 'mr';
-    const schemeDoc =
-      firestoreSchemes?.find((doc: any) => doc?.lang === activeLang) ||
-      firestoreSchemes?.[0];
-    if (schemeDoc && Array.isArray(schemeDoc.schemes)) {
-      schemeDoc.schemes.forEach((s: any, idx: number) => {
-        const title = safeStr(s.title);
-        const desc = safeStr(s.desc);
-        const eligibility = safeStr(s.eligibility);
-        const dept = safeStr(s.dept);
-        articles.push({
-          id: safeStr(s.id) || `scheme_${idx}`,
-          category: 'scheme',
-          title: { en: title, mr: title },
-          subtitle: { en: dept, mr: dept },
-          image: '',
-          tags: s.benefits ? [safeStr(s.benefits)] : [],
-          stats: [],
-          sections: [{
-            title: { en: 'Details', mr: 'माहिती' },
-            content: {
-              en: `${desc} ${eligibility}`,
-              mr: `${desc} ${eligibility}`,
-            },
-          }],
+    for (const s of safeArr(firestoreSchemes)) {
+      if (s.schemes && Array.isArray(s.schemes)) {
+        s.schemes.forEach((subScheme: any, idx: number) => {
+          const title = safeStr(subScheme.title);
+          const desc = safeStr(subScheme.desc);
+          const eligibility = safeStr(subScheme.eligibility);
+          const dept = safeStr(subScheme.dept);
+          articles.push({
+            id: safeStr(subScheme.id) || `scheme_${idx}`,
+            category: 'scheme',
+            title: { en: title, mr: title },
+            subtitle: { en: dept, mr: dept },
+            image: '',
+            tags: subScheme.benefits ? [safeStr(subScheme.benefits)] : [],
+            stats: [],
+            sections: [{
+              title: { en: 'Details', mr: 'माहिती' },
+              content: { en: `${desc} ${eligibility}`, mr: `${desc} ${eligibility}` },
+            }],
+          });
         });
-      });
+      } else {
+        articles.push({
+          id: safeStr(s.id),
+          category: 'scheme',
+          title: safeObj(s.title),
+          subtitle: safeObj(s.subtitle),
+          image: safeStr(s.image),
+          tags: safeArr(s.tags),
+          stats: safeArr(s.stats),
+          sections: safeArr(s.sections),
+        });
+      }
     }
   } catch (err) {
     console.warn('[RAG] Firestore fetch failed:', err instanceof Error ? err.message : err);
@@ -399,11 +407,21 @@ function buildChunks(articles: KnowledgeItem[]): ChunkItem[] {
       lowerTitle.includes('kvk') ||
       safeStr(art.category) === 'crop';
 
+    const sourceUrl =
+      art.category === 'crop'
+        ? `/crops/${art.id}`
+        : art.category === 'scheme'
+        ? art.id === 'pmkisan'
+          ? 'https://pmkisan.gov.in'
+          : 'https://pmfby.gov.in'
+        : '';
+
     textChunks.forEach((chunk, chunkIdx) => {
       chunks.push({
         id: `art_${artIdx}_chunk_${chunkIdx}`,
         text: chunk,
         source: sourceTitle,
+        sourceUrl,
         category: safeStr(art.category) || 'general',
         authorityScore: isExpert ? 1.0 : 0.8,
         expertReviewed: isExpert,
@@ -819,6 +837,7 @@ export async function retrieveContext(
       source: m.chunk.source,
       category: m.chunk.category,
       score: Math.min(95, Math.round(m.score * 100)),
+      url: m.chunk.sourceUrl,
     }));
     return { contextText, citations };
   }
@@ -831,6 +850,7 @@ export async function retrieveContext(
     source: m.chunk.source,
     category: m.chunk.category,
     score: Math.min(99, Math.round(m.score * 100)),
+    url: m.chunk.sourceUrl,
   }));
 
   return { contextText, citations };
