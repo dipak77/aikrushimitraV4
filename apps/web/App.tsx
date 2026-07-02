@@ -112,7 +112,9 @@ const App = () => {
           }
       } catch (e) {
           console.error("Session load error:", e);
-      } finally {
+      }
+
+      try {
           const path = window.location.pathname;
           const normalizedPath = path.replace(/\/$/, '');
 
@@ -126,6 +128,14 @@ const App = () => {
               setView(hasSession ? 'DASHBOARD' : 'LOGIN');
           } else {
               setView(hasSession ? 'DASHBOARD' : 'LANDING');
+          }
+      } catch (err) {
+          console.error("Navigation routing error in splash screen:", err);
+          // Safe fallback redirection to prevent splash screen lock
+          try {
+              setView(hasSession ? 'DASHBOARD' : 'LANDING');
+          } catch (fallbackErr) {
+              console.error("Critical navigation fallback failed:", fallbackErr);
           }
       }
   }, [setView, login]);

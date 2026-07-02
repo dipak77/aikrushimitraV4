@@ -73,10 +73,11 @@ export const useAppStore = create<AppState>()(persist((set, get) => ({
   // Navigation
   navigate: (view) => {
     const current = get().currentView;
+    const history = Array.isArray(get().navigationHistory) ? get().navigationHistory : [];
     set({
       currentView: view,
       previousView: current,
-      navigationHistory: [...get().navigationHistory.slice(-19), current],
+      navigationHistory: [...history.slice(-19), current],
       // Clear detail selections when navigating away
       ...(view !== 'SCHEMES' ? { selectedScheme: null } : {}),
       ...(view !== 'AGRI_KNOWLEDGE' && view !== 'KNOWLEDGE_DETAIL'
