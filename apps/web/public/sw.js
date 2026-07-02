@@ -5,7 +5,7 @@
 //        cache TTL, response validation, cross-browser sync fallback
 // =============================================================================
 
-const CACHE_VERSION = 'akm-v5';
+const CACHE_VERSION = 'akm-v7';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -97,7 +97,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  // Don't skipWaiting — let the main thread prompt the user via postMessage
+  self.skipWaiting();
 });
 
 // ─── ACTIVATE ────────────────────────────────────────────────────────────────

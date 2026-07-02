@@ -180,6 +180,15 @@ const serveIndexWithInjection = (req, res) => {
   }
 };
 
+app.use((req, res, next) => {
+  if (req.path === '/sw.js') {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
+
 app.use(express.static(outPath, { index: false }));
 
 app.use((req, res, next) => {
