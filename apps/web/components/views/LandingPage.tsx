@@ -6,7 +6,7 @@ import {
   Leaf, TrendingUp, CloudRain, Sprout, Map as MapIcon,
   ArrowRight, Languages, Users, Sparkles, Target, Eye,
   Cpu, Zap, Camera, CheckCircle2, Tractor, Play, Send, ExternalLink,
-  Sun, Bug, MessageSquare, Headphones, UserCheck, Loader2, Phone, Mail, MapPin, ChevronDown, Menu, X, ShieldCheck, Heart, Star, Award, Smartphone, CheckSquare, BarChart3, Clock, HelpCircle, Coins
+  Sun, Bug, MessageSquare, Headphones, UserCheck, Loader2, Phone, Mail, MapPin, ChevronDown, Menu, X, ShieldCheck, Heart, Star, Award, Smartphone, CheckSquare, BarChart3, Clock, HelpCircle, Coins, Bot
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
