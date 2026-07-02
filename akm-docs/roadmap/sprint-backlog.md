@@ -150,9 +150,15 @@ gantt
 *   **Sprint 25: Database Migration & RAG Enhancements (COMPLETED)**
     *   *Reference:* [pipeline-architecture.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/rag/pipeline-architecture.md)
     *   *Deliverables:* Migrate crops, schemes, and markets data to Firestore. Implement RAG metadata, hybrid search, citation tracking, and service worker offline caching.
-*   **Sprint 26: Next Feature Works & UX Optimization (Active)**
+*   **Sprint 26: Next Feature Works & UX Optimization (COMPLETED)**
     *   *Reference:* [feature-hierarchy.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/product/feature-hierarchy.md)
-    *   *Deliverables:* Integrate Soil NPK parameter slider dynamic AI advisory, push-triggered pest alerts, `i18next` localized resource routing, bundle size optimization, and a11y audit.
+    *   *Deliverables:* 
+        *   **Firestore Support Tickets**: Integrated client-side save and update actions storing Support Tickets in Firestore (`supportTickets` collection) with full message history.
+        *   **Dynamic Chat Handlers**: Made Support widget skip the contact form and direct-ask questions for logged-in users, pre-populating their names and emails.
+        *   **Google Auth Default & Login Cleanup**: Passed through the client-side Google Client ID in Next.js build-time configs, and disabled the mock phone login layout to keep as a future backlog task.
+*   **Sprint 27: Real Mobile OTP Authentication (Backlog)**
+    *   *Reference:* [auth-model.md](file:///c:/Users/haran/source/repos/aikrushimitraV4/akm-docs/architecture/auth-model.md)
+    *   *Deliverables:* Connect login flows to a real SMS provider or Firebase Phone Authentication gateway for actual mobile OTP verifications.
 
 
 

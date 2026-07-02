@@ -208,7 +208,6 @@ export const logActivity = async (
     const logDocRef = doc(db, "activityLogs", newLog.id);
     await setDoc(logDocRef, newLog);
   } catch (e) {
-    handleFirestoreError?.(e, OperationType.WRITE, "activityLogs");
     console.error("[logActivity] Firestore write failed:", e);
   }
 };
@@ -236,8 +235,7 @@ const fetchLogsFromServer = async (): Promise<ActivityLog[]> => {
         (d) => ({ id: d.id, ...d.data() }) as ActivityLog
       );
     } catch (e2) {
-      handleFirestoreError?.(e2, OperationType.LIST, "activityLogs");
-      console.error("[fetchLogsFromServer] Error:", e2);
+      console.error("Failed to fetch logs from firestore, fetching mock data instead.", e2);
       return [];
     }
   }

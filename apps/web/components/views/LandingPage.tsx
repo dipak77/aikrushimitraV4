@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Language } from '../../types';
+import { Language, UserProfile } from '../../types';
+import { db } from '../../utils/firebase';
+import { collection, doc, setDoc, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import {
   Leaf, TrendingUp, CloudRain, Sprout, Map as MapIcon,
   ArrowRight, Languages, Users, Sparkles, Target, Eye,
@@ -17,6 +19,7 @@ interface LandingPageProps {
   onGetStarted: () => void;
   lang: Language;
   setLang: (l: Language) => void;
+  user?: UserProfile | null;
 }
 
 /* ============================================================
@@ -1248,7 +1251,7 @@ const Footer = ({ t, navLinks, handleScrollTo }: any) => {
 // ============================================================
 // LIVE AI SUPPORT AGENT WIDGET
 // ============================================================
-const SupportAgentWidget = ({ lang }: { lang: Language }) => {
+const SupportAgentWidget = ({ lang, user }: { lang: Language; user?: UserProfile | null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<'form' | 'chat'>('form');
   const [name, setName] = useState('');
@@ -1259,8 +1262,99 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
   const [loading, setLoading] = useState(false);
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [inputMessage, setInputMessage] = useState('');
+  const [ticketCreatedAt, setTicketCreatedAt] = useState<number | null>(null);
 
   const isMarathi = lang === 'mr';
+
+  // Load existing ticket or set up logged-in user state
+  useEffect(() => {
+    const fetchExistingTicket = async () => {
+      const searchPhone = phone;
+      const searchUid = user ? (user.email || '') : ''; // email/uid acts as search key for user
+
+      if (!searchUid && !searchPhone) {
+        if (user) {
+          // If no uid/phone but logged in, just start clean chat
+          setStep('chat');
+          setMessages([
+            {
+              role: 'agent',
+              text: isMarathi
+                ? `नमस्कार ${user.name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. कृपया आपला शेतविषयक प्रश्न विचारा.`
+                : `Hello ${user.name}! Welcome to AI Krushi Mitra Support. How can we help you today?`
+            }
+          ]);
+        }
+        return;
+      }
+
+      try {
+        const q = query(
+          collection(db, 'supportTickets'),
+          where(searchUid ? 'userId' : 'phone', '==', searchUid ? searchUid : searchPhone),
+          orderBy('updatedAt', 'desc'),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const docData = snap.docs[0].data();
+          setTicketId(docData.id);
+          setName(docData.name || '');
+          setPhone(docData.phone || '');
+          setVillage(docData.village || '');
+          setTicketCreatedAt(docData.createdAt || Date.now());
+          
+          const history = docData.messages || [];
+          if (history.length > 0) {
+            setMessages(history);
+          } else if (user) {
+            setMessages([
+              {
+                role: 'agent',
+                text: isMarathi
+                  ? `नमस्कार ${user.name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. कृपया आपला शेतविषयक प्रश्न विचारा.`
+                  : `Hello ${user.name}! Welcome to AI Krushi Mitra Support. How can we help you today?`
+              }
+            ]);
+          }
+          setStep('chat');
+        } else if (user) {
+          // Logged in but no ticket yet
+          setStep('chat');
+          setMessages([
+            {
+              role: 'agent',
+              text: isMarathi
+                ? `नमस्कार ${user.name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. कृपया आपला शेतविषयक प्रश्न विचारा.`
+                : `Hello ${user.name}! Welcome to AI Krushi Mitra Support. How can we help you today?`
+            }
+          ]);
+        }
+      } catch (err) {
+        console.warn("Could not check/load existing support ticket:", err);
+        if (user) {
+          setStep('chat');
+          setMessages([
+            {
+              role: 'agent',
+              text: isMarathi
+                ? `नमस्कार ${user.name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. कृपया आपला शेतविषयक प्रश्न विचारा.`
+                : `Hello ${user.name}! Welcome to AI Krushi Mitra Support. How can we help you today?`
+            }
+          ]);
+        }
+      }
+    };
+
+    if (isOpen) {
+      if (user) {
+        setName(user.name || '');
+        setPhone(user.email || '');
+        setVillage(user.village || '');
+      }
+      fetchExistingTicket();
+    }
+  }, [isOpen, user]);
 
   const handleSubmitEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1270,25 +1364,9 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
     triggerHaptic();
 
     try {
-      // 1. Log details for future communication via backend support API (safely handled on static hosting)
-      let newTicketId = `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
-      try {
-        const res = await fetch('/api/support/enquiry', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, village, enquiry, lang })
-        });
-        const contentType = res.headers.get("content-type") || '';
-        if (res.ok && contentType.includes("application/json")) {
-          const data = await res.json();
-          if (data.id) newTicketId = data.id;
-        }
-      } catch (logErr) {
-        console.warn("Backend logging skipped on static hosting platform:", logErr);
-      }
-      setTicketId(newTicketId);
-
-      // 2. Initial agent greeting + AI response with client-side fallback support
+      let newTicketId = ticketId || `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
+      const createdAt = ticketCreatedAt || Date.now();
+      
       const initialUserText = enquiry;
       const agentGreeting = isMarathi 
         ? `नमस्कार ${name} जी! AI कृषी मित्र सपोर्टमध्ये आपले स्वागत आहे. तुमचा सपोर्ट आयडी आहे: ${newTicketId}. आम्ही तुमची माहिती नोंदवली आहे.\n\nतुमच्या प्रश्नाचे उत्तर:`
@@ -1296,10 +1374,34 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
 
       const aiAnswer = await getAIFarmingAdvice(enquiry, lang, 'Customer Support Enquiry');
       
-      setMessages([
+      const newMessages = [
         { role: 'user', text: initialUserText },
         { role: 'agent', text: `${agentGreeting}\n\n${aiAnswer}` }
-      ]);
+      ] as any[];
+
+      // Save to Firebase Firestore
+      try {
+        const ticketRef = doc(db, 'supportTickets', newTicketId);
+        await setDoc(ticketRef, {
+          id: newTicketId,
+          userId: user ? (user.email || 'guest') : 'guest',
+          name,
+          phone,
+          village,
+          lastEnquiry: initialUserText,
+          lang,
+          createdAt,
+          updatedAt: Date.now(),
+          status: 'open',
+          messages: newMessages
+        });
+      } catch (fsErr) {
+        console.error("Firestore logging failed:", fsErr);
+      }
+
+      setTicketId(newTicketId);
+      setTicketCreatedAt(createdAt);
+      setMessages(newMessages);
       setStep('chat');
     } catch (err) {
       console.error("Support enquiry error:", err);
@@ -1319,13 +1421,43 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
 
     const userText = inputMessage.trim();
     setInputMessage('');
-    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    
+    const updatedMessages = [...messages, { role: 'user', text: userText }] as any[];
+    setMessages(updatedMessages);
     setLoading(true);
     triggerHaptic();
 
     try {
       const aiResponse = await getAIFarmingAdvice(userText, lang, 'Live Customer Support');
-      setMessages(prev => [...prev, { role: 'agent', text: aiResponse }]);
+      const finalMessages = [...updatedMessages, { role: 'agent', text: aiResponse }] as any[];
+      
+      // Update in Cloud Firestore
+      let currentTicketId = ticketId;
+      if (!currentTicketId) {
+        currentTicketId = `SUP-${Math.floor(1000 + Math.random() * 9000)}`;
+        setTicketId(currentTicketId);
+      }
+
+      try {
+        const ticketRef = doc(db, 'supportTickets', currentTicketId);
+        await setDoc(ticketRef, {
+          id: currentTicketId,
+          userId: user ? (user.email || 'guest') : 'guest',
+          name: name || user?.name || 'Guest User',
+          phone: phone || user?.email || '',
+          village: village || user?.village || '',
+          lastEnquiry: userText,
+          lang,
+          createdAt: ticketCreatedAt || Date.now(),
+          updatedAt: Date.now(),
+          status: 'open',
+          messages: finalMessages
+        });
+      } catch (fsErr) {
+        console.error("Firestore update failed:", fsErr);
+      }
+
+      setMessages(finalMessages);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'agent', text: isMarathi ? 'क्षमस्व, संपर्क साधण्यात अडचण आली.' : 'Sorry, failed to connect to support assistant.' }]);
     } finally {
@@ -1487,7 +1619,7 @@ const SupportAgentWidget = ({ lang }: { lang: Language }) => {
 // ============================================================
 // MAIN
 // ============================================================
-export default function LandingPage({ onGetStarted, lang, setLang }: LandingPageProps) {
+export default function LandingPage({ onGetStarted, lang, setLang, user }: LandingPageProps) {
   const t = TRANSLATIONS[lang];
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1596,7 +1728,7 @@ export default function LandingPage({ onGetStarted, lang, setLang }: LandingPage
       <FAQSection t={t} />
       <CTASection t={t} lang={lang} handleGetStarted={handleGetStarted} />
       <Footer t={t} navLinks={navLinks} handleScrollTo={handleScrollTo} />
-      <SupportAgentWidget lang={lang} />
+      <SupportAgentWidget lang={lang} user={user} />
 
       {/* Progress Bar Update Script */}
       <script dangerouslySetInnerHTML={{ __html: `

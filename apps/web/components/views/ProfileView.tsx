@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Language, UserProfile } from '../../types';
+import { useUserStore } from '../../store/useUserStore';
 import SimpleView from '../layout/SimpleView';
 import { Button } from '../Button';
 import { UserCircle, MapPin, Ruler, Sprout, Save, User } from 'lucide-react';
@@ -193,6 +194,7 @@ const ProfileView = ({
                         size="lg" 
                         variant="outline" 
                         onClick={() => {
+                            useUserStore.getState().logout();
                             localStorage.removeItem('user_session');
                             window.location.reload();
                         }}

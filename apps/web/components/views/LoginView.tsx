@@ -354,15 +354,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, lang }) => {
                       </div>
                     )}
 
-                    {/* Phone OTP Login Trigger */}
-                    <button 
-                      onClick={() => { triggerHaptic('light'); setLoginMethod('PHONE'); setError(''); }}
-                      className="w-full h-[44px] rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm font-bold text-emerald-300 hover:text-emerald-200 group"
-                    >
-                      <Phone size={16} className="group-hover:text-emerald-400 transition-colors" />
-                      {lang === 'mr' ? 'मोबाईल नंबरने सुरू करा' : 'Continue with Phone Number'}
-                    </button>
-
                     <div className="flex items-center gap-3 w-full px-4">
                         <div className="h-[1px] bg-white/10 flex-1"></div>
                         <span className="text-[10px] text-slate-500 font-bold uppercase">{lang === 'mr' ? 'किंवा' : 'OR'}</span>

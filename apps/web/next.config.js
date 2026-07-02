@@ -2,6 +2,9 @@
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
+  env: {
+    VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID || '947961081206-0sh2q9fja06hcc65gj8o2tghhd164uia.apps.googleusercontent.com'
+  },
   images: {
     unoptimized: true
   },

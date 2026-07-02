@@ -194,7 +194,7 @@ const App = () => {
 
     switch(view) {
        case 'SPLASH': return <SplashScreen onComplete={handleSplashComplete} />;
-       case 'LANDING': return <LandingPage onGetStarted={() => user ? setView('DASHBOARD') : setView('LOGIN')} lang={lang} setLang={setLang} />;
+       case 'LANDING': return <LandingPage onGetStarted={() => user ? setView('DASHBOARD') : setView('LOGIN')} lang={lang} setLang={setLang} user={user} />;
        case 'LOGIN': return <LoginView onLoginSuccess={handleLoginSuccess} lang={lang} />;
        case 'DASHBOARD': return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
        case 'VOICE_ASSISTANT': return user ? <VoiceAssistant lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
