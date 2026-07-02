@@ -213,7 +213,7 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
     if (!weather) return null;
 
     return (
-        <div className="h-full w-full flex flex-col lg:pl-32 relative overflow-hidden text-white bg-[#020617]">
+        <div className="h-full w-full flex flex-col lg:pl-64 relative overflow-hidden text-white bg-[#020617]">
             {/* Immersive Background */}
             <div className="absolute inset-0 z-0">
                 <div className={clsx(

@@ -8,7 +8,7 @@ const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Languag
     const t = TRANSLATIONS[lang];
 
     return (
-        <div className="h-full w-full flex flex-col bg-[#020617] animate-enter lg:pl-32">
+        <div className="h-full w-full flex flex-col bg-[#020617] animate-enter lg:pl-64">
             {/* Header with Hero Gradient */}
             <div className={`relative w-full h-64 bg-gradient-to-br ${scheme.grad} shrink-0`}>
                 <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay"></div>

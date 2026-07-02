@@ -100,7 +100,7 @@ const KnowledgeDetailView = ({ item, lang, onBack }: { item: KnowledgeItem, lang
   const activeGlow = categoryGlow[item.category] || categoryGlow.crop;
 
   return (
-    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-28 animate-fade-in overflow-hidden">
+    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-64 animate-fade-in overflow-hidden">
       <div className="flex-1 overflow-y-auto hide-scrollbar pb-32">
         
         {/* Hero Section */}

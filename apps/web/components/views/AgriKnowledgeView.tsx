@@ -253,7 +253,7 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
   });
 
   return (
-    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-28 animate-fade-in">
+    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-64 animate-fade-in">
       {/* Premium Hero Banner */}
       <div className="relative bg-gray-900 shrink-0 rounded-b-[40px] shadow-xl z-10">
         <div className="absolute inset-0 overflow-hidden rounded-b-[40px]">

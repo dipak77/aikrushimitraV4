@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Language, ViewState } from '../../types';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
-import { ScanLine, FlaskConical, Map as MapIcon, Landmark, Languages, Leaf, Shield, ShoppingCart, BookOpen, ChevronDown, CheckCircle2, MessageSquare, Users, Crown, Cpu } from 'lucide-react';
+import { Languages, ChevronDown, CheckCircle2, Bell, Calendar, Shield, Sparkles } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { fetchWeather, getPlaceName, DEFAULT_COORDS, MOCK_WEATHER } from '../../services/weatherService';
 import { DASH_TEXT } from '../dashboard/constants';
-import { NewsTicker } from '../dashboard/NewsTicker';
-import { AppHeaderLogo } from '../dashboard/AppHeaderLogo';
 import { DynamicGreeting } from '../dashboard/DynamicGreeting';
 import { SmartBanner } from '../dashboard/SmartBanner';
 import { WeatherWidget } from '../dashboard/WeatherWidget';
-import { MarketWidget } from '../dashboard/MarketWidget';
-import { CalendarWidget } from '../dashboard/CalendarWidget';
 import { VoiceWidget } from '../dashboard/VoiceWidget';
-import { FeatureCard, IllustrativeBanner } from '../dashboard/ActionCards';
+import { CropAnalysisCard } from '../dashboard/CropAnalysisCard';
+import { FarmHealthScore } from '../dashboard/FarmHealthScore';
+import { TodaysTasks } from '../dashboard/TodaysTasks';
+import { SoilHealthWidget } from '../dashboard/SoilHealthWidget';
+import { CropJourneyWidget } from '../dashboard/CropJourneyWidget';
+import { MarketPricesTable } from '../dashboard/MarketPricesTable';
+import { KeyImprovements } from '../dashboard/KeyImprovements';
+import { MarketTrendChart } from '../dashboard/MarketTrendChart';
+import { AIChatWidget } from '../dashboard/AIChatWidget';
+import { MultiFieldsOverview } from '../dashboard/MultiFieldsOverview';
+import { NotificationsWidget } from '../dashboard/NotificationsWidget';
+import { FooterBanner } from '../dashboard/FooterBanner';
 
 const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLang: (l: Language) => void, user: UserProfile, onNavigate: (v: ViewState) => void }) => {
     const t = TRANSLATIONS[lang];
@@ -46,7 +53,6 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                 lat = coords.lat;
                 lng = coords.lng;
 
-                // Parallel fetch for speed
                 const [weatherData, name] = await Promise.all([
                     fetchWeather(lat, lng),
                     getPlaceName(lat, lng, lang)
@@ -56,7 +62,6 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                 setLiveLocation(name);
             } catch (e) {
                 console.error("Weather load error", e);
-                // Fallback to default if everything fails
                 try {
                     const fallback = await fetchWeather(DEFAULT_COORDS.lat, DEFAULT_COORDS.lng);
                     setWeather(fallback);
@@ -71,16 +76,19 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
         loadWeather();
     }, [lang]);
 
-    const toggleLang = () => {
-        const next = lang === 'mr' ? 'hi' : lang === 'hi' ? 'en' : 'mr';
-        setLang(next);
-        triggerHaptic();
-    };
+    // Current date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString(lang === 'mr' ? 'mr-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    });
+    const dayStr = now.toLocaleDateString(lang === 'mr' ? 'mr-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long' });
 
     return (
-        <div className="h-full w-full overflow-y-auto overflow-x-hidden hide-scrollbar bg-transparent text-slate-100 lg:pl-24 selection:bg-yellow-500/30 flex flex-col relative">
+        <div className="h-full w-full overflow-y-auto overflow-x-hidden hide-scrollbar bg-transparent text-slate-100 lg:pl-64 selection:bg-emerald-500/30 flex flex-col relative">
             
-            {/* --- INJECT KEYFRAMES FOR PREMIUM ANIMATIONS --- */}
+            {/* --- INJECT KEYFRAMES --- */}
             <style>{`
                 @keyframes marquee {
                   0% { transform: translateX(0%); }
@@ -95,49 +103,41 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                   50% { background-position: 100% 50%; }
                   100% { background-position: 0% 50%; }
                 }
-                @keyframes orbPulse {
-                  0%, 100% { transform: scale(1); opacity: 0.7; }
-                  50% { transform: scale(1.1); opacity: 0.9; }
-                }
-                @keyframes floatSlow {
-                  0%, 100% { transform: translateY(0); }
-                  50% { transform: translateY(-10px); }
-                }
-                @keyframes sunRays {
-                  0%, 100% { opacity: 0.5; height: 16px; }
-                  50% { opacity: 1; height: 24px; }
-                }
-                @keyframes rainDrop {
-                  0% { transform: translateY(-10px) rotate(15deg); opacity: 0; }
-                  50% { opacity: 1; }
-                  100% { transform: translateY(20px) rotate(15deg); opacity: 0; }
-                }
-                @keyframes twinkle {
-                  0%, 100% { opacity: 0.2; transform: scale(0.8); }
-                  50% { opacity: 1; transform: scale(1.2); }
-                }
-                @keyframes lightning {
-                  0%, 90%, 100% { opacity: 0; }
-                  92%, 94% { opacity: 1; filter: brightness(2); }
-                }
             `}</style>
 
-            {/* 1. NEWS TICKER (Top) */}
-            <NewsTicker lang={lang} />
-            
-            {/* 2. HEADER (Slim & Sticky) */}
-            <div className="pt-4 px-4 md:px-6 pb-3 flex items-center justify-between z-50 gap-4 sticky top-0 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 transition-all">
-                 {/* LEFT: Branding */}
-                 <AppHeaderLogo />
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* HEADER BAR */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 py-3 flex items-center justify-between z-50 gap-4 sticky top-0 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 transition-all">
+                {/* Left: Title */}
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                            <Sparkles size={16} className="text-black" strokeWidth={2.5} />
+                        </div>
+                        <div className="lg:hidden">
+                            <h2 className="text-sm font-black text-white leading-none">AI Krushi Agent</h2>
+                        </div>
+                    </div>
+                </div>
 
-                 {/* RIGHT: Actions */}
-                 <div className="flex items-center gap-3">
+                {/* Center: Date & Day (desktop) */}
+                <div className="hidden md:flex items-center gap-2 text-slate-400">
+                    <Calendar size={14} className="text-emerald-400" />
+                    <span className="text-xs font-bold">{dateStr}</span>
+                    <span className="text-xs text-slate-600">•</span>
+                    <span className="text-xs font-medium text-slate-500">{dayStr}</span>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-3">
+                    {/* Language Picker */}
                     <div className="relative">
-                        <button 
-                            onClick={() => setLangMenuOpen(!langMenuOpen)} 
+                        <button
+                            onClick={() => setLangMenuOpen(!langMenuOpen)}
                             className={`h-9 px-3 rounded-full transition-all flex items-center gap-2 backdrop-blur-md border ${langMenuOpen ? 'bg-emerald-500 border-emerald-500 text-slate-900' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
                         >
-                            <Languages size={16} className={langMenuOpen ? 'text-slate-900' : 'text-emerald-400'}/>
+                            <Languages size={16} className={langMenuOpen ? 'text-slate-900' : 'text-emerald-400'} />
                             <span className="hidden md:block text-[10px] font-bold uppercase tracking-wide">
                                 {LANGUAGES.find(l => l.code === lang)?.name}
                             </span>
@@ -176,172 +176,141 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         </AnimatePresence>
                     </div>
 
-                     {/* Analytics / Admin */}
-                     <button 
-                        onClick={() => onNavigate('ADMIN')} 
+                    {/* Notifications */}
+                    <button className="relative w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center backdrop-blur-md group">
+                        <Bell size={16} className="text-slate-300 group-hover:text-emerald-400 transition-colors" />
+                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 border-2 border-[#020617] flex items-center justify-center">
+                            <span className="text-[7px] font-black text-white">5</span>
+                        </div>
+                    </button>
+
+                    {/* Admin */}
+                    <button
+                        onClick={() => onNavigate('ADMIN')}
                         className="hidden sm:flex w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all items-center justify-center backdrop-blur-md group"
                         title="Analytics"
-                     >
-                         <Shield size={16} className="text-slate-300 group-hover:text-emerald-400 transition-colors"/>
-                     </button>
+                    >
+                        <Shield size={16} className="text-slate-300 group-hover:text-emerald-400 transition-colors" />
+                    </button>
 
-                     {/* Home / Landing */}
-                     <button 
-                        onClick={() => onNavigate('LANDING')} 
-                        className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center backdrop-blur-md group"
-                        title="Home"
-                     >
-                         <svg className="w-4 h-4 text-slate-300 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                         </svg>
-                     </button>
-                     
-                     {/* User Profile */}
-                     <div onClick={() => onNavigate('PROFILE')} className="relative cursor-pointer group shrink-0 ml-1">
-                         <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 p-[1.5px] shadow-[0_0_15px_rgba(251,191,36,0.2)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all">
-                              <div className="w-full h-full rounded-full bg-[#051108] flex items-center justify-center overflow-hidden">
-                                  {user.picture ? (
-                                      <img src={user.picture} alt="Profile" className="w-full h-full object-cover" />
-                                  ) : (
-                                      <span className="text-sm font-black text-white">{user.name?.charAt(0) || 'U'}</span>
-                                  )}
-                              </div>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-
-            {/* 3. HERO SECTION (Greeting & Smart Banner Side-by-Side on Desktop) */}
-            <div className="px-4 md:px-6 py-6 max-w-7xl mx-auto w-full">
-                <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                    {/* Left: Greeting */}
-                    <div className="flex-1 min-w-0">
-                        <DynamicGreeting user={user} lang={lang} />
-                    </div>
-                    
-                    {/* Right: Smart Banner (Adjusted for Hero context) */}
-                    <div className="w-full lg:w-[60%] xl:w-[50%] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
-                         <SmartBanner lang={lang} className="w-full !max-w-none !mx-0 shadow-2xl" weather={weather} user={user} />
+                    {/* User Profile */}
+                    <div onClick={() => onNavigate('PROFILE')} className="relative cursor-pointer group shrink-0 ml-1">
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 p-[1.5px] shadow-[0_0_15px_rgba(251,191,36,0.2)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all">
+                            <div className="w-full h-full rounded-full bg-[#051108] flex items-center justify-center overflow-hidden">
+                                {user.picture ? (
+                                    <img src={user.picture} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-sm font-black text-white">{user.name?.charAt(0) || 'U'}</span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 4. BENTO GRID */}
-            <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-5 pb-32 max-w-7xl mx-auto w-full">
-                
-                {/* Weather (MD: Col 1-4) */}
-                <div className="col-span-1 md:col-span-4 h-64">
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* GREETING SECTION */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 pt-5 pb-2 max-w-[1600px] mx-auto w-full">
+                <DynamicGreeting user={user} lang={lang} />
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* ROW 1: AI Analysis | Farm Health | Today's Tasks       */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
+                {/* AI Crop Analysis (5 cols) */}
+                <div className="col-span-1 md:col-span-5 min-h-[260px] animate-[fadeInUp_0.5s_ease-out]">
+                    <CropAnalysisCard lang={lang} />
+                </div>
+
+                {/* Farm Health Score (4 cols) */}
+                <div className="col-span-1 md:col-span-4 min-h-[260px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
+                    <FarmHealthScore lang={lang} />
+                </div>
+
+                {/* Today's Tasks (3 cols) */}
+                <div className="col-span-1 md:col-span-3 min-h-[260px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                    <TodaysTasks lang={lang} />
+                </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* ROW 2: Weather | Market Prices | Soil Health | Crop    */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
+                {/* Weather (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
                     <WeatherWidget weather={weather} loading={loadingWeather} location={liveLocation} lang={lang} onNavigate={onNavigate} />
                 </div>
 
-                {/* Market Trends (MD: Col 5-8) */}
-                <div className="col-span-1 md:col-span-4 h-64">
-                    <MarketWidget onNavigate={onNavigate} lang={lang} />
+                {/* Market Prices Table (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                    <MarketPricesTable lang={lang} />
                 </div>
 
-                {/* Crop Calendar (MD: Col 9-12) */}
-                <div className="col-span-1 md:col-span-4 h-64">
-                    <CalendarWidget lang={lang} onNavigate={onNavigate} />
+                {/* Soil Health (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                    <SoilHealthWidget lang={lang} />
                 </div>
 
-                {/* --- Row 2 --- */}
+                {/* Crop Journey (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.4s_both]">
+                    <CropJourneyWidget lang={lang} />
+                </div>
+            </div>
 
-                {/* Voice Widget (Desktop Only) */}
-                <div className="hidden md:block col-span-1 md:col-span-3 h-44">
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* KEY IMPROVEMENTS SECTION                               */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 max-w-[1600px] mx-auto w-full mb-4 animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                <KeyImprovements lang={lang} />
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* ROW 3: Market Trend | AI Chat | Fields | Notifications */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
+                {/* Market Trend Chart (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
+                    <MarketTrendChart lang={lang} />
+                </div>
+
+                {/* AI Chat (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                    <AIChatWidget lang={lang} />
+                </div>
+
+                {/* Multiple Fields (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                    <MultiFieldsOverview lang={lang} />
+                </div>
+
+                {/* Notifications (3 cols) */}
+                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.4s_both]">
+                    <NotificationsWidget lang={lang} />
+                </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SMART BANNER (AI-powered rotating insights)            */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 max-w-[1600px] mx-auto w-full mb-4 animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                <SmartBanner lang={lang} className="w-full !max-w-none !mx-0 shadow-2xl" weather={weather} user={user} />
+            </div>
+
+            {/* Voice Widget (Desktop Only) - Floating style */}
+            <div className="hidden md:block px-4 md:px-6 max-w-[1600px] mx-auto w-full mb-4">
+                <div className="h-20">
                     <VoiceWidget onNavigate={onNavigate} lang={lang} />
                 </div>
+            </div>
 
-                {/* Quick Actions Grid */}
-                <div className="col-span-1 md:col-span-9 grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <FeatureCard 
-                        icon={ShoppingCart} 
-                        title={t.quick_action_mandi}
-                        variant="disease"
-                        onClick={() => onNavigate('SABJI_MANDI')} 
-                        delay={100}
-                    />
-                    <FeatureCard 
-                        icon={ScanLine} 
-                        title={t.quick_action_doctor}
-                        variant="disease"
-                        onClick={() => onNavigate('DISEASE_DETECTOR')} 
-                        delay={150}
-                    />
-                    <FeatureCard 
-                        icon={FlaskConical} 
-                        title={t.quick_action_soil}
-                        variant="soil"
-                        onClick={() => onNavigate('SOIL')} 
-                        delay={200}
-                    />
-                    <FeatureCard 
-                        icon={MapIcon} 
-                        title={t.menu_area} 
-                        variant="area"
-                        onClick={() => onNavigate('AREA_CALCULATOR')} 
-                        delay={250}
-                    />
-                    <FeatureCard 
-                        icon={BookOpen} 
-                        title={t.menu_knowledge} 
-                        variant="yield"
-                        onClick={() => onNavigate('AGRI_KNOWLEDGE')} 
-                        delay={275}
-                    />
-                    <FeatureCard 
-                        icon={MessageSquare} 
-                        title={lang === 'mr' ? 'AI सल्लागार' : 'AI Chat'} 
-                        variant="yield"
-                        onClick={() => onNavigate('CHAT')} 
-                        delay={290}
-                    />
-                    <FeatureCard 
-                        icon={Users} 
-                        title={lang === 'mr' ? 'शेतकरी मंच' : 'Community'} 
-                        variant="advisor"
-                        onClick={() => onNavigate('COMMUNITY')} 
-                        delay={300}
-                    />
-                    <FeatureCard 
-                        icon={Crown} 
-                        title={lang === 'mr' ? 'विशेष सेवा' : 'Premium Hub'} 
-                        variant="advisor"
-                        onClick={() => onNavigate('PREMIUM')} 
-                        delay={310}
-                    />
-                    <FeatureCard 
-                        icon={Cpu} 
-                        title={lang === 'mr' ? 'तंत्रज्ञान हब' : 'Innovation'} 
-                        variant="area"
-                        onClick={() => onNavigate('INNOVATION')} 
-                        delay={320}
-                    />
-                </div>
-                
-                {/* Government Schemes */}
-                <div className="col-span-1 md:col-span-6 animate-enter" style={{animationDelay: '300ms'}}>
-                     <IllustrativeBanner 
-                        title={t.govt_schemes}
-                        subtitle={txt.subsidies}
-                        icon={Landmark}
-                        gradient="from-emerald-800 to-teal-900"
-                        pattern="coins"
-                        onClick={() => onNavigate('SCHEMES')}
-                     />
-                </div>
-
-                {/* Agri-Doctor Promo */}
-                <div className="col-span-1 md:col-span-6 animate-enter" style={{animationDelay: '350ms'}}>
-                     <IllustrativeBanner 
-                        title={txt.crop_doctor_title}
-                        subtitle={txt.crop_doctor_sub}
-                        icon={Leaf}
-                        gradient="from-indigo-900 to-blue-900"
-                        pattern="scan"
-                        onClick={() => onNavigate('DISEASE_DETECTOR')}
-                     />
-                </div>
-
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* FOOTER BANNER                                          */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="mt-auto pb-20 lg:pb-0">
+                <FooterBanner />
             </div>
         </div>
     );

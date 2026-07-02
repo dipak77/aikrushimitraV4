@@ -32,7 +32,7 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col relative overflow-hidden lg:pl-36">
+    <div className="h-full w-full flex flex-col relative overflow-hidden lg:pl-64">
       
       {/* Ultra-Premium Animated Orb Background */}
       <div ref={orbsRef} className="fixed inset-0 pointer-events-none overflow-hidden">
