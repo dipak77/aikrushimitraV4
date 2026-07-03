@@ -5,7 +5,7 @@
 //        cache TTL, response validation, cross-browser sync fallback
 // =============================================================================
 
-const CACHE_VERSION = 'akm-v7';
+const CACHE_VERSION = 'akm-v8';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
