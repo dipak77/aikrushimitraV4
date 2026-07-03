@@ -1,0 +1,28 @@
+runtime: nodejs20
+instance_class: F1
+env: standard
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 3
+  target_cpu_utilization: 0.65
+
+entrypoint: node server.js
+
+env_variables:
+  NODE_ENV: "production"
+  GEMINI_API_KEY: "CONFIGURE_IN_GCP_SECRET_MANAGER"
+
+handlers:
+  - url: /api/.*
+    script: auto
+    secure: always
+
+  - url: /ws/.*
+    script: auto
+    secure: always
+
+  - url: /.*
+    static_files: apps/web/out/index.html
+    upload: apps/web/out/.*
+    secure: always

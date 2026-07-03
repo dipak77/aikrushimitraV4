@@ -1,12 +1,13 @@
-
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
   content: [
-    "./index.html",
-    "./*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
-    "./services/**/*.{js,ts,jsx,tsx}"
+    "./apps/web/index.html",
+    "./apps/web/app/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/src/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/components/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/services/**/*.{js,ts,jsx,tsx}",
+    "./apps/web/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     extend: {
@@ -17,20 +18,28 @@ export default {
         devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
       },
       colors: {
-        void: '#020617', // Deep Space Background
-        
-        // New Semantic Palette
+        void: '#020617',
         agri: {
-          green: '#00FF00', // Accent Green
-          gold: '#FFB800',  // Premium/Alerts
-          purple: '#7B61FF', // Calendar/AI
-          dark: '#050505',   // Card BG Base
-          success: '#00FF00',
-          warning: '#FFB300',
-          error: '#FF3D71',
-          info: '#00B8D4'
+          green: '#10b981',
+          gold: '#f59e0b',
+          purple: '#7B61FF',
+          dark: '#050505',
+          success: '#10b981',
+          warning: '#f59e0b',
+          error: '#ef4444',
+          info: '#3b82f6'
         },
-
+        primary: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+        },
+        accent: {
+          500: '#f59e0b',
+          600: '#d97706',
+        },
         glass: {
           100: 'rgba(255, 255, 255, 0.05)',
           200: 'rgba(255, 255, 255, 0.1)',

@@ -1,50 +1,31 @@
 {
-  "name": "ai-krushi-mitra",
+  "name": "ai-krushi-mitra-monorepo",
   "version": "1.0.0",
-  "description": "Smart farming assistant for Indian farmers",
+  "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "lint": "tsc --noEmit",
-    "build": "next build",
-    "preview": "vite preview --host"
+    "dev": "npm run build && node server.js",
+    "clean": "powershell -Command \"if (Test-Path apps/web/.next) { Remove-Item -Recurse -Force apps/web/.next }; if (Test-Path apps/web/out) { Remove-Item -Recurse -Force apps/web/out }\"",
+    "build": "npm run build --workspace=@akm/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "dependencies": {
     "@google/genai": "*",
-    "@mediapipe/tasks-vision": "^0.10.9",
-    "@react-oauth/google": "^0.12.1",
-    "@react-three/drei": "^9.96.1",
-    "@react-three/fiber": "^8.15.14",
-    "@react-three/postprocessing": "^2.16.2",
-    "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "firebase": "^12.14.0",
-    "framer-motion": "^12.34.3",
-    "jwt-decode": "^4.0.0",
-    "leaflet": "^1.9.4",
-    "lucide-react": "^0.390.0",
     "next": "^14.2.35",
-    "postprocessing": "^6.36.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.12.7",
-    "tailwind-merge": "^2.3.0",
-    "three": "^0.160.0",
+    "winston": "^3.19.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.8",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.160.0",
-    "@types/ws": "^8.5.10",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.11"
+    "typescript": "^5.4.5"
   }
 }
