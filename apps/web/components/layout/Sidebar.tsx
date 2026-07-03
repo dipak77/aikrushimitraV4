@@ -5,7 +5,7 @@ import {
   LayoutDashboard, CloudSun, Sprout, Package, Bot, BookOpen, Landmark,
   Store, TrendingUp, Mic, ChevronDown, ChevronUp, Zap, Sparkles, Crown,
   ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import clsx from 'clsx';
 import { triggerHaptic } from '../../utils/common';
@@ -81,7 +81,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   const [moreOpen, setMoreOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const t = MENU_TEXTS[lang] || MENU_TEXTS.en;
-  const { sidebarCollapsed: collapsed, setSidebarCollapsed } = useAppStore();
+  const { sidebarCollapsed: collapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen } = useAppStore();
 
   const mainItems = [
     { id: 'DASHBOARD', icon: LayoutDashboard, label: t.dashboard, color: 'emerald' },
@@ -122,11 +122,20 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
         .sidebar-scrollbar::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.3); border-radius: 10px; }
       `}</style>
 
+      {/* Backdrop for mobile slide-over menu */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden animate-fade-in"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <div
         ref={sidebarRef}
         className={clsx(
-          "hidden lg:flex fixed left-0 top-0 bottom-0 flex-col z-50 overflow-hidden transition-all duration-300",
-          collapsed ? "w-20" : "w-64"
+          "fixed lg:fixed left-0 top-0 bottom-0 flex-col z-[110] lg:z-50 overflow-hidden transition-all duration-300",
+          collapsed ? "w-20" : "w-64",
+          sidebarOpen ? "flex translate-x-0" : "hidden lg:flex -translate-x-full lg:translate-x-0"
         )}
       >
         {/* Background */}
@@ -167,21 +176,35 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
               )}
             </div>
 
-            {/* Collapse toggle button */}
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                setSidebarCollapsed(!collapsed); 
-                triggerHaptic(); 
-              }}
-              className={clsx(
-                "p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors",
-                collapsed ? "mt-1" : ""
-              )}
-              title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-            </button>
+            {/* Action buttons: Collapse (desktop) & Close (mobile) */}
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setSidebarCollapsed(!collapsed); 
+                  triggerHaptic(); 
+                }}
+                className={clsx(
+                  "hidden lg:block p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors",
+                  collapsed ? "mt-1" : ""
+                )}
+                title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+              </button>
+
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setSidebarOpen(false); 
+                  triggerHaptic(); 
+                }}
+                className="lg:hidden p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors"
+                title="Close Menu"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
 
           {/* Divider */}

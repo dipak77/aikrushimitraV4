@@ -260,7 +260,7 @@ const App = () => {
         </main>
 
         {/* 5. Mobile Navigation */}
-        {!isFullScreen && <MobileNav view={view} setView={setView} />}
+        {!isFullScreen && <MobileNav view={view} setView={setView} lang={lang} />}
         </div>
     </GoogleOAuthProvider>
     </ErrorBoundary>

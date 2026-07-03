@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ViewState } from "../../types";
+import { ViewState, Language } from "../../types";
 import {
   LayoutDashboard,
   Store,
   Mic,
-  ShoppingCart,
+  Camera,
   Landmark,
 } from "lucide-react";
 import clsx from "clsx";
@@ -34,12 +34,12 @@ const NAV_ITEMS: NavItem[] = [
     gradient: "from-emerald-400 to-teal-500",
   },
   {
-    id: "SABJI_MANDI",
-    icon: ShoppingCart,
-    label: "Shop",
-    color: "#22c55e",
-    colorMuted: "#4ade80",
-    gradient: "from-green-400 to-emerald-500",
+    id: "DISEASE_DETECTOR",
+    icon: Camera,
+    label: "Scan",
+    color: "#f43f5e",
+    colorMuted: "#fb7185",
+    gradient: "from-rose-400 to-pink-500",
   },
   {
     id: "VOICE_ASSISTANT",
@@ -79,17 +79,28 @@ const SCROLL = {
    NavButton Component
    ──────────────────────────────────────────────────────────── */
 
+const LABELS: Record<string, Record<string, string>> = {
+  DASHBOARD: { mr: "मुख्यपृष्ठ", hi: "मुख्यपृष्ठ", en: "Home" },
+  DISEASE_DETECTOR: { mr: "पीक डॉक्टर", hi: "फसल डॉक्टर", en: "Scan" },
+  VOICE_ASSISTANT: { mr: "बोला", hi: "बोलें", en: "Voice" },
+  MARKET: { mr: "बाजार भाव", hi: "मंडी भाव", en: "Market" },
+  SCHEMES: { mr: "योजना", hi: "योजनाएं", en: "Schemes" },
+};
+
 const NavButton = React.memo(function NavButton({
   item,
   active,
+  lang,
   onTap,
 }: {
   item: NavItem;
   active: boolean;
+  lang: Language;
   onTap: (id: ViewState) => void;
 }) {
   const Icon = item.icon;
   const [pressed, setPressed] = useState(false);
+  const label = LABELS[item.id]?.[lang] || item.label;
 
   return (
     <button
@@ -108,7 +119,7 @@ const NavButton = React.memo(function NavButton({
         pressed && "scale-90",
       )}
       aria-current={active ? "page" : undefined}
-      aria-label={item.label}
+      aria-label={label}
     >
       {/* Active background glow */}
       {active && (
@@ -186,7 +197,7 @@ const NavButton = React.memo(function NavButton({
           textShadow: active ? `0 0 12px ${item.color}40` : 'none',
         }}
       >
-        {item.label}
+        {label}
       </span>
 
       {/* Active indicator dot */}
@@ -337,9 +348,11 @@ const CenterFAB = React.memo(function CenterFAB({
 const MobileNav = ({
   view,
   setView,
+  lang,
 }: {
   view: ViewState;
   setView: (v: ViewState) => void;
+  lang: Language;
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const scrollTargetRef = useRef<Window | HTMLElement | null>(null);
@@ -530,6 +543,7 @@ const MobileNav = ({
                     key={item.id}
                     item={item}
                     active={view === item.id}
+                    lang={lang}
                     onTap={onTap}
                   />
                 ))}
@@ -549,6 +563,7 @@ const MobileNav = ({
                     key={item.id}
                     item={item}
                     active={view === item.id}
+                    lang={lang}
                     onTap={onTap}
                   />
                 ))}

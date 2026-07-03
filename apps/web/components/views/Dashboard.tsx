@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Language, ViewState } from '../../types';
 import { TRANSLATIONS, LANGUAGES } from '../../constants';
-import { Languages, ChevronDown, CheckCircle2, Bell, Calendar, Shield, Sparkles } from 'lucide-react';
+import { Languages, ChevronDown, CheckCircle2, Bell, Calendar, Shield, Sparkles, Menu } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,7 +31,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
     const t = TRANSLATIONS[lang];
     const txt = DASH_TEXT[lang];
     const [weather, setWeather] = useState<any>(MOCK_WEATHER);
-    const collapsed = useAppStore((state) => state.sidebarCollapsed);
+    const { sidebarCollapsed: collapsed, toggleSidebar } = useAppStore();
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [liveLocation, setLiveLocation] = useState<string>(user.village || "Locating...");
@@ -113,8 +113,15 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* HEADER BAR */}
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 py-3 flex items-center justify-between z-50 gap-4 sticky top-0 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 transition-all">
-                {/* Left: Title */}
+                {/* Left: Title & Menu Trigger */}
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => toggleSidebar()}
+                        className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center"
+                        title="Open Menu"
+                    >
+                        <Menu size={16} />
+                    </button>
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                             <Sparkles size={16} className="text-black" strokeWidth={2.5} />
