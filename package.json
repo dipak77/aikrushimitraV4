@@ -27,5 +27,10 @@
   },
   "devDependencies": {
     "typescript": "^5.4.5"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "esbuild": "^0.25.0"
   }
 }
+

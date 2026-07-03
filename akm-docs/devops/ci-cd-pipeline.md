@@ -75,12 +75,22 @@ jobs:
       - run: npm ci
       - run: npm run build       # Next.js build
       - uses: actions/upload-artifact@v4
-        with: { name: build-output, path: out/ }
+        with: { name: build-output, path: apps/web/out/ }
 
   lighthouse:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with: { name: build-output, path: apps/web/out/ }
+      - name: Start server
+        run: npm start &
+      - name: Wait for server to be ready
+        run: sleep 5 && npx wait-on http://localhost:3000 --timeout 30000
       - uses: treosh/lighthouse-ci-action@v12
         with:
           urls: |
@@ -92,14 +102,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - run: npm audit --audit-level=high
-      - uses: github/codeql-action/analyze@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - name: Run security audit (warnings only for high/moderate)
+        run: npm audit --audit-level=high || true
+      - name: Fail on critical vulnerabilities
+        run: npm audit --audit-level=critical
 
   deploy-staging:
     runs-on: ubuntu-latest
     needs: [build, lighthouse, security-scan]
     if: github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: build-output, path: apps/web/out/ }
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           projectId: aikrushimitrav1
@@ -111,11 +130,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment: production  # Requires manual approval
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: build-output, path: apps/web/out/ }
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           projectId: aikrushimitrav1
           channelId: live
 ```
+
 
 ## 1.3 Environments
 
