@@ -13,7 +13,13 @@ export class RetryPolicy {
       } catch (error: any) {
         attempt++;
         const status = error?.status || error?.statusCode;
-        const isRetryable = status === 429 || status === 500 || status === 503 || error?.message?.includes('FETCH_ERROR');
+        const isNetworkError = error instanceof TypeError || 
+                               error?.message?.includes('fetch') || 
+                               error?.message?.includes('network') || 
+                               error?.message?.includes('timeout') || 
+                               error?.message?.includes('Failed to fetch') ||
+                               error?.message?.includes('FETCH_ERROR');
+        const isRetryable = !status || status === 429 || status === 500 || status === 503 || isNetworkError;
 
         if (attempt >= maxRetries || !isRetryable) {
           throw error;

@@ -183,7 +183,7 @@ export const fetchWeather = async (
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
         `&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,apparent_temperature,visibility,precipitation,cloud_cover,pressure_msl` +
         `&hourly=temperature_2m,weather_code,is_day,precipitation_probability` +
-        `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability,uv_index_max` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,uv_index_max` +
         `&timezone=auto&forecast_days=${CONFIG.FORECAST_DAYS}`;
 
       const data = await fetchWithRetry(async () => {
@@ -194,6 +194,11 @@ export const fetchWeather = async (
       // Populate current.uv_index from daily.uv_index_max[0] if present
       if (data && data.current && !data.current.uv_index && data.daily && data.daily.uv_index_max) {
         data.current.uv_index = data.daily.uv_index_max[0];
+      }
+
+      // Map daily precipitation_probability_max to precipitation_probability if present
+      if (data && data.daily && data.daily.precipitation_probability_max && !data.daily.precipitation_probability) {
+        data.daily.precipitation_probability = data.daily.precipitation_probability_max;
       }
 
       // 3. Store in cache
