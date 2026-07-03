@@ -439,7 +439,9 @@ const SolutionsSection = () => {
       grad: 'from-emerald-950/60 to-slate-950',
       border: 'border-emerald-500/20',
       iconColor: 'text-emerald-400',
-      img: 'sol_farmer_1.png'
+      img: 'sol_farmer_1.png',
+      icon: Users,
+      iconBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
     },
     {
       title: 'Progressive Farmers',
@@ -449,7 +451,9 @@ const SolutionsSection = () => {
       grad: 'from-cyan-950/60 to-slate-950',
       border: 'border-cyan-500/20',
       iconColor: 'text-cyan-400',
-      img: 'sol_farmer_2.png'
+      img: 'sol_farmer_2.png',
+      icon: Cpu,
+      iconBg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
     },
     {
       title: 'Agribusiness & Advisors',
@@ -459,7 +463,9 @@ const SolutionsSection = () => {
       grad: 'from-purple-950/60 to-slate-950',
       border: 'border-purple-500/20',
       iconColor: 'text-purple-400',
-      img: 'sol_farmer_3.png'
+      img: 'sol_farmer_3.png',
+      icon: Tractor,
+      iconBg: 'bg-purple-500/10 border-purple-500/20 text-purple-400'
     }
   ];
 
@@ -473,32 +479,36 @@ const SolutionsSection = () => {
           {cards.map((card, i) => (
             <div
               key={i}
-              className={`relative rounded-3xl overflow-hidden border ${card.border} bg-gradient-to-b ${card.grad} p-6 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-500`}
+              className={`relative rounded-3xl overflow-hidden border ${card.border} bg-gradient-to-b ${card.grad} p-6 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-500 min-h-[350px]`}
             >
-              {/* Card Copy */}
-              <div>
-                <h3 className="text-lg font-black text-white mb-2">{card.title}</h3>
-                <p className="text-xs text-slate-400 mb-5 leading-relaxed">{card.desc}</p>
-                <div className="space-y-2.5 mb-6">
-                  {card.bullets.map((bull, j) => (
-                    <div key={j} className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className={card.iconColor} />
-                      <span className="text-xs text-slate-300">{bull}</span>
-                    </div>
-                  ))}
+              {/* Left Column Content */}
+              <div className="max-w-[62%] pr-2 z-10 flex flex-col justify-between h-full">
+                <div>
+                  {/* Circular Icon */}
+                  <div className={`w-12 h-12 rounded-full ${card.iconBg} border flex items-center justify-center mb-5`}>
+                    <card.icon size={22} />
+                  </div>
+                  
+                  <h3 className="text-md sm:text-lg font-black text-white mb-2 leading-tight">{card.title}</h3>
+                  <p className="text-[11px] text-slate-400 mb-5 leading-relaxed">{card.desc}</p>
+                  
+                  <div className="space-y-3">
+                    {card.bullets.map((bull, j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <CheckCircle2 size={14} className={card.iconColor} />
+                        <span className="text-xs text-slate-300 font-medium">{bull}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom Row showing Portrait Image */}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 shrink-0">
-                  <img src={`/images/${card.img}`} alt={card.title} className="w-full h-full object-cover" />
-                </div>
-                <div className={`text-[10px] font-bold ${card.iconColor} border border-current/20 rounded-full px-3 py-1 flex items-center gap-1 hover:bg-white/5 transition-colors cursor-pointer`}>
-                  <span>Explore</span>
-                  <ArrowRight size={10} />
-                </div>
-              </div>
+              {/* Absolute Portrait Image aligned to bottom right */}
+              <img
+                src={`/images/${card.img}`}
+                alt={card.title}
+                className="absolute right-0 bottom-0 h-[85%] max-h-[300px] w-auto object-contain pointer-events-none z-0 transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
           ))}
         </div>
