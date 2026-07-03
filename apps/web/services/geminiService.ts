@@ -322,8 +322,8 @@ const postToProxy = async (endpoint: string, body: any): Promise<string> => {
     );
     try {
       return await callGeminiDirectly(endpoint, body);
-    } catch (fallbackError) {
-      console.error('Client-side AI fallback also failed:', fallbackError);
+    } catch (fallbackError: any) {
+      console.warn('Client-side AI fallback also failed:', fallbackError.message || fallbackError);
       throw fallbackError;
     }
   }
@@ -488,8 +488,8 @@ export const getLiveAgriUpdates = async (
   try {
     const text = await postToProxy('/api/updates', { prompt });
     return parseAIJson(text);
-  } catch (error) {
-    console.error('Updates Error:', error);
+  } catch (error: any) {
+    console.warn('Updates Error (using static fallback):', error.message || error);
     return [];
   }
 };
