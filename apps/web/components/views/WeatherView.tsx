@@ -120,9 +120,12 @@ const MetricCard = ({ icon: Icon, label, value, unit, color }: { icon: any, labe
     </div>
 );
 
+import { useAppStore } from '../../store/useAppStore';
+
 const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) => {
     const vt = WEATHER_V_TEXT[lang];
     const user = useUserStore((state) => state.user);
+    const collapsed = useAppStore((state) => state.sidebarCollapsed);
     const [loading, setLoading] = useState(false);
     const [weather, setWeather] = useState<WeatherData | null>(MOCK_WEATHER);
     const [locationName, setLocationName] = useState('Locating...');
@@ -213,7 +216,7 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
     if (!weather) return null;
 
     return (
-        <div className="h-full w-full flex flex-col lg:pl-64 relative overflow-hidden text-white bg-[#020617]">
+        <div className={clsx("h-full w-full flex flex-col relative overflow-hidden text-white bg-[#020617] transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
             {/* Immersive Background */}
             <div className="absolute inset-0 z-0">
                 <div className={clsx(

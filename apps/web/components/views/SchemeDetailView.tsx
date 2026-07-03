@@ -4,11 +4,15 @@ import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import { ArrowLeft, IndianRupee, CheckCircle2, CheckSquare, FileText, FileCheck, ListOrdered } from 'lucide-react';
 
+import { useAppStore } from '../../store/useAppStore';
+import clsx from 'clsx';
+
 const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Language, onBack: () => void }) => {
     const t = TRANSLATIONS[lang];
+    const collapsed = useAppStore((state) => state.sidebarCollapsed);
 
     return (
-        <div className="h-full w-full flex flex-col bg-[#020617] animate-enter lg:pl-64">
+        <div className={clsx("h-full w-full flex flex-col bg-[#020617] animate-enter transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
             {/* Header with Hero Gradient */}
             <div className={`relative w-full h-64 bg-gradient-to-br ${scheme.grad} shrink-0`}>
                 <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay"></div>

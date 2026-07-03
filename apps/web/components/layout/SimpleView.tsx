@@ -3,6 +3,9 @@ import React, { useEffect, useRef } from 'react';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 
+import { useAppStore } from '../../store/useAppStore';
+import clsx from 'clsx';
+
 interface SimpleViewProps {
   title: string;
   children?: React.ReactNode;
@@ -12,6 +15,7 @@ interface SimpleViewProps {
 
 const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) => {
   const orbsRef = useRef<HTMLDivElement>(null);
+  const collapsed = useAppStore((state) => state.sidebarCollapsed);
 
   useEffect(() => {
     // Dynamic orb animation on mouse move
@@ -32,7 +36,7 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col relative overflow-hidden lg:pl-64">
+    <div className={clsx("h-full w-full flex flex-col relative overflow-hidden transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
       
       {/* Ultra-Premium Animated Orb Background */}
       <div ref={orbsRef} className="fixed inset-0 pointer-events-none overflow-hidden">

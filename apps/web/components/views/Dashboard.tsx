@@ -24,10 +24,14 @@ import { MultiFieldsOverview } from '../dashboard/MultiFieldsOverview';
 import { NotificationsWidget } from '../dashboard/NotificationsWidget';
 import { FooterBanner } from '../dashboard/FooterBanner';
 
+import { useAppStore } from '../../store/useAppStore';
+import clsx from 'clsx';
+
 const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLang: (l: Language) => void, user: UserProfile, onNavigate: (v: ViewState) => void }) => {
     const t = TRANSLATIONS[lang];
     const txt = DASH_TEXT[lang];
     const [weather, setWeather] = useState<any>(MOCK_WEATHER);
+    const collapsed = useAppStore((state) => state.sidebarCollapsed);
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [liveLocation, setLiveLocation] = useState<string>(user.village || "Locating...");
@@ -86,7 +90,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
     const dayStr = now.toLocaleDateString(lang === 'mr' ? 'mr-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long' });
 
     return (
-        <div className="h-full w-full overflow-y-auto overflow-x-hidden hide-scrollbar bg-transparent text-slate-100 lg:pl-64 selection:bg-emerald-500/30 flex flex-col relative">
+        <div className={clsx("h-full w-full overflow-y-auto overflow-x-hidden hide-scrollbar bg-transparent text-slate-100 selection:bg-emerald-500/30 flex flex-col relative transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
             
             {/* --- INJECT KEYFRAMES --- */}
             <style>{`

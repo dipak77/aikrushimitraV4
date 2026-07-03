@@ -177,9 +177,13 @@ function StatsOverview({ lang, items }: { lang: Language, items: KnowledgeItem[]
   );
 }
 
+import { useAppStore } from '../../store/useAppStore';
+import clsx from 'clsx';
+
 const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () => void, onSelect: (item: KnowledgeItem) => void }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const collapsed = useAppStore((state) => state.sidebarCollapsed);
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -253,7 +257,7 @@ const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack:
   });
 
   return (
-    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-64 animate-fade-in">
+    <div className={clsx("h-full bg-[#f8fafc] flex flex-col animate-fade-in transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
       {/* Premium Hero Banner */}
       <div className="relative bg-gray-900 shrink-0 rounded-b-[40px] shadow-xl z-10">
         <div className="absolute inset-0 overflow-hidden rounded-b-[40px]">

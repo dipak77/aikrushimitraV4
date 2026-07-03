@@ -4,10 +4,12 @@ import { ViewState, Language } from '../../types';
 import {
   LayoutDashboard, CloudSun, Sprout, Package, Bot, BookOpen, Landmark,
   Store, TrendingUp, Mic, ChevronDown, ChevronUp, Zap, Sparkles, Crown,
-  ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield
+  ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import clsx from 'clsx';
 import { triggerHaptic } from '../../utils/common';
+import { useAppStore } from '../../store/useAppStore';
 
 const MENU_TEXTS: Record<string, any> = {
   mr: {
@@ -79,6 +81,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   const [moreOpen, setMoreOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const t = MENU_TEXTS[lang] || MENU_TEXTS.en;
+  const { sidebarCollapsed: collapsed, setSidebarCollapsed } = useAppStore();
 
   const mainItems = [
     { id: 'DASHBOARD', icon: LayoutDashboard, label: t.dashboard, color: 'emerald' },
@@ -121,7 +124,10 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
 
       <div
         ref={sidebarRef}
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 flex-col z-50 overflow-hidden"
+        className={clsx(
+          "hidden lg:flex fixed left-0 top-0 bottom-0 flex-col z-50 overflow-hidden transition-all duration-300",
+          collapsed ? "w-20" : "w-64"
+        )}
       >
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0a1628] to-[#020617] backdrop-blur-[60px]" />
@@ -135,21 +141,47 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
         <div className="relative z-10 flex flex-col h-full">
 
           {/* Logo Section */}
-          <div className="px-5 py-6 flex items-center gap-3 cursor-pointer group/logo" onClick={() => setView('DASHBOARD')}>
-            {/* Logo Circle */}
-            <div className="relative">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover/logo:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-shadow duration-500">
-                <span className="text-black font-black text-sm tracking-wider">AI</span>
+          <div 
+            className={clsx(
+              "py-6 px-4 flex items-center cursor-pointer group/logo transition-all duration-300",
+              collapsed ? "flex-col gap-4 justify-center" : "flex-row gap-3 justify-between"
+            )}
+            onClick={() => setView('DASHBOARD')}
+          >
+            <div className="flex items-center gap-3">
+              {/* Logo Circle */}
+              <div className="relative flex-shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover/logo:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-shadow duration-500">
+                  <span className="text-black font-black text-sm tracking-wider">AI</span>
+                </div>
+                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center border border-amber-300/30">
+                  <Sparkles size={8} className="text-amber-900" />
+                </div>
               </div>
-              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center border border-amber-300/30">
-                <Sparkles size={8} className="text-amber-900" />
-              </div>
+              {/* Logo Text */}
+              {!collapsed && (
+                <div className="animate-fade-in truncate">
+                  <h1 className="text-sm font-black text-white leading-none">AI Krushi Agent</h1>
+                  <p className="text-[10px] text-slate-500 font-medium mt-0.5">Smart Farming Assistant</p>
+                </div>
+              )}
             </div>
-            {/* Logo Text */}
-            <div>
-              <h1 className="text-sm font-black text-white leading-none">AI Krushi Agent</h1>
-              <p className="text-[10px] text-slate-500 font-medium mt-0.5">Smart Farming Assistant</p>
-            </div>
+
+            {/* Collapse toggle button */}
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setSidebarCollapsed(!collapsed); 
+                triggerHaptic(); 
+              }}
+              className={clsx(
+                "p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors",
+                collapsed ? "mt-1" : ""
+              )}
+              title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
           </div>
 
           {/* Divider */}
@@ -168,8 +200,10 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                     'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group/item relative overflow-hidden',
                     active
                       ? 'bg-emerald-500/10 border border-emerald-500/20'
-                      : 'border border-transparent hover:bg-white/5 hover:border-white/5'
+                      : 'border border-transparent hover:bg-white/5 hover:border-white/5',
+                    collapsed ? 'justify-center px-0' : ''
                   )}
+                  title={collapsed ? item.label : undefined}
                 >
                   {/* Active indicator */}
                   {active && (
@@ -196,12 +230,14 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                       strokeWidth={active ? 2.5 : 2}
                     />
                   </div>
-                  <span className={clsx(
-                    'text-sm font-semibold transition-colors duration-300 truncate',
-                    active ? 'text-emerald-400' : 'text-slate-400 group-hover/item:text-slate-200'
-                  )}>
-                    {item.label}
-                  </span>
+                  {!collapsed && (
+                    <span className={clsx(
+                      'text-sm font-semibold transition-colors duration-300 truncate animate-fade-in',
+                      active ? 'text-emerald-400' : 'text-slate-400 group-hover/item:text-slate-200'
+                    )}>
+                      {item.label}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -210,13 +246,23 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
             <div className="pt-2">
               <button
                 onClick={() => setMoreOpen(!moreOpen)}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/5 hover:border-white/5 transition-all duration-300"
+                className={clsx(
+                  "w-full flex items-center rounded-xl border border-transparent hover:bg-white/5 hover:border-white/5 transition-all duration-300",
+                  collapsed ? "justify-center py-2" : "justify-between px-3 py-2.5"
+                )}
+                title={collapsed ? t.more : undefined}
               >
-                <span className="text-sm font-semibold text-slate-500">{t.more}</span>
-                {moreOpen ? (
-                  <ChevronUp size={16} className="text-slate-500" />
+                {!collapsed ? (
+                  <span className="text-sm font-semibold text-slate-500">{t.more}</span>
                 ) : (
-                  <ChevronDown size={16} className="text-slate-500" />
+                  <span className="text-slate-500 text-lg font-bold leading-none">•••</span>
+                )}
+                {!collapsed && (
+                  moreOpen ? (
+                    <ChevronUp size={16} className="text-slate-500" />
+                  ) : (
+                    <ChevronDown size={16} className="text-slate-500" />
+                  )
                 )}
               </button>
 
@@ -233,8 +279,10 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                           'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group/item relative overflow-hidden',
                           active
                             ? 'bg-emerald-500/10 border border-emerald-500/20'
-                            : 'border border-transparent hover:bg-white/5 hover:border-white/5'
+                            : 'border border-transparent hover:bg-white/5 hover:border-white/5',
+                          collapsed ? 'justify-center px-0' : ''
                         )}
+                        title={collapsed ? item.label : undefined}
                       >
                         {active && (
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-to-b from-emerald-400 to-teal-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
@@ -253,12 +301,14 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                             )}
                           />
                         </div>
-                        <span className={clsx(
-                          'text-xs font-semibold transition-colors duration-300 truncate',
-                          active ? 'text-emerald-400' : 'text-slate-500 group-hover/item:text-slate-300'
-                        )}>
-                          {item.label}
-                        </span>
+                        {!collapsed && (
+                          <span className={clsx(
+                            'text-xs font-semibold transition-colors duration-300 truncate animate-fade-in',
+                            active ? 'text-emerald-400' : 'text-slate-500 group-hover/item:text-slate-300'
+                          )}>
+                            {item.label}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -268,15 +318,21 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
           </nav>
 
           {/* Voice Button */}
-          <div className="px-5 pb-6 pt-2">
+          <div className={clsx("pb-6 pt-2 transition-all duration-300", collapsed ? "px-3" : "px-5")}>
             <button
               onClick={() => { setView('VOICE_ASSISTANT'); triggerHaptic(); }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600 text-white font-bold text-sm shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_8px_32px_rgba(6,182,212,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-300 relative overflow-hidden group/voice"
+              className={clsx(
+                "w-full flex items-center justify-center bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600 text-white font-bold shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_8px_32px_rgba(6,182,212,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-300 relative overflow-hidden group/voice",
+                collapsed ? "h-11 rounded-xl" : "gap-2 py-3 rounded-xl text-sm"
+              )}
+              title={collapsed ? (lang === 'mr' ? 'बोला' : lang === 'hi' ? 'बोलें' : 'Voice') : undefined}
             >
               {/* Shine */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover/voice:translate-x-[200%] transition-transform duration-1000" />
-              <Mic size={18} strokeWidth={2.5} className="relative z-10" />
-              <span className="relative z-10">{lang === 'mr' ? 'बोला' : lang === 'hi' ? 'बोलें' : 'Voice'}</span>
+              <Mic size={18} strokeWidth={2.5} className="relative z-10 flex-shrink-0" />
+              {!collapsed && (
+                <span className="relative z-10 animate-fade-in truncate">{lang === 'mr' ? 'बोला' : lang === 'hi' ? 'बोलें' : 'Voice'}</span>
+              )}
             </button>
           </div>
         </div>

@@ -72,8 +72,12 @@ const InfoWidget = ({
   );
 };
 
+import { useAppStore } from '../../store/useAppStore';
+import clsx from 'clsx';
+
 const KnowledgeDetailView = ({ item, lang, onBack }: { item: KnowledgeItem, lang: Language, onBack: () => void }) => {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(() => new Set([0]));
+  const collapsed = useAppStore((state) => state.sidebarCollapsed);
 
   const getLabel = (obj: any) => lang === 'mr' ? obj.mr : (obj.hi || obj.en);
 
@@ -100,7 +104,7 @@ const KnowledgeDetailView = ({ item, lang, onBack }: { item: KnowledgeItem, lang
   const activeGlow = categoryGlow[item.category] || categoryGlow.crop;
 
   return (
-    <div className="h-full bg-[#f8fafc] flex flex-col lg:pl-64 animate-fade-in overflow-hidden">
+    <div className={clsx("h-full bg-[#f8fafc] flex flex-col animate-fade-in overflow-hidden transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
       <div className="flex-1 overflow-y-auto hide-scrollbar pb-32">
         
         {/* Hero Section */}
