@@ -121,6 +121,8 @@ jobs:
         with: { name: build-output, path: apps/web/out/ }
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 }}
           projectId: aikrushimitrav1
           channelId: staging
 
@@ -135,6 +137,8 @@ jobs:
         with: { name: build-output, path: apps/web/out/ }
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 }}
           projectId: aikrushimitrav1
           channelId: live
 ```
