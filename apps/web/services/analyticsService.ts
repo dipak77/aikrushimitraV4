@@ -204,11 +204,15 @@ export const logActivity = async (
     }
   }
 
-  try {
-    const logDocRef = doc(db, "activityLogs", newLog.id);
-    await setDoc(logDocRef, newLog);
-  } catch (e) {
-    console.error("[logActivity] Firestore write failed:", e);
+  if (auth.currentUser) {
+    try {
+      const logDocRef = doc(db, "activityLogs", newLog.id);
+      await setDoc(logDocRef, newLog);
+    } catch (e) {
+      console.warn("[logActivity] Firestore write failed:", e);
+    }
+  } else {
+    console.debug("[logActivity] Firestore write skipped: User not authenticated.");
   }
 };
 

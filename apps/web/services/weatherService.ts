@@ -181,7 +181,7 @@ export const fetchWeather = async (
     try {
       const url =
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
-        `&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,apparent_temperature,visibility,uv_index,precipitation,cloud_cover,pressure_msl` +
+        `&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,apparent_temperature,visibility,precipitation,cloud_cover,pressure_msl` +
         `&hourly=temperature_2m,weather_code,is_day,precipitation_probability` +
         `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability,uv_index_max` +
         `&timezone=auto&forecast_days=${CONFIG.FORECAST_DAYS}`;
@@ -190,6 +190,11 @@ export const fetchWeather = async (
         const res = await fetchWithTimeout(url);
         return await res.json();
       });
+
+      // Populate current.uv_index from daily.uv_index_max[0] if present
+      if (data && data.current && !data.current.uv_index && data.daily && data.daily.uv_index_max) {
+        data.current.uv_index = data.daily.uv_index_max[0];
+      }
 
       // 3. Store in cache
       try {
