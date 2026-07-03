@@ -5,7 +5,7 @@ import {
   LayoutDashboard, CloudSun, Sprout, Package, Bot, BookOpen, Landmark,
   Store, TrendingUp, Mic, ChevronDown, ChevronUp, Zap, Sparkles, Crown,
   ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield,
-  ChevronLeft, ChevronRight, X
+  ChevronLeft, ChevronRight, X, Home, Globe
 } from 'lucide-react';
 import clsx from 'clsx';
 import { triggerHaptic } from '../../utils/common';
@@ -13,7 +13,9 @@ import { useAppStore } from '../../store/useAppStore';
 
 const MENU_TEXTS: Record<string, any> = {
   mr: {
-    dashboard: 'Dashboard',
+    home: 'मुख्यपृष्ठ',
+    landing: 'लँडिंग पेज',
+    dashboard: 'डॅशबोर्ड',
     weather: 'हवामान',
     cropMgmt: 'पीक व्यवस्थापन',
     marketOrders: 'सब्जी मंडी',
@@ -34,7 +36,9 @@ const MENU_TEXTS: Record<string, any> = {
     admin: 'व्यवस्थापन',
   },
   hi: {
-    dashboard: 'Dashboard',
+    home: 'मुख्य पृष्ठ',
+    landing: 'लैंडिंग पेज',
+    dashboard: 'डैशबोर्ड',
     weather: 'मौसम',
     cropMgmt: 'फसल प्रबंधन',
     marketOrders: 'सब्जी मंडी',
@@ -55,6 +59,8 @@ const MENU_TEXTS: Record<string, any> = {
     admin: 'प्रशासन',
   },
   en: {
+    home: 'Home',
+    landing: 'Landing Page',
     dashboard: 'Dashboard',
     weather: 'Weather',
     cropMgmt: 'Crop Management',
@@ -84,7 +90,8 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   const { sidebarCollapsed: collapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen } = useAppStore();
 
   const mainItems = [
-    { id: 'DASHBOARD', icon: LayoutDashboard, label: t.dashboard, color: 'emerald' },
+    { id: 'DASHBOARD', icon: Home, label: t.home, color: 'emerald' },
+    { id: 'LANDING', icon: Globe, label: t.landing, color: 'blue' },
     { id: 'WEATHER', icon: CloudSun, label: t.weather, color: 'amber' },
     { id: 'CALENDAR', icon: Sprout, label: t.cropMgmt, color: 'green' },
     { id: 'SABJI_MANDI', icon: ShoppingCart, label: t.marketOrders, color: 'green' },
@@ -102,7 +109,6 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'AREA_CALCULATOR', icon: MapIcon, label: t.areaCalc, color: 'sky' },
     { id: 'PREMIUM', icon: Crown, label: t.premium, color: 'amber' },
     { id: 'INNOVATION', icon: Cpu, label: t.innovation, color: 'cyan' },
-    { id: 'ADMIN', icon: Shield, label: t.admin, color: 'slate' },
   ];
 
   return (
