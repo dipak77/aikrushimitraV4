@@ -503,12 +503,11 @@ const SolutionsSection = () => {
               <img
                 src={`/images/${card.img}`}
                 alt={card.title}
-                className={clsx(
-                  "absolute right-0 bottom-0 pointer-events-none z-0 transition-all duration-500",
+                className={`absolute right-0 bottom-0 pointer-events-none z-0 transition-all duration-500 ${
                   card.img === 'sol_farmer_1.png'
                     ? "w-full h-full object-cover object-right opacity-30 group-hover:opacity-45 group-hover:scale-105"
                     : "h-[85%] max-h-[350px] w-auto object-contain group-hover:scale-110 group-hover:-translate-x-2"
-                )}
+                }`}
               />
             </div>
           ))}
