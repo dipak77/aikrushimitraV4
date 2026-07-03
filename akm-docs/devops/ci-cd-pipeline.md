@@ -119,10 +119,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: build-output, path: apps/web/out/ }
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting (Staging)
+        if: secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: aikrushimitrav1
           channelId: staging
 
@@ -135,10 +137,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: build-output, path: apps/web/out/ }
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting (Production)
+        if: secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: aikrushimitrav1
           channelId: live
 ```
