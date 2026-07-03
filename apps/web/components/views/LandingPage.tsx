@@ -229,9 +229,15 @@ const HeroSection = ({ t, handleGetStarted, handleScrollTo }: any) => {
 
   return (
     <section id="home" className="relative min-h-[100vh] flex items-center pt-32 pb-20 overflow-hidden bg-slate-950">
-      <div className="absolute inset-0 pointer-events-none" style={meshBg} />
-      <div className="absolute inset-0 pointer-events-none opacity-40" style={gridPattern} />
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-emerald-500/10 blur-[120px]" />
+      {/* Premium Hero Farmer Background Graphic */}
+      <div 
+        className="absolute inset-0 bg-cover bg-[center_right_-8rem] md:bg-right lg:bg-center pointer-events-none opacity-85"
+        style={{ backgroundImage: "url('/images/landing-hero.png')" }} 
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={gridPattern} />
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
       <div ref={heroRef} className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full transition-all duration-1000 ${heroInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="grid lg:grid-cols-12 gap-12 items-center">
@@ -294,80 +300,8 @@ const HeroSection = ({ t, handleGetStarted, handleScrollTo }: any) => {
 
           </div>
 
-          {/* Right Phone + Smiling Farmer Image */}
-          <div className="lg:col-span-5 relative flex items-center justify-center h-[450px] lg:h-[500px]">
-            {/* Background glowing circle */}
-            <div className="absolute w-96 h-96 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none" />
-
-            {/* Decorative Orbits */}
-            <div className="absolute w-[400px] h-[400px] border border-white/5 rounded-full animate-spin-slow"></div>
-            <div className="absolute w-[300px] h-[300px] border border-white/5 rounded-full"></div>
-
-            {/* Floating UI Cards */}
-            <div className="absolute top-10 left-0 hidden sm:block bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-xl shadow-2xl animate-float z-20">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <CloudRain size={16} className="text-emerald-400" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] text-slate-500 font-semibold">Weather</p>
-                  <p className="text-xs font-bold text-white">28°C Partly Cloudy</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-10 right-0 hidden sm:block bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-xl shadow-2xl animate-float-delay z-20">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <TrendingUp size={16} className="text-amber-400" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] text-slate-500 font-semibold">Market Price</p>
-                  <p className="text-xs font-bold text-white">Soyabean ₹6,840 (+4.2%)</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Phone Mockup */}
-            <div className="relative w-[220px] h-[440px] rounded-[2.5rem] border-[6px] border-slate-800 bg-slate-950 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 scale-90 sm:scale-100">
-              <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 flex justify-center items-center rounded-b-xl z-20">
-                <div className="w-16 h-3 rounded-full bg-slate-900"></div>
-              </div>
-              {/* App Screen Content Preview */}
-              <div className="p-4 pt-8 space-y-3 h-full flex flex-col">
-                <div className="flex justify-between items-center text-[9px] text-slate-500 font-bold">
-                  <span>9:41</span>
-                  <span>5G</span>
-                </div>
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-left">
-                  <p className="text-[8px] text-emerald-400 font-black uppercase tracking-wider">AI शिफारस (सोयाबीन)</p>
-                  <p className="text-sm font-bold text-white mt-1">फुलोरा अवस्था</p>
-                  <p className="text-[9px] text-slate-400 mt-1 leading-normal">आज फवारणी केल्यास उत्पादनात +15% वाढ</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 rounded-xl bg-slate-900 border border-white/5 text-left">
-                    <p className="text-[8px] text-slate-400 uppercase font-bold">हवामान</p>
-                    <p className="text-base font-black text-white">28°C</p>
-                  </div>
-                  <div className="p-2 rounded-xl bg-slate-900 border border-white/5 text-left">
-                    <p className="text-[8px] text-slate-400 uppercase font-bold">मार्केट</p>
-                    <p className="text-base font-black text-white">₹6,840</p>
-                  </div>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between">
-                  <div className="text-left">
-                    <p className="text-[8px] text-slate-400 uppercase font-bold">पिक आजार</p>
-                    <p className="text-[10px] font-bold text-white">कोणताही आजार नाही</p>
-                  </div>
-                  <CheckCircle2 size={16} className="text-emerald-400" />
-                </div>
-                <div className="mt-auto p-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 text-[9px] font-black text-center uppercase tracking-wider">
-                  संपूर्ण माहिती पहा →
-                </div>
-              </div>
-            </div>
-
-          </div>
+          {/* Right column placeholder to fully showcase the farmer graphic from the background */}
+          <div className="lg:col-span-5 h-[150px] lg:h-[500px]" />
 
         </div>
       </div>
