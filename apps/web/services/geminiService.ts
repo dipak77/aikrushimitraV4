@@ -11,10 +11,10 @@ import {
 import { useUserStore } from '../store/useUserStore';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const PROXY_TIMEOUT_MS = 15_000;
-const GEMINI_TIMEOUT_MS = 20_000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1_000;
+const PROXY_TIMEOUT_MS = parseInt(typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_PROXY_TIMEOUT || process.env.PROXY_TIMEOUT || '15000') : '15000', 10);
+const GEMINI_TIMEOUT_MS = parseInt(typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_GEMINI_TIMEOUT || process.env.GEMINI_TIMEOUT || '20000') : '20000', 10);
+const MAX_RETRIES = parseInt(typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_MAX_RETRIES || process.env.MAX_RETRIES || '3') : '3', 10);
+const RETRY_DELAY_MS = parseInt(typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_RETRY_DELAY || process.env.RETRY_DELAY || '1000') : '1000', 10);
 const MAX_INPUT_LEN = 2_000;
 const MAX_IMAGE_LEN = 5_000_000; // 5MB base64 safety limit
 
@@ -59,6 +59,11 @@ const extractBase64 = (imageData: string): string => {
  * Detects MIME type from a data URI prefix, defaulting to image/jpeg.
  */
 const detectMimeType = (imageData: string): string => {
+  if (!imageData || typeof imageData !== 'string') return 'image/jpeg';
+  const match = imageData.match(/^data:([^;]+);base64,/);
+  if (match && match[1]) {
+    return match[1];
+  }
   if (imageData.includes('image/png')) return 'image/png';
   if (imageData.includes('image/webp')) return 'image/webp';
   if (imageData.includes('image/gif')) return 'image/gif';
@@ -71,12 +76,25 @@ const detectMimeType = (imageData: string): string => {
  */
 const parseAIJson = (text: string): any[] => {
   if (!text || typeof text !== 'string') return [];
-  const cleaned = text.replace(/```(?:json)?/g, '').trim();
-  const match = cleaned.match(/\[[\s\S]*\]/);
-  if (!match) return [];
+  let cleaned = text.replace(/```(?:json)?/g, '').trim();
+  let match = cleaned.match(/\[[\s\S]*\]/);
+  if (!match) {
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (objMatch) {
+      try {
+        const sanitized = objMatch[0].replace(/,\s*([\]}])/g, '$1');
+        const parsed = JSON.parse(sanitized);
+        return [parsed];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
   try {
-    const parsed = JSON.parse(match[0]);
-    return Array.isArray(parsed) ? parsed : [];
+    const sanitized = match[0].replace(/,\s*([\]}])/g, '$1');
+    const parsed = JSON.parse(sanitized);
+    return Array.isArray(parsed) ? parsed : [parsed];
   } catch {
     return [];
   }
@@ -280,7 +298,17 @@ export const getGenAIKey = (): string => {
     return (window as any).ENV.API_KEY;
   }
 
+  // Vite support
+  try {
+    // @ts-ignore
+    const viteKey = import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY || import.meta.env?.VITE_API_KEY;
+    if (viteKey) return viteKey;
+  } catch { /* ignore */ }
+
   const envKey =
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_API_KEY ||
+    process.env.NEXT_PUBLIC_API_KEY ||
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
     process.env.API_KEY ||
@@ -295,13 +323,14 @@ export const getGenAIKey = (): string => {
  * Includes a 15-second timeout on the proxy fetch.
  */
 const postToProxy = async (endpoint: string, body: any): Promise<string> => {
+  const isUpdates = endpoint === '/api/updates';
   try {
     const response = await fetchWithTimeout(
       getApiUrl(endpoint),
       {
-        method: 'POST',
+        method: isUpdates ? 'GET' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: isUpdates ? undefined : JSON.stringify(body),
       },
       PROXY_TIMEOUT_MS
     );
