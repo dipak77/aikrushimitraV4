@@ -56,8 +56,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci
-      - run: npm run lint        # ESLint
-      - run: npx tsc --noEmit    # TypeScript
+      - run: npm run lint        # ESLint/TypeScript workspace check
+
 
   unit-tests:
     runs-on: ubuntu-latest
