@@ -44,6 +44,10 @@ interface AppState {
 
   // Actions — Connectivity
   setOnline: (online: boolean) => void;
+
+  // Platform Config
+  platformConfig: any | null;
+  loadPlatformConfig: () => Promise<void>;
 }
 
 // Views that should not show the sidebar/navbar
@@ -116,6 +120,20 @@ export const useAppStore = create<AppState>()(persist((set, get) => ({
     isOnline,
     showOfflineBanner: !isOnline,
   }),
+
+  // Platform Config Initial State & Load Action
+  platformConfig: null,
+  loadPlatformConfig: async () => {
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        set({ platformConfig: data });
+      }
+    } catch (e) {
+      console.warn('Failed to load public configuration flags:', e);
+    }
+  },
 }), {
   name: 'akm-app-store',
   storage: createJSONStorage(() => localStorage),

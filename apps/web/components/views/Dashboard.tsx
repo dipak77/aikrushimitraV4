@@ -31,10 +31,15 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
     const t = TRANSLATIONS[lang];
     const txt = DASH_TEXT[lang];
     const [weather, setWeather] = useState<any>(MOCK_WEATHER);
-    const { sidebarCollapsed: collapsed, toggleSidebar } = useAppStore();
+    const { sidebarCollapsed: collapsed, toggleSidebar, platformConfig } = useAppStore();
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [liveLocation, setLiveLocation] = useState<string>(user.village || "Locating...");
+
+    const showWeather = !platformConfig || platformConfig.features?.weather !== false;
+    const showVoice = !platformConfig || platformConfig.features?.voiceAssistant !== false;
+    const showAi = !platformConfig || platformConfig.features?.aiAssistant !== false;
+    const showDiagnosis = !platformConfig || platformConfig.features?.cropDiagnosis !== false;
 
     useEffect(() => {
         const loadWeather = async () => {
@@ -231,9 +236,11 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
                 {/* AI Crop Analysis (5 cols) */}
-                <div className="col-span-1 md:col-span-5 min-h-[260px] animate-[fadeInUp_0.5s_ease-out]">
-                    <CropAnalysisCard lang={lang} />
-                </div>
+                {showDiagnosis && (
+                  <div className="col-span-1 md:col-span-5 min-h-[260px] animate-[fadeInUp_0.5s_ease-out]">
+                      <CropAnalysisCard lang={lang} />
+                  </div>
+                )}
 
                 {/* Farm Health Score (4 cols) */}
                 <div className="col-span-1 md:col-span-4 min-h-[260px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
@@ -251,9 +258,11 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
                 {/* Weather (3 cols) */}
-                <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
-                    <WeatherWidget weather={weather} loading={loadingWeather} location={liveLocation} lang={lang} onNavigate={onNavigate} />
-                </div>
+                {showWeather && (
+                  <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
+                      <WeatherWidget weather={weather} loading={loadingWeather} location={liveLocation} lang={lang} onNavigate={onNavigate} />
+                  </div>
+                )}
 
                 {/* Market Prices Table (3 cols) */}
                 <div className="col-span-1 md:col-span-3 h-[280px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
@@ -288,9 +297,11 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                 </div>
 
                 {/* AI Chat (3 cols) */}
-                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
-                    <AIChatWidget lang={lang} />
-                </div>
+                {showAi && (
+                  <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                      <AIChatWidget lang={lang} />
+                  </div>
+                )}
 
                 {/* Multiple Fields (3 cols) */}
                 <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
@@ -311,11 +322,13 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             </div>
 
             {/* Voice Widget (Desktop Only) - Floating style */}
-            <div className="hidden md:block px-4 md:px-6 max-w-[1600px] mx-auto w-full mb-4">
-                <div className="h-20">
-                    <VoiceWidget onNavigate={onNavigate} lang={lang} />
-                </div>
-            </div>
+            {showVoice && (
+              <div className="hidden md:block px-4 md:px-6 max-w-[1600px] mx-auto w-full mb-4">
+                  <div className="h-20">
+                      <VoiceWidget onNavigate={onNavigate} lang={lang} />
+                  </div>
+              </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════ */}
             {/* FOOTER BANNER                                          */}

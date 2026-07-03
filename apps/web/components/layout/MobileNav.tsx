@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { triggerHaptic } from "../../utils/common";
+import { useAppStore } from "../../store/useAppStore";
 
 /* ────────────────────────────────────────────────────────────
    Design Tokens
@@ -388,14 +389,42 @@ const MobileNav = ({
     [setView],
   );
 
+  const { platformConfig } = useAppStore();
+
+  const isEnabled = useCallback((id: string) => {
+    if (!platformConfig || !platformConfig.features) return true;
+    switch (id) {
+      case 'DISEASE_DETECTOR': return platformConfig.features.cropDiagnosis !== false;
+      case 'VOICE_ASSISTANT': return platformConfig.features.voiceAssistant !== false;
+      case 'MARKET': return platformConfig.features.marketplace !== false;
+      case 'SCHEMES': return platformConfig.features.govtSchemes !== false;
+      default: return true;
+    }
+  }, [platformConfig]);
+
+  const filteredNavItems = useMemo(() => {
+    return NAV_ITEMS.filter(n => isEnabled(n.id));
+  }, [isEnabled]);
+
   /* ── Active item for ambient glow color ── */
   const activeItem = useMemo(
-    () => NAV_ITEMS.find((n) => n.id === view) || NAV_ITEMS[0],
-    [view],
+    () => filteredNavItems.find((n) => n.id === view) || filteredNavItems[0] || NAV_ITEMS[0],
+    [view, filteredNavItems],
   );
 
-  const leftItems = useMemo(() => NAV_ITEMS.slice(0, 2), []);
-  const rightItems = useMemo(() => NAV_ITEMS.slice(3, 5), []);
+  const leftItems = useMemo(() => {
+    const withoutMain = filteredNavItems.filter(n => !n.main);
+    return withoutMain.slice(0, 2);
+  }, [filteredNavItems]);
+
+  const rightItems = useMemo(() => {
+    const withoutMain = filteredNavItems.filter(n => !n.main);
+    return withoutMain.slice(2, 4);
+  }, [filteredNavItems]);
+
+  const showVoiceFAB = useMemo(() => {
+    return isEnabled('VOICE_ASSISTANT');
+  }, [isEnabled]);
 
   return (
     <>
@@ -588,10 +617,12 @@ const MobileNav = ({
           </div>
 
           {/* ── Center FAB ── */}
-          <CenterFAB
-            active={view === "VOICE_ASSISTANT"}
-            onTap={() => onTap("VOICE_ASSISTANT")}
-          />
+          {showVoiceFAB && (
+            <CenterFAB
+              active={view === "VOICE_ASSISTANT"}
+              onTap={() => onTap("VOICE_ASSISTANT")}
+            />
+          )}
         </div>
       </nav>
 

@@ -96,7 +96,7 @@ jobs:
           name: build-output
           path: apps/web/out/
       - name: Deploy to Firebase Hosting (Staging)
-        if: secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 != '' || secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -116,7 +116,7 @@ jobs:
           name: build-output
           path: apps/web/out/
       - name: Deploy to Firebase Hosting (Production)
-        if: secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 || secrets.FIREBASE_SERVICE_ACCOUNT
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AIKRUSHIMITRAV1 != '' || secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

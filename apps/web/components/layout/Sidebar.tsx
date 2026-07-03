@@ -87,7 +87,20 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   const [moreOpen, setMoreOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const t = MENU_TEXTS[lang] || MENU_TEXTS.en;
-  const { sidebarCollapsed: collapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen } = useAppStore();
+  const { sidebarCollapsed: collapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen, platformConfig } = useAppStore();
+
+  const isEnabled = (id: string) => {
+    if (!platformConfig || !platformConfig.features) return true;
+    switch (id) {
+      case 'WEATHER': return platformConfig.features.weather !== false;
+      case 'SABJI_MANDI': return platformConfig.features.marketplace !== false;
+      case 'CHAT': return platformConfig.features.aiAssistant !== false;
+      case 'SCHEMES': return platformConfig.features.govtSchemes !== false;
+      case 'DISEASE_DETECTOR': return platformConfig.features.cropDiagnosis !== false;
+      case 'VOICE_ASSISTANT': return platformConfig.features.voiceAssistant !== false;
+      default: return true;
+    }
+  };
 
   const mainItems = [
     { id: 'DASHBOARD', icon: Home, label: t.home, color: 'emerald' },
@@ -100,7 +113,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'SCHEMES', icon: Landmark, label: t.govtHelp, color: 'cyan' },
     { id: 'MARKET', icon: Store, label: t.marketRates, color: 'violet' },
     { id: 'COMMUNITY', icon: Users, label: t.community, color: 'blue' },
-  ];
+  ].filter(item => isEnabled(item.id));
 
   const moreItems = [
     { id: 'DISEASE_DETECTOR', icon: ScanLine, label: t.diseaseDetector, color: 'rose' },
@@ -109,7 +122,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'AREA_CALCULATOR', icon: MapIcon, label: t.areaCalc, color: 'sky' },
     { id: 'PREMIUM', icon: Crown, label: t.premium, color: 'amber' },
     { id: 'INNOVATION', icon: Cpu, label: t.innovation, color: 'cyan' },
-  ];
+  ].filter(item => isEnabled(item.id));
 
   return (
     <>

@@ -41,8 +41,22 @@ import { analyzeCropDisease } from './services/geminiService';
 
 const App = () => {
   const { user, login, logout, language: lang, setLanguage: setLang, updateProfile, setUser } = useUserStore();
-  const { currentView: view, navigate: setView, selectedScheme, setSelectedScheme, selectedKnowledgeItem, setSelectedKnowledgeItem } = useAppStore();
+  const { 
+    currentView: view, 
+    navigate: setView, 
+    selectedScheme, 
+    setSelectedScheme, 
+    selectedKnowledgeItem, 
+    setSelectedKnowledgeItem,
+    loadPlatformConfig,
+    platformConfig
+  } = useAppStore();
   
+  // Load platform public configuration on mount
+  useEffect(() => {
+    loadPlatformConfig();
+  }, [loadPlatformConfig]);
+
   // --- GOOGLE CLIENT ID ---
   const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID || "";
 

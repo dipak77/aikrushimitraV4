@@ -4,13 +4,14 @@ import { getAnalyticsStats, hashPassword, TARGET_HASH } from '../../services/ana
 import { 
   ShieldCheck, Lock, Unlock, Activity, MapPin, Smartphone, 
   Calendar, Eye, EyeOff, AlertTriangle, Users, Clock, 
-  Globe, Laptop, Search, ChevronDown, CheckCircle2, User, Loader2
+  Globe, Laptop, Search, ChevronDown, CheckCircle2, User, Loader2, Settings
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../constants';
 import { Language } from '../../types';
 import { Button } from '../Button';
 import SimpleView from '../layout/SimpleView';
 import clsx from 'clsx';
+import AdminConfigCenter from './AdminConfigCenter';
 
 const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }) => {
   const t = TRANSLATIONS[lang];
@@ -20,7 +21,7 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
   const [error, setError] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs' | 'settings'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Initial Load & Auto-Refresh
@@ -197,11 +198,12 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-white/10 pb-1">
-            <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label={t.admin_dashboard.overview} icon={Activity} />
-            <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} label={t.admin_dashboard.user_details} icon={Users} />
-            <TabButton active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} label={t.admin_dashboard.raw_logs} icon={Calendar} />
-        </div>
+         <div className="flex gap-2 border-b border-white/10 pb-1">
+             <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label={t.admin_dashboard.overview} icon={Activity} />
+             <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} label={t.admin_dashboard.user_details} icon={Users} />
+             <TabButton active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} label={t.admin_dashboard.raw_logs} icon={Calendar} />
+             <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} label="Settings" icon={Settings} />
+         </div>
 
         {/* --- OVERVIEW TAB --- */}
         {activeTab === 'overview' && (
@@ -356,6 +358,11 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
                     </table>
                 </div>
             </div>
+        )}
+
+        {/* --- SETTINGS TAB --- */}
+        {activeTab === 'settings' && (
+            <AdminConfigCenter passcode={password} />
         )}
 
       </div>

@@ -12,6 +12,7 @@ import logger from './src/utils/logger.js';
 import { errorHandler } from './src/middleware/error.middleware.js';
 import { initApiRoutes, getSeason, filterOutput } from './src/routes/api.js';
 import { initVoiceWebSocket } from './src/websocket/voice.handler.js';
+import { loadConfig } from './src/utils/configManager.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -132,11 +133,13 @@ app.use('/api', (req, res, next) => {
 
 // AI CLIENT FACTORY
 const getAIClient = () => {
-  if (!API_KEY) {
-    throw new Error('API_KEY not configured on server. Check environment variables.');
+  const config = loadConfig();
+  const providerKey = config.ai?.providers?.gemini?.apiKey || API_KEY;
+  if (!providerKey) {
+    throw new Error('Gemini API key is not configured. Please configure it in the Admin Settings panel.');
   }
   return new GoogleGenAI({ 
-    apiKey: API_KEY,
+    apiKey: providerKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
