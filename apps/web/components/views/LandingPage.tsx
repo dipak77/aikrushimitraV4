@@ -5,7 +5,7 @@ import {
   Droplets, Upload, Brain, FileText, TrendingUp, ChevronRight, Check, Tractor, 
   Users, ShieldCheck, Quote, Smartphone, QrCode, Apple, Play, Phone, Mail, 
   MapPin, Headphones, X, Send, Loader2, ChevronDown, ListChecks, Mic, LayoutGrid, Bell, 
-  Map as MapIcon, Heart, Clock
+  Map as MapIcon, Heart, Clock as ClockIcon
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { LANGUAGES, TRANSLATIONS } from '../../constants';
@@ -126,7 +126,7 @@ const getLandingData = (lang: Language) => {
   const whyChoose = [
     { icon: Sprout, title: isMr ? 'अधिक उत्पादन' : (isHi ? 'अधिक उपज' : 'Higher Yield'), desc: isMr ? 'एआय शिफारसी उत्पादन २०% पर्यंत वाढवतात' : (isHi ? 'AI सुझाव से उत्पादन 20% तक बढ़ता है' : 'AI recommendations increase productivity up to 20%'), color: '#22c55e' },
     { icon: ShieldCheck, title: isMr ? 'खर्च बचत' : (isHi ? 'लागत बचत' : 'Cost Saving'), desc: isMr ? 'अचूक सल्ला आणि नियोजनासह लागवड खर्च कमी करा' : (isHi ? 'सटीक सलाह और योजना से खर्च कम करें' : 'Reduce input costs with precise advice and planning'), color: '#f97316' },
-    { icon: Clock, title: isMr ? 'वेळ बचत' : (isHi ? 'समय बचत' : 'Time Saving'), desc: isMr ? 'तात्काळ उपाय मिळवा, शेतातील वेळ आणि श्रम वाचवा' : (isHi ? 'तुरंत समाधान पाएं, खेत में समय बचाएं' : 'Get instant solutions, save time and effort in field'), color: '#eab308' },
+    { icon: ClockIcon, title: isMr ? 'वेळ बचत' : (isHi ? 'समय बचत' : 'Time Saving'), desc: isMr ? 'तात्काळ उपाय मिळवा, शेतातील वेळ आणि श्रम वाचवा' : (isHi ? 'तुरंत समाधान पाएं, खेत में समय बचाएं' : 'Get instant solutions, save time and effort in field'), color: '#eab308' },
     { icon: Headphones, title: isMr ? 'तज्ज्ञ मदत' : (isHi ? 'विशेषज्ञ सहायता' : 'Expert Support'), desc: isMr ? '२४/७ एआय सहाय्यक आणि कृषी तज्ज्ञांचे मार्गदर्शन' : (isHi ? '24/7 AI सहायक और कृषि विशेषज्ञ मार्गदर्शन' : '24/7 AI assistant and agricultural expert guidance'), color: '#a855f7' },
     { icon: Users, title: isMr ? 'शेतकऱ्यांचा विश्वास' : (isHi ? 'किसानों का भरोसा' : 'Trusted by Farmers'), desc: isMr ? '५०,०००+ शेतकरी चांगल्या शेतीसाठी एआयवर विश्वास ठेवतात' : (isHi ? '50,000+ किसान हमारे AI पर भरोसा करते हैं' : '50,000+ farmers trust our AI for better farming'), color: '#22c55e' },
     { icon: ShieldCheck, title: isMr ? 'सुरक्षित आणि खाजगी' : (isHi ? 'सुरक्षित और निजी' : 'Secure & Private'), desc: isMr ? 'तुमचा डेटा सुरक्षित आहे आणि कधीही शेअर केला जात नाही' : (isHi ? 'कायदा सुरक्षित है, कभी साझा नहीं किया जाता' : 'Your data is safe and never shared with anyone'), color: '#0ea5e9' },
@@ -276,7 +276,7 @@ const getLandingData = (lang: Language) => {
     solutions,
     whyChoose,
     testimonials,
-    labels: labels[lang] || labels.en,
+    labels: (labels as any)[lang] || labels.en,
   };
 };
 

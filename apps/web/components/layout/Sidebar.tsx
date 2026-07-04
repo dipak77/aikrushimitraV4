@@ -4,7 +4,7 @@ import { ViewState, Language } from '../../types';
 import {
   LayoutDashboard, CloudSun, Sprout, Package, Bot, BookOpen, Landmark,
   Store, TrendingUp, Mic, ChevronDown, ChevronUp, Zap, Sparkles, Crown,
-  ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield,
+  Settings, ScanLine, FlaskConical, Map as MapIcon, Users, MessageSquare, Cpu, ShoppingCart, Shield,
   ChevronLeft, ChevronRight, X, Home, Globe
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -34,6 +34,7 @@ const MENU_TEXTS: Record<string, any> = {
     premium: 'विशेष सेवा',
     innovation: 'तंत्रज्ञान हब',
     admin: 'व्यवस्थापन',
+    settings: 'सेटिंग्ज',
   },
   hi: {
     home: 'मुख्य पृष्ठ',
@@ -57,6 +58,7 @@ const MENU_TEXTS: Record<string, any> = {
     premium: 'विशेष सेवा',
     innovation: 'तकनीक हब',
     admin: 'प्रशासन',
+    settings: 'सेटिंग्स',
   },
   en: {
     home: 'Home',
@@ -80,6 +82,7 @@ const MENU_TEXTS: Record<string, any> = {
     premium: 'Premium',
     innovation: 'Innovation Hub',
     admin: 'Admin',
+    settings: 'Settings',
   },
 };
 
@@ -122,6 +125,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'AREA_CALCULATOR', icon: MapIcon, label: t.areaCalc, color: 'sky' },
     { id: 'PREMIUM', icon: Crown, label: t.premium, color: 'amber' },
     { id: 'INNOVATION', icon: Cpu, label: t.innovation, color: 'cyan' },
+    { id: 'SETTINGS', icon: Settings, label: t.settings, color: 'emerald' },
   ].filter(item => isEnabled(item.id));
 
   return (

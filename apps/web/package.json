@@ -30,6 +30,7 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.3.0",
     "three": "^0.160.0",
+    "z-ai-web-dev-sdk": "^0.0.18",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },

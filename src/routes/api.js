@@ -10,6 +10,19 @@ import {
 import { retrieveContext } from '../../apps/web/services/ragService.js';
 import { GoogleGenAI } from '@google/genai';
 import { loadConfig, saveConfig, maskSecrets, loadAuditLogs } from '../utils/configManager.js';
+import ZAI from 'z-ai-web-dev-sdk';
+
+let zaiClient = null;
+const getZaiClient = async () => {
+  if (zaiClient) return zaiClient;
+  try {
+    zaiClient = await ZAI.create();
+    return zaiClient;
+  } catch (err) {
+    logger.warn('⚠️ Failed to initialize ZAI client:', err.message);
+    return null;
+  }
+};
 
 const MAX_LOGS = 5000;
 const MAX_IMAGE_LEN = 10 * 1024 * 1024; // 10MB
@@ -209,7 +222,73 @@ export const initApiRoutes = (app, getAIClient, API_KEY, GLOBAL_ACTIVITY_LOGS, s
   // AI Chat
   app.post('/api/chat', rateLimiter(30, 60000), async (req, res) => {
     try {
-      const { prompt, systemInstruction, user } = req.body;
+      const { prompt, systemInstruction, user, messages, question } = req.body;
+
+      // Handle ZAI format chat requests
+      if (messages || question) {
+        let conversation = [];
+        if (messages && Array.isArray(messages)) {
+          conversation = messages.map(m => ({
+            role: m.role === 'assistant' ? 'assistant' : m.role,
+            content: m.content || m.text || ''
+          }));
+        } else if (question) {
+          conversation = [{ role: 'user', content: question }];
+        }
+
+        const zai = await getZaiClient();
+        if (zai) {
+          const SYSTEM_PROMPT = `तुम "AI कृषि मित्र" हो — एक उन्नत कृषि AI सहायक। तुम्हारी भूमिका भारतीय किसानों को खेती, फसल प्रबंधन, मिट्टी स्वास्थ्य, मौसम, कीट नियंत्रण, सिंचाई, बाजार भाव और आधुनिक कृषि तकनीकों में मदद करना है।
+
+नियम:
+1. हमेशा हिंदी (देवनागरी) में उत्तर दो। आवश्यक होने पर थोड़ा अंग्रेज़ी मिला सकते हो।
+2. उत्तर संक्षिप्त, व्यावहारिक और क्रियान्वयन योग्य रखो — bullet points का उपयोग करो।
+3. वैज्ञानिक रूप से सही जानकारी दो। अनुमान लगाने पर स्पष्ट करो।
+4. भारतीय कृषि संदर्भ (मौसम, फसलें, बाजार) में उत्तर दो।
+5. सुरक्षित खेती पद्धतियों और सतत कृषि को प्रोत्साहित करो।
+6. उत्तर को markdown में सुंदर ढंग से फॉर्मेट करो — हेडिंग, bullets, और बोल्ड टेक्स्ट का उपयोग करो।
+7. अगर कोई प्रश्न कृषि से संबंधित नहीं है, तो विनम्रता से कृषि संबंधी प्रश्न पूछने को कहो।
+
+उदाहरण शैली:
+"🌾 **सिंचाई के सुझाव:**
+• सुबह 6-8 बजे या शाम 5-7 बजे पानी दें
+• फसल की ग्रोथ स्टेज के अनुसार पानी की मात्रा तय करें
+• टपक सिंचाई (drip irrigation) से 40% पानी बचत होती है"`;
+
+          const fullMessages = [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...conversation.slice(-12)
+          ];
+
+          const response = await zai.chat.completions.create({
+            messages: fullMessages,
+            temperature: 0.7,
+            max_tokens: 900,
+            thinking: { type: 'disabled' },
+          });
+
+          const content = response.choices[0]?.message?.content || 'माफ़ करना, अभी उत्तर देने में समस्या हो रही है।';
+          return res.json({
+            success: true,
+            reply: content,
+            usage: response.usage
+          });
+        } else {
+          // Fallback to standard Gemini
+          const ai = getAIClient();
+          const lastQuestion = question || (messages && messages[messages.length - 1]?.content) || 'नमस्ते';
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: lastQuestion,
+          });
+          return res.json({
+            success: true,
+            reply: response.text || 'माफ़ करना, अभी उत्तर देने में समस्या हो रही है।'
+          });
+        }
+      }
+
+      // Default app prompt chat logic
       if (!prompt) {
         return res.status(400).json({ error: 'Missing required field: prompt' });
       }
@@ -274,6 +353,175 @@ export const initApiRoutes = (app, getAIClient, API_KEY, GLOBAL_ACTIVITY_LOGS, s
         return res.status(401).json({ error: 'API key invalid or not configured.' });
       }
       return res.status(500).json({ error: 'Failed to generate response.', details: error.message });
+    }
+  });
+
+  // AI Recommendations
+  const getRecommendationsHandler = async (req, res) => {
+    try {
+      const state = {
+        cropHealth: 94,
+        soilPh: 6.8,
+        soilNitrogen: 'कम',
+        soilPhosphorus: 'सामान्य',
+        soilPotassium: 'सामान्य',
+        temperature: 28,
+        humidity: 45,
+        rainChance: 10,
+        crops: ['गेहूं', 'धान', 'मक्का'],
+        irrigationHoursAgo: 42,
+        ...req.body
+      };
+
+      const prompt = `एक किसान के खेत की वर्तमान स्थिति:
+- फसल स्वास्थ्य: ${state.cropHealth}%
+- मिट्टी pH: ${state.soilPh}
+- नाइट्रोजन: ${state.soilNitrogen}
+- फॉस्फोरस: ${state.soilPhosphorus}
+- पोटेशियम: ${state.soilPotassium}
+- तापमान: ${state.temperature}°C
+- नमी: ${state.humidity}%
+- वर्षा की संभावना: ${state.rainChance}%
+- फसलें: ${state.crops.join(', ')}
+- अंतिम सिंचाई: ${state.irrigationHoursAgo} घंटे पहले
+
+इस स्थिति के आधार पर 3 बेहतरीन AI सुझाव दो जिससे फसल उत्पादन 15% तक बढ़ सके। प्रत्येक सुझाव के लिए:
+- एक छोटा शीर्षक (emoji सहित)
+- 2-3 लाइन का विवरण
+- अपेक्षित लाभ (प्रतिशत में)
+
+केवल JSON लौटाओ, इस फॉर्मेट में:
+{
+  "recommendations": [
+    { "title": "...", "description": "...", "benefit": "+X%", "icon": "🌿" },
+    ...
+  ],
+  "overallUplift": "+15%"
+}`;
+
+      const zai = await getZaiClient();
+      if (zai) {
+        const response = await zai.chat.completions.create({
+          messages: [
+            { role: 'system', content: 'तुम एक कृषि विशेषज्ञ AI हो। केवल मान्य JSON लौटाओ, कोई markdown नहीं।' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.6,
+          max_tokens: 700,
+          thinking: { type: 'disabled' },
+        });
+
+        const content = response.choices[0]?.message?.content || '';
+        let parsed;
+        try {
+          const clean = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+          parsed = JSON.parse(clean);
+        } catch {
+          parsed = null;
+        }
+
+        if (parsed && parsed.recommendations) {
+          return res.json({ success: true, ...parsed });
+        }
+      }
+
+      // Fallback
+      const fallback = {
+        recommendations: [
+          {
+            title: '🌿 जैविक खाद का उपयोग',
+            description: 'नाइट्रोजन की कमी को पूरा करने के लिए वर्मीकम्पोस्ट का उपयोग करें। यह मिट्टी की उर्वरता बढ़ाता है।',
+            benefit: '+12%',
+            icon: '🌿',
+          },
+          {
+            title: '💧 टपक सिंचाई',
+            description: 'पानी की बचत के लिए ड्रिप इरिगेशन अपनाएं। फसल को सही मात्रा में नमी मिलेगी।',
+            benefit: '+18%',
+            icon: '💧',
+          },
+          {
+            title: '🐞 एकीकृत कीट प्रबंधन',
+            description: 'रासायनिक कीटनाशक के बजाय जैविक तरीके अपनाएं — नीम तेल और फेरोमोन ट्रैप का उपयोग करें।',
+            benefit: '+10%',
+            icon: '🐞',
+          },
+        ],
+        overallUplift: '+15%',
+      };
+      return res.json({ success: true, ...fallback });
+    } catch (error) {
+      logger.error('❌ Recommendations API Error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  };
+
+  app.post('/api/recommendations', getRecommendationsHandler);
+  app.get('/api/recommendations', getRecommendationsHandler);
+
+  // AI Text-to-Speech (TTS)
+  app.post('/api/voice', async (req, res) => {
+    try {
+      const { text, voice, speed } = req.body;
+      if (!text || text.trim().length === 0) {
+        return res.status(400).json({ error: 'text आवश्यक है' });
+      }
+      const cleanText = text.slice(0, 1000);
+
+      const zai = await getZaiClient();
+      if (zai) {
+        const response = await zai.audio.tts.create({
+          input: cleanText,
+          voice: voice || 'tongtong',
+          speed: speed ?? 1.0,
+          response_format: 'wav',
+          stream: false,
+        });
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = Buffer.from(new Uint8Array(arrayBuffer));
+        res.setHeader('Content-Type', 'audio/wav');
+        res.setHeader('Content-Length', audioBuffer.length.toString());
+        res.setHeader('Cache-Control', 'no-cache');
+        return res.status(200).send(audioBuffer);
+      } else {
+        return res.status(501).json({ error: 'TTS not supported without active ZAI client' });
+      }
+    } catch (error) {
+      logger.error('❌ Voice API Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // AI Speech-to-Text (ASR)
+  app.post('/api/asr', async (req, res) => {
+    try {
+      let base64Audio = null;
+      if (req.body && req.body.audio) {
+        base64Audio = req.body.audio;
+      } else if (req.body && req.body.base64) {
+        base64Audio = req.body.base64;
+      }
+
+      const zai = await getZaiClient();
+      if (zai && base64Audio) {
+        const result = await zai.audio.asr.create({
+          file_base64: base64Audio,
+        });
+        return res.json({ success: true, text: result.text || '' });
+      } else {
+        return res.json({
+          success: false,
+          text: 'मेरे खेत में फसलों की देखभाल कैसे करूं?',
+          error: 'ZAI client or audio base64 not available'
+        });
+      }
+    } catch (error) {
+      logger.error('❌ ASR API Error:', error);
+      return res.json({
+        success: false,
+        text: 'मेरे खेत में फसलों की देखभाल कैसे करूं?',
+        error: error.message
+      });
     }
   });
 

@@ -27,6 +27,7 @@ export type ViewState =
   | 'COMMUNITY'
   | 'PREMIUM'
   | 'INNOVATION'
+  | 'SETTINGS'
   | 'ADMIN';
 
 export interface UserProfile {

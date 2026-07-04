@@ -19,7 +19,9 @@ import { CropJourneyWidget } from '../dashboard/CropJourneyWidget';
 import { MarketPricesTable } from '../dashboard/MarketPricesTable';
 import { KeyImprovements } from '../dashboard/KeyImprovements';
 import { MarketTrendChart } from '../dashboard/MarketTrendChart';
-import { AIChatWidget } from '../dashboard/AIChatWidget';
+import { AIChatAssistant } from '../dashboard/AIChatAssistant';
+import { AIRecommendations } from '../dashboard/AIRecommendations';
+import { VoiceAssistantWidget } from '../dashboard/VoiceAssistantWidget';
 import { MultiFieldsOverview } from '../dashboard/MultiFieldsOverview';
 import { NotificationsWidget } from '../dashboard/NotificationsWidget';
 import { FooterBanner } from '../dashboard/FooterBanner';
@@ -210,7 +212,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                     </button>
 
                     {/* User Profile */}
-                    <div onClick={() => onNavigate('PROFILE')} className="relative cursor-pointer group shrink-0 ml-1">
+                    <div onClick={() => onNavigate('SETTINGS')} className="relative cursor-pointer group shrink-0 ml-1">
                         <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 p-[1.5px] shadow-[0_0_15px_rgba(251,191,36,0.2)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all">
                             <div className="w-full h-full rounded-full bg-[#051108] flex items-center justify-center overflow-hidden">
                                 {user.picture ? (
@@ -229,6 +231,11 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 pt-5 pb-2 max-w-[1600px] mx-auto w-full">
                 <DynamicGreeting user={user} lang={lang} />
+            </div>
+
+            {/* AI Crop Yield Advisory / Suggestions */}
+            <div className="px-4 md:px-6 pb-2 max-w-[1600px] mx-auto w-full animate-[fadeInUp_0.5s_ease-out]">
+                <AIRecommendations lang={lang} user={user} />
             </div>
 
             {/* ═══════════════════════════════════════════════════════ */}
@@ -288,28 +295,40 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             </div>
 
             {/* ═══════════════════════════════════════════════════════ */}
-            {/* ROW 3: Market Trend | AI Chat | Fields | Notifications */}
+            {/* ROW 3: Market Trend | AI Chat Assistant | Voice Assistant */}
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
-                {/* Market Trend Chart (3 cols) */}
-                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
+                {/* Market Trend Chart (4 cols) */}
+                <div className="col-span-1 md:col-span-4 min-h-[380px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
                     <MarketTrendChart lang={lang} />
                 </div>
 
-                {/* AI Chat (3 cols) */}
+                {/* AI Chat (4 cols) */}
                 {showAi && (
-                  <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
-                      <AIChatWidget lang={lang} />
+                  <div className="col-span-1 md:col-span-4 min-h-[380px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                      <AIChatAssistant lang={lang} user={user} />
                   </div>
                 )}
 
-                {/* Multiple Fields (3 cols) */}
-                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                {/* Voice Assistant (4 cols) */}
+                {showVoice && (
+                  <div className="col-span-1 md:col-span-4 min-h-[380px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                      <VoiceAssistantWidget lang={lang} user={user} />
+                  </div>
+                )}
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* ROW 4: Multiple Fields Overview | Notifications Panel */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <div className="px-4 md:px-6 grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1600px] mx-auto w-full mb-4">
+                {/* Multiple Fields (6 cols) */}
+                <div className="col-span-1 md:col-span-6 min-h-[360px] animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
                     <MultiFieldsOverview lang={lang} />
                 </div>
 
-                {/* Notifications (3 cols) */}
-                <div className="col-span-1 md:col-span-3 h-[360px] animate-[fadeInUp_0.5s_ease-out_0.4s_both]">
+                {/* Notifications (6 cols) */}
+                <div className="col-span-1 md:col-span-6 min-h-[360px] animate-[fadeInUp_0.5s_ease-out_0.4s_both]">
                     <NotificationsWidget lang={lang} />
                 </div>
             </div>

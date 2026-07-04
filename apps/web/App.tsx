@@ -36,6 +36,7 @@ import ChatView from './components/views/ChatView';
 import CommunityForumView from './components/views/CommunityForumView';
 import PremiumServicesView from './components/views/PremiumServicesView';
 import InnovationHubView from './components/views/InnovationHubView';
+import SettingsView from './components/views/SettingsView';
 import { OfflineDB } from './utils/offlineDb';
 import { analyzeCropDisease } from './services/geminiService';
 
@@ -137,7 +138,7 @@ const App = () => {
           } else if (normalizedPath === '/app/login') {
               setView('LOGIN');
           } else if (normalizedPath === '/app/profile') {
-              setView(hasSession ? 'PROFILE' : 'LOGIN');
+              setView(hasSession ? 'SETTINGS' : 'LOGIN');
           } else if (normalizedPath === '/app') {
               setView(hasSession ? 'DASHBOARD' : 'LOGIN');
           } else {
@@ -177,7 +178,7 @@ const App = () => {
         } else if (normalizedPath === '/app/login') {
           setView('LOGIN');
         } else if (normalizedPath === '/app/profile') {
-          setView(hasSession ? 'PROFILE' : 'LOGIN');
+          setView(hasSession ? 'SETTINGS' : 'LOGIN');
         } else if (normalizedPath === '/app') {
           setView(hasSession ? 'DASHBOARD' : 'LOGIN');
         }
@@ -199,7 +200,7 @@ const App = () => {
     }
 
     // Force onboarding if details are incomplete
-    if (user && needsOnboarding && view !== 'SPLASH' && view !== 'LANDING' && view !== 'PROFILE') {
+    if (user && needsOnboarding && view !== 'SPLASH' && view !== 'LANDING' && view !== 'SETTINGS') {
         return <OnboardingView lang={lang} user={user} onComplete={(updatedUser) => {
             updateProfile(updatedUser);
             setView('DASHBOARD');
@@ -243,6 +244,8 @@ const App = () => {
          return user ? <PremiumServicesView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        case 'INNOVATION':
          return user ? <InnovationHubView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
+       case 'SETTINGS':
+         return user ? <SettingsView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        default: return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
     }
   };
