@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getApiUrl } from '../services/geminiService';
 
 // ═══════════════════════════════════════════════════════════════
 // MARKET STORE — Live prices, comparisons, and price alert rules
@@ -95,7 +96,7 @@ export const useMarketStore = create<MarketState>()(
         try {
           // Make API call to weather/prices proxy
           const url = `/api/v1/market?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}${crop ? `&crop=${encodeURIComponent(crop)}` : ''}`;
-          const response = await fetch(url);
+          const response = await fetch(getApiUrl(url));
           if (!response.ok) throw new Error('Failed to retrieve price indexes');
           const data = await response.json();
           set({ latestPrices: data, isLoadingPrices: false });

@@ -10,7 +10,7 @@ import {
 import { retrieveContext } from '../../apps/web/services/ragService.js';
 import { GoogleGenAI } from '@google/genai';
 import { loadConfig, saveConfig, maskSecrets, loadAuditLogs } from '../utils/configManager.js';
-import ZAI from 'z-ai-web-dev-sdk';
+import ZAI from '../utils/zai-client.js';
 
 let zaiClient = null;
 const getZaiClient = async () => {

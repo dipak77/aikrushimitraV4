@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Volume2, Sparkles, AudioLines, RefreshCw } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import type { Language, UserProfile } from '../../types';
+import { getApiUrl } from '../../services/geminiService';
 
 type State = 'idle' | 'recording' | 'thinking' | 'speaking';
 
@@ -106,7 +107,7 @@ export function VoiceAssistantWidget({ lang, user }: { lang: Language; user: Use
       reader.onloadend = async () => {
         try {
           const base64Audio = (reader.result as string).split(',')[1];
-          const asrRes = await fetch('/api/asr', {
+          const asrRes = await fetch(getApiUrl('/api/asr'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ audio: base64Audio }),
@@ -132,7 +133,7 @@ export function VoiceAssistantWidget({ lang, user }: { lang: Language; user: Use
     setState('thinking');
     setTranscript(text);
     try {
-      const chatRes = await fetch('/api/chat', {
+      const chatRes = await fetch(getApiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text, user }),
@@ -143,7 +144,7 @@ export function VoiceAssistantWidget({ lang, user }: { lang: Language; user: Use
       setState('speaking');
 
       // Call TTS
-      const ttsRes = await fetch('/api/voice', {
+      const ttsRes = await fetch(getApiUrl('/api/voice'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: reply.replace(/\*\*/g, '') }),

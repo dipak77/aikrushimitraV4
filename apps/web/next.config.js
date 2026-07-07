@@ -3,7 +3,8 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   env: {
-    VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID || '947961081206-0sh2q9fja06hcc65gj8o2tghhd164uia.apps.googleusercontent.com'
+    VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID || '947961081206-0sh2q9fja06hcc65gj8o2tghhd164uia.apps.googleusercontent.com',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || ''
   },
   images: {
     unoptimized: true

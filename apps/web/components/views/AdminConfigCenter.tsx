@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../Button';
 import clsx from 'clsx';
+import { getApiUrl } from '../../services/geminiService';
 
 interface AdminConfigCenterProps {
   passcode: string;
@@ -45,7 +46,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
   const fetchConfig = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/config', { headers });
+      const res = await fetch(getApiUrl('/api/admin/config'), { headers });
       if (!res.ok) throw new Error('Failed to fetch configurations.');
       const data = await res.json();
       setConfig(data.config);
@@ -67,7 +68,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/admin/config', {
+      const res = await fetch(getApiUrl('/api/admin/config'), {
         method: 'POST',
         headers,
         body: JSON.stringify(updatedConfig)
@@ -94,7 +95,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
     
     setValidatingKey(provider);
     try {
-      const res = await fetch('/api/admin/config/validate', {
+      const res = await fetch(getApiUrl('/api/admin/config/validate'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ provider, apiKey })
@@ -117,7 +118,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
   const fetchDiagnostics = async () => {
     setLoadingDiagnostics(true);
     try {
-      const res = await fetch('/api/admin/diagnostics', { headers });
+      const res = await fetch(getApiUrl('/api/admin/diagnostics'), { headers });
       const data = await res.json();
       setDiagnostics(data.diagnostics || []);
     } catch (err: any) {
@@ -130,7 +131,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
   const fetchAuditLogs = async () => {
     setLoadingAudits(true);
     try {
-      const res = await fetch('/api/admin/audit-logs', { headers });
+      const res = await fetch(getApiUrl('/api/admin/audit-logs'), { headers });
       const data = await res.json();
       setAuditLogs(data.logs || []);
     } catch (err: any) {
@@ -184,7 +185,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
   const handleExportConfig = async () => {
     try {
-      const res = await fetch('/api/admin/config/backup', { method: 'POST', headers });
+      const res = await fetch(getApiUrl('/api/admin/config/backup'), { method: 'POST', headers });
       const data = await res.json();
       const blob = new Blob([JSON.stringify(data.config, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -205,7 +206,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
     reader.onload = async (evt) => {
       try {
         const parsed = JSON.parse(evt.target?.result as string);
-        const res = await fetch('/api/admin/config/restore', {
+        const res = await fetch(getApiUrl('/api/admin/config/restore'), {
           method: 'POST',
           headers,
           body: JSON.stringify({ config: parsed })

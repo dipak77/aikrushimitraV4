@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, User, Sparkles, Volume2, Square, RotateCcw } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import type { Language, UserProfile } from '../../types';
+import { getApiUrl } from '../../services/geminiService';
 
 interface Message {
   id: string;
@@ -160,7 +161,7 @@ export function AIChatAssistant({ lang, user }: { lang: Language; user: UserProf
         .filter((m) => !m.loading && m.id !== 'welcome')
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const res = await fetch('/api/chat', {
+      const res = await fetch(getApiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -201,7 +202,7 @@ export function AIChatAssistant({ lang, user }: { lang: Language; user: UserProf
     }
     try {
       setSpeakingId(msg.id);
-      const res = await fetch('/api/voice', {
+      const res = await fetch(getApiUrl('/api/voice'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: msg.content.replace(/\*\*/g, '') }), // Strip markdown bold markers for TTS

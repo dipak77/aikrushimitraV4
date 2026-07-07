@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ViewState } from '../types';
+import { getApiUrl } from '../services/geminiService';
 
 // ═══════════════════════════════════════════════════════════════
 // APP STORE — Navigation, UI state, and global controls
@@ -125,7 +126,7 @@ export const useAppStore = create<AppState>()(persist((set, get) => ({
   platformConfig: null,
   loadPlatformConfig: async () => {
     try {
-      const res = await fetch('/api/config');
+      const res = await fetch(getApiUrl('/api/config'));
       if (res.ok) {
         const data = await res.json();
         set({ platformConfig: data });

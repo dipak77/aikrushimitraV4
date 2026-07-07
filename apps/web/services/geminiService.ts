@@ -278,9 +278,23 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
 // ─── Public Exports ──────────────────────────────────────────────────────────
 
 /**
- * Returns a root-relative API URL.
+ * Returns a root-relative API URL or the absolute production backend URL.
  */
-export const getApiUrl = (endpoint: string): string => endpoint;
+export const getApiUrl = (endpoint: string): string => {
+  if (typeof window === 'undefined') return endpoint;
+  
+  const hostname = window.location.hostname;
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+  
+  if (isLocal) {
+    return endpoint;
+  }
+  
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://aikrushimitrav1.el.r.appspot.com';
+  const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${cleanBase}${cleanEndpoint}`;
+};
 
 /**
  * Resolves the Gemini API key from runtime env, build-time env, or config.

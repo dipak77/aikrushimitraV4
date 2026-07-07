@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, ArrowRight, RotateCw, CheckCircle2 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import type { Language, UserProfile } from '../../types';
+import { getApiUrl } from '../../services/geminiService';
 
 interface Recom {
   title: string;
@@ -80,7 +81,7 @@ export function AIRecommendations({ lang, user }: { lang: Language; user: UserPr
   const fetchRecs = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
     try {
-      const res = await fetch('/api/recommendations', {
+      const res = await fetch(getApiUrl('/api/recommendations'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
