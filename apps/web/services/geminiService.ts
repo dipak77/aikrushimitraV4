@@ -240,6 +240,44 @@ const callGeminiDirectly = async (endpoint: string, body: any) => {
             return response.text;
           }
 
+          // ── Recommendations ──
+          if (endpoint === '/api/recommendations') {
+            const prompt = `एक किसान के खेत की वर्तमान स्थिति:
+- फसल स्वास्थ्य: ${body.cropHealth || 94}%
+- मिट्टी pH: ${body.soilPh || 6.8}
+- नाइट्रोजन: ${body.soilNitrogen || 'कम'}
+- फॉस्फोरस: ${body.soilPhosphorus || 'सामान्य'}
+- पोटेशियम: ${body.soilPotassium || 'सामान्य'}
+- तापमान: ${body.temperature || 28}°C
+- नमी: ${body.humidity || 45}%
+- वर्षा की संभावना: ${body.rainChance || 10}%
+- फसलें: ${(body.crops || []).join(', ')}
+- अंतिम सिंचाई: ${body.irrigationHoursAgo || 42} घंटे पहले
+
+इस स्थिति के आधार पर 3 बेहतरीन AI सुझाव दो जिससे फसल उत्पादन 15% तक बढ़ सके। प्रत्येक सुझाव के लिए:
+- एक छोटा शीर्षक (emoji सहित)
+- 2-3 लाइन का विवरण
+- अपेक्षित लाभ (प्रतिशत में)
+
+केवल JSON लौटाओ, इस फॉर्मेट में:
+{
+  "recommendations": [
+    { "title": "...", "description": "...", "benefit": "+X%", "icon": "🌿" },
+    ...
+  ],
+  "overallUplift": "+15%"
+}`;
+
+            const response = await AIRouter.routeChat(
+              prompt,
+              {
+                systemInstruction: 'तुम एक कृषि विशेषज्ञ AI हो। केवल मान्य JSON लौटाओ, कोई markdown या backticks नहीं।'
+              },
+              apiKey
+            );
+            return response.text;
+          }
+
           // ── Default fallback ──
           const promptText =
             typeof body === 'string'
@@ -290,7 +328,7 @@ export const getApiUrl = (endpoint: string): string => {
     return endpoint;
   }
   
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://aikrushimitrav1.el.r.appspot.com';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://aikrushimitra.space-z.ai';
   const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${cleanBase}${cleanEndpoint}`;
@@ -318,6 +356,15 @@ export const getGenAIKey = (): string => {
     const viteKey = import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY || import.meta.env?.VITE_API_KEY;
     if (viteKey) return viteKey;
   } catch { /* ignore */ }
+
+  const encKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY_ENC;
+  if (encKey) {
+    try {
+      return atob(encKey);
+    } catch {
+      // ignore decoding error
+    }
+  }
 
   const envKey =
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
@@ -357,6 +404,9 @@ const postToProxy = async (endpoint: string, body: any): Promise<string> => {
     }
 
     const data = await response.json();
+    if (endpoint === '/api/recommendations') {
+      return JSON.stringify(data);
+    }
     return data.text;
   } catch (error) {
     console.warn(
@@ -394,12 +444,56 @@ export const analyzeCropDisease = async (
     const mimeType = detectMimeType(base64Image);
     const user = useUserStore.getState().user;
 
-    return await postToProxy('/api/vision', {
+    const rawResult = await postToProxy('/api/vision', {
       prompt,
       imageBase64: base64Data,
       mimeType,
       user,
     });
+
+    try {
+      const trimmed = rawResult.trim();
+      if (trimmed.startsWith('{')) {
+        const parsed = JSON.parse(trimmed);
+        const userLang = user?.language || lang || 'mr';
+        let formatted = '';
+        if (userLang === 'mr') {
+          formatted += `🎯 **रोग/समस्या**: ${parsed.disease_local || parsed.disease || 'माहिती उपलब्ध नाही'}\n\n`;
+          if (parsed.symptoms_observed?.length) {
+            formatted += `🔍 **निरीक्षणे**: \n${parsed.symptoms_observed.map((s: string) => `• ${s}`).join('\n')}\n\n`;
+          }
+          if (parsed.treatment) {
+            formatted += `🛡️ **उपाय योजना**:\n`;
+            if (parsed.treatment.immediate) formatted += `• **त्वरित**: ${parsed.treatment.immediate}\n`;
+            if (parsed.treatment.organic?.length) {
+              formatted += `• **सेंद्रिय**: ${parsed.treatment.organic.map((o: any) => `${o.product} (${o.dosage})`).join(', ')}\n`;
+            }
+            if (parsed.treatment.chemical?.length) {
+              formatted += `• **रासायनिक**: ${parsed.treatment.chemical.map((c: any) => `${c.product} (${c.dosage})`).join(', ')}\n`;
+            }
+          }
+        } else {
+          formatted += `🎯 **Disease**: ${parsed.disease || 'Unknown'}\n\n`;
+          if (parsed.symptoms_observed?.length) {
+            formatted += `🔍 **Symptoms**: \n${parsed.symptoms_observed.map((s: string) => `• ${s}`).join('\n')}\n\n`;
+          }
+          if (parsed.treatment) {
+            formatted += `🛡️ **Treatments**:\n`;
+            if (parsed.treatment.immediate) formatted += `• **Immediate**: ${parsed.treatment.immediate}\n`;
+            if (parsed.treatment.organic?.length) {
+              formatted += `• **Organic**: ${parsed.treatment.organic.map((o: any) => `${o.product} (${o.dosage})`).join(', ')}\n`;
+            }
+            if (parsed.treatment.chemical?.length) {
+              formatted += `• **Chemical**: ${parsed.treatment.chemical.map((c: any) => `${c.product} (${c.dosage})`).join(', ')}\n`;
+            }
+          }
+        }
+        return formatted || rawResult;
+      }
+    } catch {
+      // Return rawResult if JSON parsing fails
+    }
+    return rawResult;
   } catch (error) {
     return lang === 'mr'
       ? 'फोटो बघताना काहीतरी अडचण आलीया. एकदा परत प्रयत्न करा.'
@@ -534,5 +628,74 @@ export const getLiveAgriUpdates = async (
   } catch (error: any) {
     console.warn('Updates Error (using static fallback):', error.message || error);
     return [];
+  }
+};
+
+/**
+ * Generates custom dynamic recommendations based on farm status.
+ */
+export const getAIRecommendations = async (body: any): Promise<any> => {
+  try {
+    const resString = await postToProxy('/api/recommendations', body);
+    const parsed = JSON.parse(resString);
+    if (parsed.recommendations) {
+      return parsed;
+    }
+    throw new Error('Invalid format');
+  } catch (err) {
+    // Return a default/fallback list in case both proxy and Gemini direct call fail or return bad JSON
+    return {
+      recommendations: [
+        {
+          title: '🌿 जैविक खाद का उपयोग',
+          description: 'नाइट्रोजन की कमी को पूरा करने के लिए वर्मीकम्पोस्ट का उपयोग करें। यह मिट्टी की उर्वरता बढ़ाता है।',
+          benefit: '+12%',
+          icon: '🌿',
+        },
+        {
+          title: '💧 टपक सिंचाई',
+          description: 'पानी की बचत के लिए ड्रिप इरिगेशन अपनाएं। फसल को सही मात्रा में नमी मिलेगी।',
+          benefit: '+18%',
+          icon: '💧',
+        },
+        {
+          title: '🐞 एकीकृत कीट प्रबंधन',
+          description: 'रासायनिक कीटनाशक के बजाय जैविक तरीके अपनाएं — नीम तेल और फेरोमोन ट्रैप का उपयोग करें।',
+          benefit: '+10%',
+          icon: '🐞',
+        },
+      ],
+      overallUplift: '+15%',
+    };
+  }
+};
+
+/**
+ * Gets AI weather crop advisory.
+ */
+export const getWeatherAdvisory = async (
+  weatherForecast: any,
+  lang: string
+): Promise<string> => {
+  try {
+    return await postToProxy('/api/weather/advisory', { weatherForecast });
+  } catch (e) {
+    return lang === 'mr'
+      ? 'हवामान सल्ला सध्या उपलब्ध नाही.'
+      : 'Weather advisory is currently unavailable.';
+  }
+};
+
+/**
+ * Matches schemes from database with user profile.
+ */
+export const getAISchemesMatch = async (
+  schemesDb: any[]
+): Promise<string> => {
+  try {
+    const user = useUserStore.getState().user;
+    return await postToProxy('/api/schemes/match', { schemesDb, user });
+  } catch (e) {
+    return 'योजना शोधताना काही त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
   }
 };

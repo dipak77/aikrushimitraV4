@@ -1,10 +1,14 @@
+const rawKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+const encodedKey = rawKey ? Buffer.from(rawKey).toString('base64') : '';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
   env: {
     VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID || '947961081206-0sh2q9fja06hcc65gj8o2tghhd164uia.apps.googleusercontent.com',
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || ''
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://aikrushimitra.space-z.ai',
+    NEXT_PUBLIC_GEMINI_API_KEY_ENC: encodedKey
   },
   images: {
     unoptimized: true

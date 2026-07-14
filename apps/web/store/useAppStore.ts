@@ -127,12 +127,14 @@ export const useAppStore = create<AppState>()(persist((set, get) => ({
   loadPlatformConfig: async () => {
     try {
       const res = await fetch(getApiUrl('/api/config'));
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         set({ platformConfig: data });
       }
     } catch (e) {
-      console.warn('Failed to load public configuration flags:', e);
+      // Backend proxy unavailable — silently skip config load
+      console.debug('Platform config unavailable (backend proxy not reachable)');
     }
   },
 }), {

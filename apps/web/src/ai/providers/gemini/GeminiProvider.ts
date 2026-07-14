@@ -24,9 +24,23 @@ export class GeminiProvider implements IAIProvider {
       requestConfig.temperature = options.temperature;
     }
 
+    let contents: any = prompt;
+    if (options?.history && options.history.length > 0) {
+      contents = [
+        ...options.history.map((h: any) => ({
+          role: h.role === 'model' || h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content || h.text || '' }]
+        })),
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ];
+    }
+
     const response = await this.ai.models.generateContent({
       model,
-      contents: prompt,
+      contents,
       ...(Object.keys(requestConfig).length > 0 && { config: requestConfig })
     });
 

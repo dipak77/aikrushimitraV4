@@ -199,8 +199,9 @@ export const logActivity = async (
   if (!auth.currentUser) {
     try {
       await signInAnonymously(auth);
-    } catch (authErr) {
-      console.warn("[logActivity] Anonymous auth failed:", authErr);
+    } catch (authErr: any) {
+      // Anonymous auth may be disabled in Firebase Console — silently skip
+      console.debug("[logActivity] Anonymous auth unavailable, skipping Firestore write:", authErr?.code || authErr?.message);
     }
   }
 
