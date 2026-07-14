@@ -20,7 +20,7 @@ export const aiConfig: AIConfiguration = {
   chatModel: 'gemini-2.5-flash',
   embeddingModel: 'text-embedding-004',
   temperature: 0.7,
-  maxTokens: 2048,
+  maxTokens: 800,
   timeoutMs: 20000,
   retryCount: 3,
   cacheTTLMs: 3600000 // 1 hour
