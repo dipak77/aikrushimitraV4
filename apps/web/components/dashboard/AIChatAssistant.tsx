@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, User, Sparkles, Volume2, Square, RotateCcw } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import type { Language, UserProfile } from '../../types';
-import { getApiUrl } from '../../services/geminiService';
+import { getApiUrl, getAIFarmingAdvice } from '../../services/geminiService';
 
 interface Message {
   id: string;
@@ -161,19 +161,11 @@ export function AIChatAssistant({ lang, user }: { lang: Language; user: UserProf
         .filter((m) => !m.loading && m.id !== 'welcome')
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const res = await fetch(getApiUrl('/api/chat'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...history, { role: 'user', content: trimmed }],
-          user
-        }),
-      });
-      const data = await res.json();
+      const reply = await getAIFarmingAdvice(trimmed, lang, user.crop || 'cotton', history);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === loadingMsg.id
-            ? { ...m, content: data.reply || 'क्षमस्व, आता उत्तर देण्यास काही अडचण येत आहे.', loading: false }
+            ? { ...m, content: reply, loading: false }
             : m
         )
       );
@@ -188,7 +180,7 @@ export function AIChatAssistant({ lang, user }: { lang: Language; user: UserProf
     } finally {
       setIsThinking(false);
     }
-  }, [messages, isThinking, user, t.errorMsg]);
+  }, [messages, isThinking, user, lang, t.errorMsg]);
 
   const speak = async (msg: Message) => {
     triggerHaptic('medium');

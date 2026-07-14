@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import { useUserStore } from '../../store/useUserStore';
-import { getApiUrl } from '../../services/geminiService';
+import { getApiUrl, getWeatherAdvisory } from '../../services/geminiService';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -137,15 +137,8 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
         const fetchAdvisory = async () => {
             setLoadingAdvisory(true);
             try {
-                const res = await fetch(getApiUrl('/api/weather/advisory'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user, weatherForecast: weather.daily })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setAiAdvisory(data.text);
-                }
+                const text = await getWeatherAdvisory(weather.daily, lang);
+                setAiAdvisory(text);
             } catch (err) {
                 console.error("Failed to load weather advisory:", err);
             } finally {
@@ -153,7 +146,7 @@ const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) =
             }
         };
         fetchAdvisory();
-    }, [weather, user]);
+    }, [weather, user, lang]);
 
     useEffect(() => {
         const load = async () => {

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Volume2, Sparkles, AudioLines, RefreshCw } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import type { Language, UserProfile } from '../../types';
-import { getApiUrl } from '../../services/geminiService';
+import { getApiUrl, getAIFarmingAdvice } from '../../services/geminiService';
 
 type State = 'idle' | 'recording' | 'thinking' | 'speaking';
 
@@ -133,35 +133,33 @@ export function VoiceAssistantWidget({ lang, user }: { lang: Language; user: Use
     setState('thinking');
     setTranscript(text);
     try {
-      const chatRes = await fetch(getApiUrl('/api/chat'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, user }),
-      });
-      const chatData = await chatRes.json();
-      const reply = chatData.reply || 'क्षमस्व, सध्या उत्तर उपलब्ध नाही.';
+      const reply = await getAIFarmingAdvice(text, lang, user.crop || 'cotton', []);
       setResponse(reply);
       setState('speaking');
 
-      // Call TTS
-      const ttsRes = await fetch(getApiUrl('/api/voice'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: reply.replace(/\*\*/g, '') }),
-      });
-      if (ttsRes.ok) {
-        const audioBlob = await ttsRes.blob();
-        const url = URL.createObjectURL(audioBlob);
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.onended = () => setState('idle');
-        audio.onerror = () => setState('idle');
-        await audio.play();
-      } else {
+      // Call TTS (silently fallback if backend voice API is down)
+      try {
+        const ttsRes = await fetch(getApiUrl('/api/voice'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: reply.replace(/\*\*/g, '') }),
+        });
+        if (ttsRes.ok) {
+          const audioBlob = await ttsRes.blob();
+          const url = URL.createObjectURL(audioBlob);
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.onended = () => setState('idle');
+          audio.onerror = () => setState('idle');
+          await audio.play();
+        } else {
+          setState('idle');
+        }
+      } catch {
         setState('idle');
       }
     } catch (e) {
-      console.error('Chat/TTS error:', e);
+      console.error('Chat error:', e);
       setResponse('⚠️ काहीतरी त्रुटी झाली. पुन्हा प्रयत्न करा.');
       setState('idle');
     }

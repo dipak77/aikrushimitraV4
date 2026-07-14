@@ -5,7 +5,7 @@ import { TRANSLATIONS } from '../../constants';
 import SimpleView from '../layout/SimpleView';
 import { Landmark, ArrowUpRight, Sparkles, X, Loader2 } from 'lucide-react';
 import { useUserStore } from '../../store/useUserStore';
-import { getApiUrl } from '../../services/geminiService';
+import { getApiUrl, getAISchemesMatch } from '../../services/geminiService';
 import { fetchSchemes } from '../../services/dbService';
 import clsx from 'clsx';
 
@@ -40,15 +40,8 @@ const SchemesView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () =>
         setMatching(true);
         setMatchResult(null);
         try {
-            const res = await fetch(getApiUrl('/api/schemes/match'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user, schemes })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMatchResult(data.text);
-            }
+            const text = await getAISchemesMatch(schemes);
+            setMatchResult(text);
         } catch (err) {
             console.error("Failed to match schemes:", err);
             setMatchResult("योजना शोधताना काही त्रुटी आली. कृपया पुन्हा प्रयत्न करा.");
