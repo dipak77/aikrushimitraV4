@@ -435,7 +435,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
               'DASHBOARD', 'LANDING', 'WEATHER', 'CALENDAR', 'SABJI_MANDI', 
               'CHAT', 'AGRI_KNOWLEDGE', 'SCHEMES', 'MARKET', 'COMMUNITY', 
               'DISEASE_DETECTOR', 'SOIL', 'YIELD', 'AREA_CALCULATOR', 
-              'PREMIUM', 'INNOVATION', 'SETTINGS'
+              'PREMIUM', 'INNOVATION', 'ADMIN', 'SETTINGS'
             ];
             const visibility = config.menuSettings?.visibility || {};
 
@@ -467,6 +467,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
                         AREA_CALCULATOR: 'Area Calculator',
                         PREMIUM: 'Premium Services',
                         INNOVATION: 'Innovation Hub',
+                        ADMIN: 'Admin Console',
                         SETTINGS: 'System Settings'
                       }[id] || id;
 

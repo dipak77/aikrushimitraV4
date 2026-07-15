@@ -126,6 +126,7 @@ const DEFAULT_CONFIG = {
       'AREA_CALCULATOR',
       'PREMIUM',
       'INNOVATION',
+      'ADMIN',
       'SETTINGS'
     ],
     visibility: {
@@ -145,6 +146,7 @@ const DEFAULT_CONFIG = {
       AREA_CALCULATOR: true,
       PREMIUM: true,
       INNOVATION: true,
+      ADMIN: true,
       SETTINGS: true
     }
   }

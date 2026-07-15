@@ -122,6 +122,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'AREA_CALCULATOR', icon: MapIcon, label: t.areaCalc, color: 'sky' },
     { id: 'PREMIUM', icon: Crown, label: t.premium, color: 'amber' },
     { id: 'INNOVATION', icon: Cpu, label: t.innovation, color: 'cyan' },
+    { id: 'ADMIN', icon: Shield, label: t.admin, color: 'rose' },
     { id: 'SETTINGS', icon: Settings, label: t.settings, color: 'emerald' },
   ];
 
