@@ -313,7 +313,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* ═══════════════════════════════════════════════════════ */}
             {/* HEADER BAR */}
             {/* ═══════════════════════════════════════════════════════ */}
-            <div className="px-4 md:px-6 py-2.5 flex items-center justify-between z-50 gap-4 sticky top-0 bg-[#020617]/95 backdrop-blur-xl border-b border-white/5 transition-all">
+            <div className="px-4 md:px-6 py-2.5 flex items-center justify-between z-50 gap-4 sticky top-0 bg-[#070a07]/95 backdrop-blur-xl border-b border-emerald-500/10 transition-all">
                 {/* Left: Brand Logo & Menu Trigger */}
                 <div className="flex items-center gap-3">
                     <button
@@ -324,7 +324,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         <Menu size={16} />
                     </button>
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-400 flex items-center justify-center shadow-[0_0_12px_rgba(34,197,94,0.3)]">
                             <Sparkles size={16} className="text-black" strokeWidth={2.5} />
                         </div>
                         <div className="flex flex-col">
@@ -341,7 +341,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                         id="dashboard-search"
                         type="text"
                         placeholder={dTxt.searchPlaceholder}
-                        className="w-full h-8 pl-9 pr-12 text-xs rounded-full bg-slate-900/60 border border-white/10 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all font-semibold"
+                        className="w-full h-8 pl-9 pr-12 text-xs rounded-full bg-[#0a140a]/60 border border-emerald-500/10 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all font-semibold"
                     />
                     <kbd className="absolute right-3 top-2.5 h-3.5 select-none pointer-events-none items-center gap-1 rounded bg-white/5 px-1.5 font-mono text-[9px] font-bold text-slate-400 flex border border-white/5">
                         <span className="text-[8px]">Ctrl</span>K
@@ -366,7 +366,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                     <div className="relative">
                         <button
                             onClick={() => setLangMenuOpen(!langMenuOpen)}
-                            className={`h-8 px-2.5 rounded-full transition-all flex items-center gap-1.5 backdrop-blur-md border text-[10px] font-bold uppercase tracking-wider ${langMenuOpen ? 'bg-emerald-500 border-emerald-500 text-slate-900' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                            className={`h-8 px-2.5 rounded-full transition-all flex items-center gap-1.5 backdrop-blur-md border text-[10px] font-bold uppercase tracking-wider ${langMenuOpen ? 'bg-gradient-to-r from-emerald-500 to-lime-400 border-emerald-500 text-slate-900' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
                         >
                             <Globe size={13} className={langMenuOpen ? 'text-slate-900' : 'text-emerald-400'} />
                             <span>
@@ -381,7 +381,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute right-0 mt-2 w-56 bg-[#0a1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[120] p-2"
+                                    className="absolute right-0 mt-2 w-56 bg-[#0a140a]/95 border border-emerald-500/20 rounded-2xl shadow-2xl overflow-hidden z-[120] p-2"
                                 >
                                     <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
                                         {LANGUAGES.map((l) => (
@@ -410,7 +410,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                     {/* Notification bell */}
                     <button className="relative w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center backdrop-blur-md group">
                         <Bell size={14} className="text-slate-300 group-hover:text-emerald-400 transition-colors" />
-                        <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-[#020617] flex items-center justify-center">
+                        <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-[#070a07] flex items-center justify-center">
                         </div>
                     </button>
 
@@ -425,7 +425,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
 
                     {/* User profile block */}
                     <div onClick={() => onNavigate('SETTINGS')} className="flex items-center gap-2 cursor-pointer group shrink-0 ml-1">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 p-[1px] shadow-[0_0_12px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-lime-400 p-[1px] shadow-[0_0_12px_rgba(34,197,94,0.2)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-all">
                             <div className="w-full h-full rounded-full bg-[#051108] flex items-center justify-center overflow-hidden">
                                 {user.picture ? (
                                     <img src={user.picture} alt="Profile" className="w-full h-full object-cover" />
@@ -446,10 +446,10 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             {/* HERO SECTION CONTAINER */}
             {/* ═══════════════════════════════════════════════════════ */}
             <div className="px-4 md:px-6 pt-5 pb-2 max-w-[1600px] mx-auto w-full animate-[fadeInUp_0.5s_ease-out]">
-                <div className="relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#0c1825]/90 via-[#06141f]/95 to-[#0b1723]/90 border border-emerald-500/15 p-5 md:p-8 flex flex-col md:flex-row justify-between gap-6 shadow-[0_20px_50px_rgba(2,6,23,0.6)]">
+                <div className="relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#0a1a0f]/90 via-[#070a07]/95 to-[#0b1d0e]/90 border border-emerald-500/20 p-5 md:p-8 flex flex-col md:flex-row justify-between gap-6 shadow-[0_20px_50px_rgba(2,6,23,0.6)]">
                     {/* Glow background decorations */}
                     <div className="absolute top-0 right-1/4 w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-60 h-60 bg-lime-500/5 rounded-full blur-[80px] pointer-events-none" />
 
                     {/* Left half: Greetings and AI suggestions */}
                     <div className="flex-1 flex flex-col justify-between relative z-10">
@@ -460,21 +460,21 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                                     <Wifi size={10} className="animate-pulse" />
                                     {dTxt.online}
                                 </span>
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/60 border border-white/5 text-[10px] font-bold text-slate-300">
-                                    <MapPin size={10} className="text-cyan-400" />
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0a140a]/60 border border-emerald-500/10 text-[10px] font-bold text-slate-300">
+                                    <MapPin size={10} className="text-lime-400" />
                                     {user.district || 'Yavatmal'}, {user.state || 'Maharashtra'}
                                 </span>
                             </div>
 
                             {/* Heading greet */}
                             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight mb-2">
-                                {dTxt.greeting} <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">{user.name || "Gayatri"}</span> ✨
+                                {dTxt.greeting} <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-lime-300">{user.name || "Gayatri"}</span> ✨
                             </h1>
                             <p className="text-sm text-slate-400 font-semibold mb-6">{dTxt.subtitle}</p>
                         </div>
 
                         {/* Integrated AI Suggestion Widget Card */}
-                        <div className="relative p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-slate-950/20 border border-emerald-500/20 shadow-lg flex items-center justify-between gap-4 max-w-2xl group hover:border-emerald-400/40 transition-all duration-300">
+                        <div className="relative p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-[#070a07]/40 border border-emerald-500/30 shadow-lg flex items-center justify-between gap-4 max-w-2xl group hover:border-lime-500/40 transition-all duration-300">
                             {/* Inner contents */}
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-md">
@@ -497,7 +497,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                                         triggerHaptic('medium');
                                         setShowRecommendations(!showRecommendations);
                                     }}
-                                    className="px-3.5 py-2 rounded-xl bg-emerald-500 text-emerald-950 text-xs font-black hover:bg-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
+                                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-lime-400 hover:from-emerald-400 hover:to-lime-300 text-black text-xs font-black active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
                                 >
                                     <span>{showRecommendations ? dTxt.viewLess : dTxt.btnViewStatus}</span>
                                 </button>
@@ -506,14 +506,14 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                     </div>
 
                     {/* Right half: dynamic circular gauge progress score */}
-                    <div className="flex items-center justify-center flex-col shrink-0 relative z-10 bg-slate-950/25 border border-white/5 rounded-3xl p-5 md:p-6 min-w-[200px]">
+                    <div className="flex items-center justify-center flex-col shrink-0 relative z-10 bg-[#070a07]/50 border border-emerald-500/10 rounded-3xl p-5 md:p-6 min-w-[200px]">
                         {/* Circular ring wrapper */}
                         <div className="relative flex items-center justify-center w-36 h-36">
                             <svg className="w-full h-full transform -rotate-90">
                                 <defs>
                                     <linearGradient id="crop-health-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                                         <stop offset="0%" stopColor="#10b981" />
-                                        <stop offset="100%" stopColor="#06b6d4" />
+                                        <stop offset="100%" stopColor="#a3e635" />
                                     </linearGradient>
                                 </defs>
                                 <circle cx="72" cy="72" r="50" className="stroke-slate-800/60 fill-transparent" strokeWidth="8" />

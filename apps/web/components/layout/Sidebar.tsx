@@ -162,7 +162,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
         )}
       >
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0a1628] to-[#020617] backdrop-blur-[60px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#070a07] via-[#0a1a0f] to-[#070a07] backdrop-blur-[60px]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/15 via-transparent to-transparent opacity-60" />
 
         {/* Right border */}
@@ -183,7 +183,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
             <div className="flex items-center gap-3">
               {/* Logo Circle */}
               <div className="relative flex-shrink-0">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover/logo:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-shadow duration-500">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-lime-400 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.4)] group-hover/logo:shadow-[0_0_30px_rgba(34,197,94,0.6)] transition-shadow duration-500">
                   <span className="text-black font-black text-sm tracking-wider">AI</span>
                 </div>
                 <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center border border-amber-300/30">
@@ -253,7 +253,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                 >
                   {/* Active indicator */}
                   {active && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-gradient-to-b from-emerald-400 to-teal-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-gradient-to-b from-emerald-400 to-lime-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                   )}
 
                   {/* Hover shine effect */}
@@ -331,7 +331,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
                         title={collapsed ? item.label : undefined}
                       >
                         {active && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-to-b from-emerald-400 to-teal-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-to-b from-emerald-400 to-lime-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                         )}
                         <div className={clsx(
                           'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0',
@@ -368,7 +368,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
             <button
               onClick={() => { setView('VOICE_ASSISTANT'); triggerHaptic(); }}
               className={clsx(
-                "w-full flex items-center justify-center bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600 text-white font-bold shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_8px_32px_rgba(6,182,212,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-300 relative overflow-hidden group/voice",
+                "w-full flex items-center justify-center bg-gradient-to-r from-emerald-500 via-emerald-600 to-lime-400 text-black font-extrabold shadow-[0_4px_20px_rgba(34,197,94,0.3)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.5)] hover:scale-[1.02] active:scale-95 transition-all duration-300 relative overflow-hidden group/voice",
                 collapsed ? "h-11 rounded-xl" : "gap-2 py-3 rounded-xl text-sm"
               )}
               title={collapsed ? (lang === 'mr' ? 'बोला' : lang === 'hi' ? 'बोलें' : 'Voice') : undefined}
