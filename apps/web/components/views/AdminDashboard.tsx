@@ -17,6 +17,7 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
   const t = TRANSLATIONS[lang];
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [hashedPasscode, setHashedPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<any>(null);
@@ -56,6 +57,7 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
     try {
       const hash = await hashPassword(cleanPassword);
       if (hash === TARGET_HASH) {
+        setHashedPasscode(hash);
         setIsAuthenticated(true);
         // Stats loading triggers via useEffect
         setError('');
@@ -362,7 +364,7 @@ const AdminDashboard = ({ onBack, lang }: { onBack: () => void, lang: Language }
 
         {/* --- SETTINGS TAB --- */}
         {activeTab === 'settings' && (
-            <AdminConfigCenter passcode={password} />
+            <AdminConfigCenter passcode={hashedPasscode} />
         )}
 
       </div>

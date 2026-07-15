@@ -234,7 +234,26 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
     );
   }
 
-  if (!config) return null;
+  if (!config) {
+    return (
+      <div className="bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[300px] flex flex-col justify-center items-center gap-4 text-center">
+        {message ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-2 text-red-400 font-bold">
+              <AlertTriangle size={24} />
+              <span>{message.text}</span>
+            </div>
+            <p className="text-xs text-slate-500 max-w-md">Failed to load platform configuration. Please check your credentials and try again.</p>
+            <button onClick={fetchConfig} className="px-5 py-2 rounded-xl bg-emerald-500 text-black text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-600 transition mx-auto mt-2">
+              <RotateCcw size={14} /> Retry Connection
+            </button>
+          </div>
+        ) : (
+          <div className="text-slate-500">No configuration found.</div>
+        )}
+      </div>
+    );
+  }
 
   const sidebarTabs = [
     { id: 'general', label: 'General Settings', icon: Settings },
