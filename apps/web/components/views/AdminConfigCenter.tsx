@@ -3,7 +3,7 @@ import {
   Settings, Bot, Key, Database, Bell, Flag, FileText, 
   Activity, ClipboardList, Download, Upload, Shield, 
   CheckCircle, XCircle, Loader2, Save, RotateCcw, AlertTriangle, Eye, EyeOff,
-  LayoutGrid, ChevronUp, ChevronDown
+  LayoutGrid, ChevronUp, ChevronDown, Sparkles, Zap, Brain, Lock, Server
 } from 'lucide-react';
 import { Button } from '../Button';
 import clsx from 'clsx';
@@ -16,8 +16,8 @@ interface AdminConfigCenterProps {
 export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) {
   const [config, setConfig] = useState<any>(null);
   const [activeSubTab, setActiveSubTab] = useState<
-    'general' | 'menu' | 'ai' | 'secrets' | 'firebase' | 'notifications' | 'features' | 'prompts' | 'diagnostics' | 'audit' | 'backup'
-  >('general');
+    'overview' | 'general' | 'menu' | 'ai' | 'secrets' | 'firebase' | 'notifications' | 'features' | 'prompts' | 'diagnostics' | 'audit' | 'backup'
+  >('overview');
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -143,7 +143,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
   };
 
   useEffect(() => {
-    if (activeSubTab === 'diagnostics') fetchDiagnostics();
+    if (activeSubTab === 'diagnostics' || activeSubTab === 'overview') fetchDiagnostics();
     if (activeSubTab === 'audit') fetchAuditLogs();
   }, [activeSubTab]);
 
@@ -236,7 +236,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
   if (!config) {
     return (
-      <div className="bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[300px] flex flex-col justify-center items-center gap-4 text-center">
+      <div className="bg-[#070a07] backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[300px] flex flex-col justify-center items-center gap-4 text-center">
         {message ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-2 text-red-400 font-bold">
@@ -256,23 +256,32 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
   }
 
   const sidebarTabs = [
-    { id: 'general', label: 'General Settings', icon: Settings },
-    { id: 'menu', label: 'Navigation & Menu', icon: LayoutGrid },
-    { id: 'ai', label: 'AI Providers', icon: Bot },
-    { id: 'secrets', label: 'API & Secrets', icon: Key },
-    { id: 'firebase', label: 'Firebase Config', icon: Database },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'features', label: 'Feature Flags', icon: Flag },
-    { id: 'prompts', label: 'Prompt Management', icon: FileText },
-    { id: 'diagnostics', label: 'System Diagnostics', icon: Activity },
-    { id: 'audit', label: 'Audit Logs', icon: ClipboardList },
-    { id: 'backup', label: 'Backup & Restore', icon: Download }
+    { id: 'overview', label: 'ओवरव्यू', labelEn: 'Overview', icon: LayoutGrid },
+    { id: 'general', label: 'सामान्य सेटिंग्स', labelEn: 'General Settings', icon: Settings },
+    { id: 'menu', label: 'मेन्यू सेटिंग्स', labelEn: 'Navigation & Menu', icon: LayoutGrid },
+    { id: 'ai', label: 'AI प्रदाता', labelEn: 'AI Providers', icon: Bot },
+    { id: 'secrets', label: 'API और सीक्रेट्स', labelEn: 'API & Secrets', icon: Key },
+    { id: 'firebase', label: 'Firebase कॉन्फ़िग', labelEn: 'Firebase Config', icon: Database },
+    { id: 'notifications', label: 'सूचनाएं', labelEn: 'Notifications', icon: Bell },
+    { id: 'features', label: 'फ़ीचर फ़्लैग', labelEn: 'Feature Flags', icon: Flag },
+    { id: 'prompts', label: 'प्रॉम्प्ट प्रबंधन', labelEn: 'Prompt Management', icon: FileText },
+    { id: 'diagnostics', label: 'सिस्टम डायग्नोस्टिक्स', labelEn: 'System Diagnostics', icon: Activity },
+    { id: 'audit', label: 'ऑडिट लॉग', labelEn: 'Audit Logs', icon: ClipboardList },
+    { id: 'backup', label: 'बैकअप और रिस्टोर', labelEn: 'Backup & Restore', icon: Download }
   ] as const;
 
+  const PROVIDER_ICON: Record<string, typeof Bot> = {
+    openai: Sparkles,
+    gemini: Zap,
+    claude: Brain,
+    deepseek: Bot,
+    groq: Zap
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[600px]">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-[#070a07]/50 backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[600px]">
       
-      {/* 1. Sub navigation menu side bar */}
+      {/* 1. Sub navigation menu sidebar */}
       <div className="flex flex-col gap-1 border-r border-white/5 pr-4">
         {sidebarTabs.map(tab => {
           const Icon = tab.icon;
@@ -282,14 +291,17 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
               key={tab.id}
               onClick={() => { setActiveSubTab(tab.id); setMessage(null); }}
               className={clsx(
-                "flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-left",
+                "flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all text-left border",
                 active 
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                  ? "bg-emerald-500/10 text-white border-emerald-500/20" 
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border-transparent"
               )}
             >
-              <Icon size={16} />
-              <span>{tab.label}</span>
+              <Icon size={14} className={active ? "text-emerald-400" : "text-slate-500"} />
+              <div className="flex flex-col">
+                <span className="text-[12px]">{tab.label}</span>
+                <span className="text-[9px] text-slate-500 font-normal uppercase tracking-wider">{tab.labelEn}</span>
+              </div>
             </button>
           );
         })}
@@ -304,33 +316,115 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
           {/* Notifications Banner */}
           {message && (
             <div className={clsx(
-              "flex items-center gap-3 p-4 rounded-xl border text-sm font-semibold animate-enter",
+              "flex items-center gap-3 p-4 rounded-xl border text-xs font-semibold animate-enter",
               message.type === 'success' 
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                 : "bg-red-500/10 border-red-500/20 text-red-400"
             )}>
-              {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+              {message.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
               <span>{message.text}</span>
             </div>
           )}
 
+          {/* ── OVERVIEW TAB ── */}
+          {activeSubTab === 'overview' && (() => {
+            const enabledProvidersCount = Object.values(config.ai?.providers || {}).filter((p: any) => p.enabled).length;
+            const flagsOnCount = Object.values(config.features || {}).filter((f: any) => f === true).length;
+            const healthyServicesCount = diagnostics.filter((d: any) => d.status === 'Connected').length;
+
+            const stats = [
+              { label: 'सक्रिय AI प्रदाता', labelEn: 'Enabled AI Providers', value: enabledProvidersCount, icon: Bot, accent: 'from-emerald-400 to-emerald-600' },
+              { label: 'वर्तमान प्रोफ़ाइल', labelEn: 'Active Profile', value: config.profile ?? '—', icon: Activity, accent: 'from-sky-400 to-sky-600' },
+              { label: 'फ़ीचर फ़्लैग चालू', labelEn: 'Feature Flags On', value: flagsOnCount, icon: Flag, accent: 'from-amber-400 to-amber-600' },
+              { label: 'स्वस्थ सेवाएँ', labelEn: 'Healthy Services', value: `${healthyServicesCount}/${diagnostics.length || 0}`, icon: Server, accent: 'from-rose-400 to-rose-600' }
+            ];
+
+            return (
+              <div className="space-y-6 animate-enter">
+                <div>
+                  <h2 className="text-xl font-bold text-white">ओवरव्यू</h2>
+                  <p className="text-[12px] text-slate-400 mt-0.5">Platform Overview · सिस्टम की समग्र स्थिति</p>
+                </div>
+
+                {/* Stat cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {stats.map((s) => {
+                    const Icon = s.icon;
+                    return (
+                      <div key={s.labelEn} className="glass bg-white/[0.02] rounded-2xl p-4 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.accent} flex items-center justify-center`}>
+                            <Icon className="w-4 h-4 text-black" />
+                          </div>
+                        </div>
+                        <div className="text-xl font-bold text-white leading-tight">{s.value}</div>
+                        <div className="text-[11px] text-white font-medium mt-1">{s.label}</div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-wider">{s.labelEn}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Provider status summary */}
+                <div className="glass bg-white/[0.02] rounded-2xl p-5 border border-white/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Bot className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-bold text-white">AI प्रदाता स्थिति</h3>
+                    <span className="text-[10px] text-slate-500 ml-auto uppercase tracking-wider">AI Providers Status</span>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {Object.keys(config.ai?.providers || {}).map(key => {
+                      const p = config.ai.providers[key];
+                      const Icon = PROVIDER_ICON[key] ?? Bot;
+                      return (
+                        <div key={key} className="flex items-center gap-3 p-3 rounded-xl bg-black/30 border border-white/5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${p.enabled ? 'bg-emerald-500/15' : 'bg-white/5'}`}>
+                            <Icon className={`w-4 h-4 ${p.enabled ? 'text-emerald-400' : 'text-slate-500'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[13px] font-semibold text-white capitalize">{key}</div>
+                            <div className="text-[10px] text-slate-500 truncate">{p.model}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {p.enabled ? (
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">सक्रिय</span>
+                            ) : (
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/10">बंद</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* ── GENERAL SETTINGS ── */}
           {activeSubTab === 'general' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">General Platform Settings</h3>
-              <div className="space-y-2">
-                <label className="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Profile</label>
-                <select 
-                  value={config.profile}
-                  onChange={e => setConfig({ ...config, profile: e.target.value })}
-                  className="w-full max-w-xs bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2.5 text-white"
-                >
-                  <option value="Development">Development</option>
-                  <option value="Testing">Testing</option>
-                  <option value="Staging">Staging</option>
-                  <option value="Production">Production</option>
-                </select>
-                <p className="text-xs text-slate-500">Specifies settings grouping and debugging levels for the system.</p>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">सामान्य सेटिंग्स</h3>
+                <p className="text-[12px] text-slate-400">General Settings · प्लेटफ़ॉर्म की बुनियादी जानकारी</p>
+              </div>
+
+              <div className="glass bg-white/[0.02] rounded-2xl p-5 border border-white/10 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11.5px] text-slate-400">सक्रिय प्रोफ़ाइल (Active Profile)</label>
+                    <select 
+                      value={config.profile}
+                      onChange={e => setConfig({ ...config, profile: e.target.value })}
+                      className="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs"
+                    >
+                      <option value="Development">Development</option>
+                      <option value="Testing">Testing</option>
+                      <option value="Staging">Staging</option>
+                      <option value="Production">Production</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -348,8 +442,8 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
             return (
               <div className="space-y-4 animate-enter">
                 <div>
-                  <h3 className="text-lg font-black text-white">Menu Navigation & Page Controls</h3>
-                  <p className="text-xs text-slate-400 mt-1">Reorder pages and toggle their visibility in the sidebar. Note: "Settings" is always visible to prevent lockout.</p>
+                  <h3 className="text-lg font-black text-white">मेन्यू सेटिंग्स</h3>
+                  <p className="text-[12px] text-slate-400">Navigation & Menu · साइडबार लिंक व्यवस्थापन</p>
                 </div>
 
                 <div className="bg-slate-950/40 p-4 border border-white/5 rounded-xl">
@@ -468,9 +562,12 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── AI PROVIDERS ── */}
           {activeSubTab === 'ai' && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-enter">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-black text-white">AI Models & Router</h3>
+                <div>
+                  <h3 className="text-lg font-black text-white">AI प्रदाता</h3>
+                  <p className="text-[12px] text-slate-400">AI Providers · विभिन्न AI मॉडल कॉन्फ़िगर करें</p>
+                </div>
                 <div className="flex gap-2 items-center text-xs bg-white/5 border border-white/5 px-3 py-1.5 rounded-full">
                   <span className="text-slate-400">Default Router Provider:</span>
                   <select
@@ -491,10 +588,14 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
                 {Object.keys(config.ai.providers).map(key => {
                   const provider = config.ai.providers[key];
+                  const Icon = PROVIDER_ICON[key] ?? Bot;
                   return (
                     <div key={key} className="bg-slate-950/40 border border-white/5 p-4 rounded-xl space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-sm text-white uppercase">{key}</span>
+                        <div className="flex items-center gap-2">
+                          <Icon size={16} className={provider.enabled ? "text-emerald-400" : "text-slate-500"} />
+                          <span className="font-bold text-sm text-white uppercase">{key}</span>
+                        </div>
                         <input 
                           type="checkbox"
                           checked={provider.enabled}
@@ -544,8 +645,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── API & SECRETS ── */}
           {activeSubTab === 'secrets' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-black text-white">API Credentials & Secrets</h3>
+            <div className="space-y-6 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">API और सीक्रेट्स</h3>
+                <p className="text-[12px] text-slate-400">API & Secrets · विभिन्न एपीआई क्रेडेंशियल्स</p>
+              </div>
               <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2">
                 {Object.keys(config.ai.providers).map(key => {
                   const provider = config.ai.providers[key];
@@ -600,9 +704,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── FIREBASE SETTINGS ── */}
           {activeSubTab === 'firebase' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">Dynamic Firebase Client Setup</h3>
-              <p className="text-xs text-slate-400">Specifies Firebase configurations used on the client. Keys are masked for protection.</p>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">Firebase कॉन्फ़िग</h3>
+                <p className="text-[12px] text-slate-400">Firebase Config · डेटाबेस सेटअप</p>
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
                 {Object.keys(config.firebase).map(key => (
@@ -626,8 +732,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── NOTIFICATIONS SETTINGS ── */}
           {activeSubTab === 'notifications' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">SMS & Email Delivery Settings</h3>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">सूचनाएं</h3>
+                <p className="text-[12px] text-slate-400">Notifications · एसएमएस और ईमेल सेटअप</p>
+              </div>
               
               <div className="space-y-4">
                 {/* Twilio */}
@@ -714,9 +823,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── FEATURE FLAGS ── */}
           {activeSubTab === 'features' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">Runtime Feature Flags</h3>
-              <p className="text-xs text-slate-400">Specifies modules enabled for clients in real-time. Toggling changes take place instantly.</p>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">फ़ीचर फ़्लैग</h3>
+                <p className="text-[12px] text-slate-400">Feature Flags · रीयल-टाइम मॉड्यूल नियंत्रण</p>
+              </div>
               
               <div className="grid grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-2">
                 {Object.keys(config.features).map(key => (
@@ -743,9 +854,12 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── PROMPT MANAGEMENT ── */}
           {activeSubTab === 'prompts' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-enter">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-black text-white">Prompt Template Management</h3>
+                <div>
+                  <h3 className="text-lg font-black text-white">प्रॉम्प्ट प्रबंधन</h3>
+                  <p className="text-[12px] text-slate-400">Prompt Management · एआई प्रॉम्प्ट टेम्पलेट्स</p>
+                </div>
                 <div className="flex gap-2">
                   <select 
                     value={selectedPromptKey}
@@ -809,9 +923,12 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── SYSTEM DIAGNOSTICS ── */}
           {activeSubTab === 'diagnostics' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-enter">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-black text-white">Diagnostics & Latency Matrix</h3>
+                <div>
+                  <h3 className="text-lg font-black text-white">सिस्टम डायग्नोस्टिक्स</h3>
+                  <p className="text-[12px] text-slate-400">Diagnostics · सेवा संपर्क जांच</p>
+                </div>
                 <Button size="sm" variant="secondary" onClick={fetchDiagnostics} disabled={loadingDiagnostics}>
                   {loadingDiagnostics ? 'Checking...' : 'Run Diagnostics'}
                 </Button>
@@ -859,9 +976,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── AUDIT LOGS ── */}
           {activeSubTab === 'audit' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">Configuration Audit Logs</h3>
-              <p className="text-xs text-slate-400">Chronological history of settings changes and actor updates.</p>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">ऑडिट लॉग</h3>
+                <p className="text-[12px] text-slate-400">Audit Logs · सेटिंग बदलाव इतिहास</p>
+              </div>
               
               {loadingAudits ? (
                 <div className="h-48 flex items-center justify-center text-slate-500">
@@ -910,9 +1029,11 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
           {/* ── BACKUP & RESTORE ── */}
           {activeSubTab === 'backup' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-white">System Backups & Migration</h3>
-              <p className="text-xs text-slate-400">Export and import complete profile setups as JSON configurations.</p>
+            <div className="space-y-4 animate-enter">
+              <div>
+                <h3 className="text-lg font-black text-white">बैकअप और रिस्टोर</h3>
+                <p className="text-[12px] text-slate-400">Backup & Restore · प्रोफाइल बैकअप निर्यात और आयात</p>
+              </div>
               
               <div className="flex gap-4 pt-4">
                 <Button variant="secondary" className="flex items-center gap-2" onClick={handleExportConfig}>
@@ -936,7 +1057,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
         </div>
 
-        {/* Global Save Button (Exclude prompts/diagnostics/audit logs/backup tabs) */}
+        {/* Global Save Button (Exclude prompts/diagnostics/audit logs/backup/overview tabs) */}
         {['general', 'menu', 'ai', 'secrets', 'firebase', 'notifications', 'features'].includes(activeSubTab) && (
           <div className="flex justify-end pt-6 border-t border-white/5 mt-6">
             <Button variant="primary" onClick={() => handleSave()} disabled={saving} className="flex items-center gap-2">
