@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings, Bot, Key, Database, Bell, Flag, FileText, 
   Activity, ClipboardList, Download, Upload, Shield, 
-  CheckCircle, XCircle, Loader2, Save, RotateCcw, AlertTriangle, Eye, EyeOff
+  CheckCircle, XCircle, Loader2, Save, RotateCcw, AlertTriangle, Eye, EyeOff,
+  LayoutGrid, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { Button } from '../Button';
 import clsx from 'clsx';
@@ -15,7 +16,7 @@ interface AdminConfigCenterProps {
 export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) {
   const [config, setConfig] = useState<any>(null);
   const [activeSubTab, setActiveSubTab] = useState<
-    'general' | 'ai' | 'secrets' | 'firebase' | 'notifications' | 'features' | 'prompts' | 'diagnostics' | 'audit' | 'backup'
+    'general' | 'menu' | 'ai' | 'secrets' | 'firebase' | 'notifications' | 'features' | 'prompts' | 'diagnostics' | 'audit' | 'backup'
   >('general');
   
   const [loading, setLoading] = useState(false);
@@ -237,6 +238,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
 
   const sidebarTabs = [
     { id: 'general', label: 'General Settings', icon: Settings },
+    { id: 'menu', label: 'Navigation & Menu', icon: LayoutGrid },
     { id: 'ai', label: 'AI Providers', icon: Bot },
     { id: 'secrets', label: 'API & Secrets', icon: Key },
     { id: 'firebase', label: 'Firebase Config', icon: Database },
@@ -313,6 +315,137 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
               </div>
             </div>
           )}
+
+          {/* ── NAVIGATION & MENU CONTROL ── */}
+          {activeSubTab === 'menu' && (() => {
+            const sequence = config.menuSettings?.sequence || [
+              'DASHBOARD', 'LANDING', 'WEATHER', 'CALENDAR', 'SABJI_MANDI', 
+              'CHAT', 'AGRI_KNOWLEDGE', 'SCHEMES', 'MARKET', 'COMMUNITY', 
+              'DISEASE_DETECTOR', 'SOIL', 'YIELD', 'AREA_CALCULATOR', 
+              'PREMIUM', 'INNOVATION', 'SETTINGS'
+            ];
+            const visibility = config.menuSettings?.visibility || {};
+
+            return (
+              <div className="space-y-4 animate-enter">
+                <div>
+                  <h3 className="text-lg font-black text-white">Menu Navigation & Page Controls</h3>
+                  <p className="text-xs text-slate-400 mt-1">Reorder pages and toggle their visibility in the sidebar. Note: "Settings" is always visible to prevent lockout.</p>
+                </div>
+
+                <div className="bg-slate-950/40 p-4 border border-white/5 rounded-xl">
+                  <div className="flex flex-col gap-2 max-h-[380px] overflow-y-auto pr-1">
+                    {sequence.map((id: string, index: number) => {
+                      const isVisible = visibility[id] !== false;
+                      const name = {
+                        DASHBOARD: 'Dashboard / Home',
+                        LANDING: 'Landing Page',
+                        WEATHER: 'Weather Forecast',
+                        CALENDAR: 'Crop Management',
+                        SABJI_MANDI: 'Sabji Mandi (Marketplace)',
+                        CHAT: 'AI Chat Advisor',
+                        AGRI_KNOWLEDGE: 'Agriculture Knowledge Hub',
+                        SCHEMES: 'Government Schemes',
+                        MARKET: 'Mandi Rates',
+                        COMMUNITY: 'Farmer Community',
+                        DISEASE_DETECTOR: 'Crop Doctor (Disease Detector)',
+                        SOIL: 'Soil Analysis / Health',
+                        YIELD: 'Yield Predictor',
+                        AREA_CALCULATOR: 'Area Calculator',
+                        PREMIUM: 'Premium Services',
+                        INNOVATION: 'Innovation Hub',
+                        SETTINGS: 'System Settings'
+                      }[id] || id;
+
+                      const moveUp = () => {
+                        if (index === 0) return;
+                        const newSeq = [...sequence];
+                        const temp = newSeq[index - 1];
+                        newSeq[index - 1] = newSeq[index];
+                        newSeq[index] = temp;
+                        setConfig({
+                          ...config,
+                          menuSettings: {
+                            sequence: newSeq,
+                            visibility
+                          }
+                        });
+                      };
+
+                      const moveDown = () => {
+                        if (index === sequence.length - 1) return;
+                        const newSeq = [...sequence];
+                        const temp = newSeq[index + 1];
+                        newSeq[index + 1] = newSeq[index];
+                        newSeq[index] = temp;
+                        setConfig({
+                          ...config,
+                          menuSettings: {
+                            sequence: newSeq,
+                            visibility
+                          }
+                        });
+                      };
+
+                      const toggleVisibility = () => {
+                        if (id === 'SETTINGS') return;
+                        setConfig({
+                          ...config,
+                          menuSettings: {
+                            sequence,
+                            visibility: {
+                              ...visibility,
+                              [id]: !isVisible
+                            }
+                          }
+                        });
+                      };
+
+                      return (
+                        <div key={id} className="flex items-center justify-between bg-black/30 px-4 py-2.5 border border-white/5 rounded-xl hover:border-emerald-500/25 transition">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-slate-500 font-mono w-6">{index + 1}</span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-semibold text-white">{name}</span>
+                              <span className="text-[10px] text-slate-500 font-mono -mt-0.5">{id}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={moveUp} 
+                              disabled={index === 0}
+                              className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-20 disabled:pointer-events-none transition"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button 
+                              onClick={moveDown} 
+                              disabled={index === sequence.length - 1}
+                              className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-20 disabled:pointer-events-none transition"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+
+                            <button 
+                              onClick={toggleVisibility}
+                              disabled={id === 'SETTINGS'}
+                              className={`p-1.5 rounded transition ${
+                                id === 'SETTINGS' ? 'text-slate-600 cursor-not-allowed' :
+                                isVisible ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                              }`}
+                            >
+                              {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── AI PROVIDERS ── */}
           {activeSubTab === 'ai' && (
@@ -785,7 +918,7 @@ export default function AdminConfigCenter({ passcode }: AdminConfigCenterProps) 
         </div>
 
         {/* Global Save Button (Exclude prompts/diagnostics/audit logs/backup tabs) */}
-        {['general', 'ai', 'secrets', 'firebase', 'notifications', 'features'].includes(activeSubTab) && (
+        {['general', 'menu', 'ai', 'secrets', 'firebase', 'notifications', 'features'].includes(activeSubTab) && (
           <div className="flex justify-end pt-6 border-t border-white/5 mt-6">
             <Button variant="primary" onClick={() => handleSave()} disabled={saving} className="flex items-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}

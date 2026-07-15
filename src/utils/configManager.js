@@ -107,6 +107,46 @@ const DEFAULT_CONFIG = {
     schemeMatcher: { version: '1.0', content: SCHEME_MATCHER_V1, history: [] },
     soilInterpreter: { version: '1.0', content: SOIL_INTERPRETER_V1, history: [] },
     agriExpert: { version: '1.0', content: AGRI_EXPERT_V1, history: [] }
+  },
+  menuSettings: {
+    sequence: [
+      'DASHBOARD',
+      'LANDING',
+      'WEATHER',
+      'CALENDAR',
+      'SABJI_MANDI',
+      'CHAT',
+      'AGRI_KNOWLEDGE',
+      'SCHEMES',
+      'MARKET',
+      'COMMUNITY',
+      'DISEASE_DETECTOR',
+      'SOIL',
+      'YIELD',
+      'AREA_CALCULATOR',
+      'PREMIUM',
+      'INNOVATION',
+      'SETTINGS'
+    ],
+    visibility: {
+      DASHBOARD: true,
+      LANDING: true,
+      WEATHER: true,
+      CALENDAR: true,
+      SABJI_MANDI: true,
+      CHAT: true,
+      AGRI_KNOWLEDGE: true,
+      SCHEMES: true,
+      MARKET: true,
+      COMMUNITY: true,
+      DISEASE_DETECTOR: true,
+      SOIL: true,
+      YIELD: true,
+      AREA_CALCULATOR: true,
+      PREMIUM: true,
+      INNOVATION: true,
+      SETTINGS: true
+    }
   }
 };
 
@@ -256,6 +296,13 @@ export function saveConfig(newConfig, actor = 'System') {
         changes.push({ field: `features.${key}`, oldValue: String(oldVal), newValue: String(newVal) });
       }
     });
+  }
+
+  // Track menuSettings changes
+  if (newConfig.menuSettings && currentConfig.menuSettings) {
+    if (JSON.stringify(newConfig.menuSettings) !== JSON.stringify(currentConfig.menuSettings)) {
+      changes.push({ field: 'menuSettings', oldValue: 'custom order/visibility', newValue: 'updated order/visibility' });
+    }
   }
 
   // Track prompt changes

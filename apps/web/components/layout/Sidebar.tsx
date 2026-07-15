@@ -105,7 +105,7 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     }
   };
 
-  const mainItems = [
+  const ALL_ITEMS = [
     { id: 'DASHBOARD', icon: Home, label: t.home, color: 'emerald' },
     { id: 'LANDING', icon: Globe, label: t.landing, color: 'blue' },
     { id: 'WEATHER', icon: CloudSun, label: t.weather, color: 'amber' },
@@ -116,9 +116,6 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'SCHEMES', icon: Landmark, label: t.govtHelp, color: 'cyan' },
     { id: 'MARKET', icon: Store, label: t.marketRates, color: 'violet' },
     { id: 'COMMUNITY', icon: Users, label: t.community, color: 'blue' },
-  ].filter(item => isEnabled(item.id));
-
-  const moreItems = [
     { id: 'DISEASE_DETECTOR', icon: ScanLine, label: t.diseaseDetector, color: 'rose' },
     { id: 'SOIL', icon: FlaskConical, label: t.soilAnalysis, color: 'lime' },
     { id: 'YIELD', icon: TrendingUp, label: t.yieldPredict, color: 'fuchsia' },
@@ -126,7 +123,29 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
     { id: 'PREMIUM', icon: Crown, label: t.premium, color: 'amber' },
     { id: 'INNOVATION', icon: Cpu, label: t.innovation, color: 'cyan' },
     { id: 'SETTINGS', icon: Settings, label: t.settings, color: 'emerald' },
-  ].filter(item => isEnabled(item.id));
+  ];
+
+  const menuConfig = platformConfig?.menuSettings || {
+    sequence: ALL_ITEMS.map(i => i.id),
+    visibility: ALL_ITEMS.reduce((acc, i) => ({ ...acc, [i.id]: true }), {})
+  };
+
+  const activeSequence = menuConfig.sequence || ALL_ITEMS.map(i => i.id);
+  const activeVisibility = menuConfig.visibility || {};
+
+  const visibleItems = ALL_ITEMS.filter(item => {
+    if (item.id === 'SETTINGS') return true;
+    return activeVisibility[item.id] !== false && isEnabled(item.id);
+  });
+
+  const sortedItems = [...visibleItems].sort((a, b) => {
+    const idxA = activeSequence.indexOf(a.id);
+    const idxB = activeSequence.indexOf(b.id);
+    return (idxA > -1 ? idxA : 99) - (idxB > -1 ? idxB : 99);
+  });
+
+  const mainItems = sortedItems.slice(0, 10);
+  const moreItems = sortedItems.slice(10);
 
   return (
     <>
