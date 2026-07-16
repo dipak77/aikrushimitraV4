@@ -5,7 +5,7 @@ import {
   Droplets, Upload, Brain, FileText, TrendingUp, ChevronRight, Check, Tractor,
   Users, ShieldCheck, Quote, Smartphone, QrCode, Apple, Play, Phone, Mail,
   MapPin, Headphones, X, Send, Loader2, ChevronDown, ListChecks, Mic, LayoutGrid, Bell,
-  Map as MapIcon, Heart, Clock as ClockIcon, Crosshair, Navigation, Zap
+  Map as MapIcon, Heart, Clock as ClockIcon, Crosshair, Navigation, Zap, Globe, WifiOff
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 import { LANGUAGES, TRANSLATIONS } from '../../constants';
@@ -122,6 +122,88 @@ export default function LandingPage({ onGetStarted, lang, setLang, user }: Landi
   const data = getLandingData(lang);
   const l = data.labels;
   const isMr = lang === 'mr'; const isHi = lang === 'hi';
+
+  const [activeFeature, setActiveFeature] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const getCoordinates = (index: number) => {
+    const angle = (index * 60) - 90; // Starting from Top (-90 deg)
+    const rad = (angle * Math.PI) / 180;
+    const radius = isMobile ? 120 : 190;
+    const center = isMobile ? 170 : 250;
+    return {
+      x: center + radius * Math.cos(rad),
+      y: center + radius * Math.sin(rad)
+    };
+  };
+
+  const currentCoordinates = getCoordinates(activeFeature);
+
+  const hubFeatures = [
+    {
+      icon: ShieldCheck,
+      titleEn: 'Disease & Pest Detection',
+      titleHi: 'बीमारी और कीट पहचान',
+      titleMr: 'रोग आणि कीड नियंत्रण',
+      descEn: 'Diagnose leaf diseases and pest infestations instantly from uploaded photos, getting biological and chemical remedies.',
+      descHi: 'अपलोड किए गए पत्तों या फसलों के चित्रों से तुरंत रोग और कीटों की पहचान करें और उपचार के वैज्ञानिक सुझाव प्राप्त करें।',
+      descMr: 'अपलोड केलेल्या पानाच्या किंवा पिकाच्या फोटोवरून रोगांचे अचूक निदान करा आणि जैविक व रासायनिक उपाय मिळवा.'
+    },
+    {
+      icon: LineChart,
+      titleEn: 'Market Intelligence',
+      titleHi: 'बाजार बुद्धि',
+      titleMr: 'बाजार भाव विश्लेषण',
+      descEn: 'Track live Mandi rates and analyze historical trends using smart charts to determine the best times to sell.',
+      descHi: 'विभिन्न मंडियों की लाइव दरों को ट्रैक करें और बेचने के सर्वोत्तम समय का निर्णय लेने के लिए ऐतिहासिक मूल्य प्रवृत्तियों का विश्लेषण करें।',
+      descMr: 'विविध मंड्यांमधील थेट बाजार भाव तपासा आणि पीक विक्रीच्या सर्वोत्तम वेळेचा निर्णय घेण्यासाठी ऐतिहासिक आलेखाचे विश्लेषण करा.'
+    },
+    {
+      icon: CloudSun,
+      titleEn: 'Weather Analytics',
+      titleHi: 'मौसम बुद्धि',
+      titleMr: 'हवामान अंदाज',
+      descEn: 'Receive highly accurate, location-specific forecasts and actionable farming weather advisories for irrigation and spraying.',
+      descHi: 'सिंचाई और छिड़काव के लिए स्थान-विशिष्ट अत्यंत सटीक मौसम पूर्वानुमान और कृषि मौसम संबंधी अलर्ट प्राप्त करें।',
+      descMr: 'पिकांवर औषध फवारणी आणि सिंचनाच्या अचूक नियोजनासाठी तुमच्या गावातील हवामानाचा अचूक अंदाज आणि अलर्ट मिळवा.'
+    },
+    {
+      icon: ListChecks,
+      titleEn: 'Crop Scheduler',
+      titleHi: 'कार्य योजना',
+      titleMr: 'कामकाज नियोजन',
+      descEn: 'Generate fully customized sowing-to-harvest schedules for your chosen crops to optimize fertilization and care.',
+      descHi: 'उर्वरक प्रबंधन और देखभाल को अनुकूलित करने के लिए चुनी गई फसलों के लिए बोने से लेकर कटाई तक का एक व्यक्तिगत कैलेंडर बनाएं।',
+      descMr: 'तुमच्या मुख्य पिकासाठी पेरणीपासून ते कापणीपर्यंतच्या सर्व शेती कामांचे सविस्तर वेळापत्रक आणि स्मरणपत्रे तयार करा.'
+    },
+    {
+      icon: FlaskConical,
+      titleEn: 'Soil Interpreter',
+      titleHi: 'मिट्टी बुद्धि',
+      titleMr: 'माती परीक्षण',
+      descEn: 'Interpret soil laboratory reports with AI explanations and customized NPK fertilizer recommendation schemes.',
+      descHi: 'मिट्टी परीक्षण प्रयोगशाला रिपोर्टों को सरल स्पष्टीकरण के साथ समझें और व्यक्तिगत NPK उर्वरक मात्रा की गणना करें।',
+      descMr: 'माती तपासणी रिपोर्ट सहजपणे समजून घ्या आणि पिकांच्या गरजेनुसार आवश्यक खत व औषध मात्रांचे अचूक प्रमाण काढा.'
+    },
+    {
+      icon: Leaf,
+      titleEn: 'Crop Identifier',
+      titleHi: 'फसल पहचान',
+      titleMr: 'पीक ओळख',
+      descEn: 'Analyze plant profiles and growth stages from leaf imagery, verifying species, health scores, and nutrition parameters.',
+      descHi: 'पत्ती के चित्रों से पौधे की प्रजातियों और विकास चरणों का विश्लेषण करें और स्वास्थ्य स्कोर और पोषण मापदंडों की पुष्टि करें।',
+      descMr: 'पानाच्या फोटोवरून पिकाची जात, वाढीची अवस्था, आरोग्य स्कोर आणि आवश्यक पोषण घटकांचे अचूक विश्लेषण मिळवा.'
+    }
+  ];
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 20);
@@ -287,6 +369,171 @@ export default function LandingPage({ onGetStarted, lang, setLang, user }: Landi
             </motion.div>
           </div>
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-8">{data.heroStats.map(s => <div key={s.label}><div className="text-[28px] font-black tracking-tight bg-gradient-to-r from-emerald-300 to-lime-300 bg-clip-text text-transparent">{s.value}</div><div className="text-[12px] text-zinc-500 mt-1">{s.label}</div></div>)}</div>
+        </div>
+      </section>
+
+      {/* 4. AI AGRI INTELLIGENCE HUB (AI कृषि बुद्धिमत्ता केंद्र) */}
+      <section className="relative py-24 overflow-hidden border-b border-white/5 bg-[#030704]">
+        <div className="absolute inset-0 opacity-[0.02]" style={gridPattern} />
+        {/* Decorative background glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center">
+          {/* Header */}
+          <div className="max-w-3xl mx-auto mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isMr ? 'AI कृषी बुद्धिमत्ता केंद्र' : (isHi ? 'AI कृषि बुद्धिमत्ता केंद्र' : 'AI Agri Intelligence Hub')}</span>
+            </div>
+            
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+              {isMr ? 'एक प्लॅटफॉर्म, अमर्याद शक्यता' : (isHi ? 'एक प्लेटफ़ॉर्म, असीमित संभावनाएं' : 'One Platform, Limitless Possibilities')}
+            </h2>
+            
+            <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+              {isMr ? '६ एआय-संचालित वैशिष्ट्ये एकाच ठिकाणी' : (isHi ? '6 AI-संचालित सुविधाएं एक केंद्रीय हब में' : '6 AI-driven features in a single central hub')}
+            </p>
+          </div>
+
+          {/* Wheel Layout */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-12 max-w-6xl mx-auto">
+            
+            {/* The interactive SVG Wheel */}
+            <div className="relative w-[340px] h-[340px] sm:w-[500px] sm:h-[500px] flex items-center justify-center select-none scale-95 sm:scale-100 transition-all">
+              
+              {/* Central Glowing AI Orb */}
+              <div className="relative w-36 h-36 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br from-emerald-500/15 via-teal-900/30 to-lime-500/15 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_60px_rgba(16,185,129,0.2)]">
+                <div className="absolute inset-1 rounded-full border border-dashed border-emerald-400/20 animate-spin-slow" />
+                <div className="absolute inset-3 rounded-full border border-dotted border-emerald-300/25 animate-spin-reverse" />
+                
+                <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-slate-950/90 border border-emerald-500/30 flex flex-col items-center justify-center text-center p-2 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition duration-500" />
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-1 text-emerald-400 border border-emerald-500/20">
+                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-slate-500 uppercase">KRUSHI CORE</span>
+                  <span className="text-base sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-lime-300">★ AI ★</span>
+                </div>
+              </div>
+
+              {/* Orbital Background Track */}
+              <div className="absolute w-[240px] h-[240px] sm:w-[380px] sm:h-[380px] rounded-full border border-dashed border-emerald-500/10 animate-spin-slow pointer-events-none" />
+
+              {/* Dynamic SVG Connector Line */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                <g className="transition-all duration-500">
+                  <line 
+                    x1="50%" 
+                    y1="50%" 
+                    x2={currentCoordinates.x} 
+                    y2={currentCoordinates.y} 
+                    className="stroke-emerald-400 stroke-2"
+                    strokeDasharray="6,6"
+                    style={{ filter: 'drop-shadow(0 0 6px rgba(52,211,153,0.8))' }}
+                  />
+                  <circle 
+                    cx={currentCoordinates.x} 
+                    cy={currentCoordinates.y} 
+                    r="4" 
+                    className="fill-emerald-400" 
+                  />
+                </g>
+              </svg>
+
+              {/* Floating Node Items */}
+              {hubFeatures.map((feat, index) => {
+                const angle = (index * 60) - 90; // Starting from Top (-90 deg)
+                const rad = (angle * Math.PI) / 180;
+                
+                // Adaptive layout radius based on screens
+                const radius = isMobile ? 120 : 190;
+                
+                // Offset calculation from center (which is 50%, 50%)
+                const leftOffset = radius * Math.cos(rad);
+                const topOffset = radius * Math.sin(rad);
+
+                const active = activeFeature === index;
+                const Icon = feat.icon;
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setActiveFeature(index)}
+                    onMouseEnter={() => setActiveFeature(index)}
+                    style={{
+                      position: 'absolute',
+                      left: `calc(50% + ${leftOffset}px - 28px)`,
+                      top: `calc(50% + ${topOffset}px - 28px)`,
+                      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-300 z-20 ${
+                      active 
+                        ? 'bg-emerald-500 border-emerald-400 text-black scale-110 shadow-[0_0_25px_rgba(52,211,153,0.6)]' 
+                        : 'bg-[#0f1d12]/90 border-emerald-500/20 text-emerald-400/80 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    <Icon size={22} className={active ? 'text-black' : 'text-emerald-400 group-hover:scale-105'} />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Description Info Card */}
+            <div className="lg:max-w-md w-full text-left space-y-6">
+              <div className="bg-[#0f1a0f]/60 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-[28px] shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeFeature}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        {React.createElement(hubFeatures[activeFeature].icon, { size: 20 })}
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">
+                          {lang === 'mr' ? hubFeatures[activeFeature].titleMr : (lang === 'hi' ? hubFeatures[activeFeature].titleHi : hubFeatures[activeFeature].titleEn)}
+                        </h4>
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+                          {hubFeatures[activeFeature].titleEn}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed min-h-[72px]">
+                      {lang === 'mr' ? hubFeatures[activeFeature].descMr : (lang === 'hi' ? hubFeatures[activeFeature].descHi : hubFeatures[activeFeature].descEn)}
+                    </p>
+
+                    <button 
+                      onClick={handleTryAI}
+                      className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold hover:underline pt-2 group/btn"
+                    >
+                      <span>{isMr ? 'आता तपासा' : (isHi ? 'अभी जांचें' : 'Try Feature')}</span>
+                      <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Bottom glass features bar */}
+              <div className="rounded-[20px] bg-slate-950/60 border border-white/5 p-4 flex justify-between items-center text-[11px] sm:text-xs text-zinc-400">
+                <span className="flex items-center gap-1.5"><Sparkles size={13} className="text-emerald-400" /> 24x7 AI</span>
+                <span className="text-white/10">|</span>
+                <span className="flex items-center gap-1.5"><Mic size={13} className="text-cyan-400" /> {isMr ? 'व्हॉइस' : (isHi ? 'वॉइस' : 'Voice')}</span>
+                <span className="text-white/10">|</span>
+                <span className="flex items-center gap-1.5"><Globe size={13} className="text-amber-400" /> 12 {isMr ? 'भाषा' : (isHi ? 'भाषाएँ' : 'Languages')}</span>
+                <span className="text-white/10">|</span>
+                <span className="flex items-center gap-1.5"><WifiOff size={13} className="text-rose-400" /> {isMr ? 'ऑफलाइन' : (isHi ? 'ऑफ़लाइन' : 'Offline')}</span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
