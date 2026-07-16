@@ -10,7 +10,7 @@ import {
   Globe, WifiOff, ShieldCheck
 } from 'lucide-react';import { triggerHaptic } from '../../utils/common';
 import { getApiUrl } from '../../services/geminiService';
-import { AGENTS } from '../../lib/krushi/rag/agents';
+import { orchestrate, AGENTS } from '../../lib/krushi/rag/agents';
 
 interface Message {
   id: string;
@@ -282,14 +282,91 @@ const ChatView = ({ lang, user, onBack }: { lang: Language; user: UserProfile; o
       ]);
 
     } catch (e) {
-      console.error(e);
-      const errorMessage: Message = {
-        id: `msg_err_${Date.now()}`,
-        role: 'model',
-        text: lang === 'mr' ? "क्षमा करा, RAG सर्व्हरशी संपर्क साधता आला नाही. ऑफलाइन मोड निवडून प्रयत्न करा." : "Error calling RAG server. Toggle local mode and try again.",
-        timestamp: Date.now()
-      };
-      setMessages([...newMessages, errorMessage]);
+      console.warn("RAG API failed, executing client-side local fallback:", e);
+      try {
+        const orchestrated = orchestrate(
+          queryText,
+          {
+            name: user.name || 'Farmer',
+            location: user.village || '',
+            state: 'Maharashtra',
+            language: lang,
+            crops: user.crop ? [user.crop] : []
+          },
+          newMessages.map(m => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: m.text
+          }))
+        );
+
+        const selectedAgent = orchestrated.selectedAgent;
+        let localAnswer = '';
+        if (orchestrated.ragResults.length > 0) {
+          const doc = orchestrated.ragResults[0].doc;
+          localAnswer = lang === 'mr'
+            ? `off-line/स्थानिक RAG मोडमधील शोध परिणाम:\n\n**${doc.titleHi || doc.title}**\n\n${doc.content}\n\n*${doc.summary}*`
+            : lang === 'hi'
+            ? `ऑफलाइन/स्थानीय RAG मोड का खोज परिणाम:\n\n**${doc.titleHi || doc.title}**\n\n${doc.content}\n\n*${doc.summary}*`
+            : `Offline/local RAG search result:\n\n**${doc.title}**\n\n${doc.content}\n\n*${doc.summary}*`;
+        } else {
+          localAnswer = lang === 'mr'
+            ? `off-line शोध: या विषयावर स्थानिक ज्ञानकोशामध्ये कोणतीही थेट माहिती सापडली नाही.`
+            : lang === 'hi'
+            ? `ऑफलाइन खोज: इस विषय पर स्थानीय ज्ञानकोश में कोई सीधी जानकारी नहीं मिली।`
+            : `Offline Search: No direct information found on this topic in the local database.`;
+        }
+
+        const fallbackOrch = {
+          intent: orchestrated.intent,
+          selectedAgent: {
+            id: selectedAgent.id,
+            name: selectedAgent.name,
+            nameHi: selectedAgent.nameHi,
+            icon: selectedAgent.icon,
+            color: selectedAgent.color
+          },
+          steps: orchestrated.steps,
+          confidence: orchestrated.confidence,
+          ragResults: orchestrated.ragResults.map((r: any) => ({
+            id: r.doc.id,
+            title: r.doc.titleHi || r.doc.title,
+            source: r.doc.metadata.source,
+            confidence: r.doc.confidenceScore,
+            score: Math.round(r.score * 100) / 100
+          })),
+          citations: orchestrated.citations,
+          detectedEntities: orchestrated.context.relatedEntities.map((ent: any) => ({
+            id: ent.id,
+            name: ent.canonicalName,
+            type: ent.type
+          }))
+        };
+
+        const assistantMessage: Message = {
+          id: `msg_ai_local_${Date.now()}`,
+          role: 'model',
+          text: localAnswer,
+          timestamp: Date.now(),
+          orchestration: fallbackOrch
+        };
+
+        const finalMessages = [...newMessages, assistantMessage];
+        setMessages(finalMessages);
+        currentSession.messages = finalMessages;
+        saveSessions([
+          currentSession,
+          ...sessions.filter(s => s.id !== activeSessionId)
+        ]);
+      } catch (errInner) {
+        console.error("Local RAG engine failure", errInner);
+        const errorMessage: Message = {
+          id: `msg_err_${Date.now()}`,
+          role: 'model',
+          text: lang === 'mr' ? "क्षमा करा, RAG सर्व्हरशी संपर्क साधता आला नाही. ऑफलाइन मोड निवडून प्रयत्न करा." : "Error calling RAG server. Toggle local mode and try again.",
+          timestamp: Date.now()
+        };
+        setMessages([...newMessages, errorMessage]);
+      }
     } finally {
       setLoading(false);
     }
