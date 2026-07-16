@@ -296,7 +296,57 @@ export default function LandingPage({ onGetStarted, lang, setLang, user }: Landi
           <div className="flex flex-wrap items-end justify-between gap-4 mb-8"><div><div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-bold tracking-widest uppercase text-emerald-300"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE INTELLIGENCE</div><h2 className="mt-3 text-[32px] font-black tracking-tight">Live Location • Satellite • Weather</h2><p className="mt-1 text-sm text-zinc-400">Real GPS, Esri World Imagery, IMD hyperlocal - all in one glass dashboard</p></div><div className="flex gap-2"><button onClick={getLiveLocation} className="px-4 h-9 rounded-full bg-white text-black text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-100"><Navigation className="w-3.5 h-3.5" />{locStatus === 'fetching' ? 'Locating...' : 'Get Live Location'}</button><span className="px-3 h-9 inline-flex items-center rounded-full bg-white/5 border border-white/10 text-[11px] text-zinc-400">Accuracy ±{liveLoc.acc}m</span></div></div>
           <div className="grid lg:grid-cols-12 gap-5">
             <div className="lg:col-span-5 rounded-[24px] overflow-hidden border border-white/10 bg-[#0d1a0d] p-1.5"><div className="rounded-[18px] overflow-hidden bg-[#0a140a] h-[340px] relative" id="liveMapLive" /><div className="p-3 flex justify-between text-[11px] text-zinc-400"><span>Lat {liveLoc.lat.toFixed(6)} • Lng {liveLoc.lng.toFixed(6)}</span><span className="text-emerald-400">● GPS Active</span></div></div>
-            <div className="lg:col-span-7 rounded-[24px] overflow-hidden border border-white/10 bg-[#0d1a0d] p-1.5"><div className="rounded-[18px] overflow-hidden bg-[#0a140a] h-[340px] relative" id="satMapLive"><div className="absolute top-3 left-3 z-[400] flex gap-1.5">{['True Color', 'NDVI', 'Moisture'].map(lay => <button key={lay} onClick={() => setSatLayer(lay)} className={`px-3 py-1.5 rounded-full text-[11px] font-medium backdrop-blur border transition ${satLayer === lay ? 'bg-white text-black border-white' : 'bg-black/40 text-white border-white/15 hover:bg-black/60'}`}>{lay}</button>)}</div>{satLayer !== 'True Color' && (<div className="absolute inset-0 z-[300] pointer-events-none opacity-60" style={{ background: satLayer === 'NDVI' ? 'radial-gradient(ellipse at 30% 30%, rgba(132,204,2,0.9), transparent 60%), linear-gradient(180deg, rgba(34,197,94,0.18), transparent)' : satLayer === 'Moisture' ? 'radial-gradient(ellipse at 50% 50%, rgba(59,130,246,0.65), transparent 70%)' : 'radial-gradient(ellipse at 40% 40%, rgba(249,115,22,0.8), transparent 60%)' }} />)}</div><div className="p-3 flex justify-between text-[11px] text-zinc-400"><span>Esri World Imagery • {satLayer} • Zoom 16</span><span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />Last sync 2m ago</span></div></div>
+            <div className="lg:col-span-7 rounded-[24px] overflow-hidden border border-white/10 bg-[#0d1a0d] p-1.5">
+              <div className="rounded-[18px] overflow-hidden bg-[#0a140a] h-[340px] relative">
+                <img 
+                  src="/landing/satellite-view.jpg" 
+                  alt="Satellite Farm View" 
+                  className="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105"
+                />
+                
+                {/* Visual scanning overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#070a07]/60 via-transparent to-black/20 pointer-events-none" />
+                
+                {/* Target cursor scanner marker */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                  <div className="w-24 h-24 rounded-full border border-emerald-400/30 animate-ping absolute" />
+                  <div className="w-16 h-16 rounded-full border border-emerald-400/50 bg-emerald-400/5 flex items-center justify-center">
+                    <Crosshair className="w-6 h-6 text-emerald-400/80 animate-pulse" />
+                  </div>
+                </div>
+
+                <div className="absolute top-3 left-3 z-[400] flex gap-1.5">
+                  {['True Color', 'NDVI', 'Moisture'].map(lay => (
+                    <button 
+                      key={lay} 
+                      onClick={() => setSatLayer(lay)} 
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium backdrop-blur border transition ${
+                        satLayer === lay 
+                          ? 'bg-emerald-500 text-black border-emerald-500 font-bold' 
+                          : 'bg-black/50 text-white border-white/15 hover:bg-black/75'
+                      }`}
+                    >
+                      {lay}
+                    </button>
+                  ))}
+                </div>
+
+                {satLayer !== 'True Color' && (
+                  <div className="absolute inset-0 z-[300] pointer-events-none opacity-50 transition-all duration-300" style={{ 
+                    background: satLayer === 'NDVI' 
+                      ? 'radial-gradient(circle at 40% 40%, rgba(74,222,128,0.4) 0%, rgba(34,197,94,0.15) 50%, transparent 100%)' 
+                      : 'radial-gradient(circle at 60% 50%, rgba(59,130,246,0.45) 0%, rgba(29,78,216,0.2) 60%, transparent 100%)' 
+                  }} />
+                )}
+              </div>
+              <div className="p-3 flex justify-between text-[11px] text-zinc-400">
+                <span>AI Farm Analysis • {satLayer} • Hyperlocal</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  NDVI Scan Active
+                </span>
+              </div>
+            </div>
           </div>
           <div className="mt-4 grid md:grid-cols-3 gap-3 text-[12px]"><div className="rounded-full bg-white/[0.04] border border-white/10 px-4 py-2.5 flex justify-between"><span className="text-zinc-400">NDVI</span><b className="text-lime-300">0.82 Healthy</b></div><div className="rounded-full bg-white/[0.04] border border-white/10 px-4 py-2.5 flex justify-between"><span className="text-zinc-400">Moisture</span><b>68% • Good</b></div><div className="rounded-full bg-white/[0.04] border border-white/10 px-4 py-2.5 flex justify-between"><span className="text-zinc-400">Field</span><b>2.4 acre • Pune</b></div></div>
         </div>
