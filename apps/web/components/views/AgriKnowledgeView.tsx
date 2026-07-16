@@ -1,404 +1,493 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Language } from '../../types';
-import { CATEGORIES, KnowledgeItem } from '../../data/knowledge';
-import { fetchCrops, fetchContent, fetchSchemes } from '../../services/dbService';
 import {
-  Clock, Droplets, Sun, TrendingUp, IndianRupee, Percent, Sprout,
-  Search, X, Wheat, Settings, Milk, Landmark, LayoutGrid, BookOpen,
-  Tag, Info, ChevronRight, ArrowLeft, Sparkles, Leaf
+  Search, BookOpen, Network, Upload, Filter, FileText, Tag,
+  CheckCircle2, AlertTriangle, Database, Sparkles, ChevronDown, X,
+  MapPin, Calendar, Shield, Layers, ArrowLeft
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
+import { KNOWLEDGE_BASE } from '../../lib/krushi/rag/knowledge-base';
+import {
+  CROPS, DISEASES, FERTILIZERS, getRelatedEntities,
+  CONFIDENCE_HI, STAGES_HI, SEASONS_HI, SOIL_TYPES_HI,
+} from '../../lib/krushi/rag/taxonomy';
+import { hybridSearch, autoTagDocument } from '../../lib/krushi/rag/rag-engine';
 
-const iconMap: Record<string, React.ReactNode> = {
-  clock: <Clock className="w-3.5 h-3.5" />,
-  droplet: <Droplets className="w-3.5 h-3.5" />,
-  sun: <Sun className="w-3.5 h-3.5" />,
-  'trending-up': <TrendingUp className="w-3.5 h-3.5" />,
-  'indian-rupee': <IndianRupee className="w-3.5 h-3.5" />,
-  percent: <Percent className="w-3.5 h-3.5" />,
-  sprout: <Sprout className="w-3.5 h-3.5" />,
-};
+type Tab = 'browse' | 'search' | 'graph' | 'ingest';
 
-const catIconMap: Record<string, React.ReactNode> = {
-  grid: <LayoutGrid className="w-4 h-4" />,
-  wheat: <Wheat className="w-4 h-4" />,
-  settings: <Settings className="w-4 h-4" />,
-  milk: <Milk className="w-4 h-4" />,
-  landmark: <Landmark className="w-4 h-4" />,
-};
-
-function CategoryFilter({ selected, onSelect, lang }: {
-  selected: string;
-  onSelect: (id: string) => void;
+export function AgriKnowledgeView({ lang, onBack, onSelect }: {
   lang: Language;
+  onBack: () => void;
+  onSelect: (item: any) => void;
 }) {
-  const getLabel = (obj: any) => lang === 'mr' ? obj.mr : (obj.hi || obj.en);
+  const [tab, setTab] = useState<Tab>('browse');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
+  const [filterConfidence, setFilterConfidence] = useState<string>('all');
+  const [ingestContent, setIngestContent] = useState('');
+  const [ingestTitle, setIngestTitle] = useState('');
+  const [ingestResult, setIngestResult] = useState<any | null>(null);
 
-  return (
-    <div className="flex gap-2.5 overflow-x-auto pb-4 px-1 hide-scrollbar snap-x">
-      {CATEGORIES.map((cat) => {
-        const isActive = selected === cat.id;
-        return (
-          <button
-            key={cat.id}
-            onClick={() => { onSelect(cat.id); triggerHaptic(); }}
-            className={`snap-start flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
-              isActive
-                ? `bg-gradient-to-br ${cat.color} text-white shadow-lg shadow-${cat.color.split('-')[1]}/30 scale-105 ring-2 ring-white/50`
-                : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:text-gray-800 hover:shadow-md hover:border-gray-200'
-            }`}
-          >
-            {catIconMap[cat.icon]}
-            <span>{getLabel(cat.label)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+  const filteredDocs = useMemo(() => {
+    let docs = KNOWLEDGE_BASE;
+    if (filterConfidence !== 'all') {
+      docs = docs.filter((d) => d.confidence === filterConfidence);
+    }
+    return docs;
+  }, [filterConfidence]);
 
-function StatBadge({ stat, lang }: { stat: KnowledgeItem['stats'][0]; lang: Language }) {
-  const label = lang === 'mr' ? stat.label.mr : stat.label.en;
-  
-  return (
-    <div className="flex items-center gap-2.5 bg-gray-50/80 hover:bg-green-50/50 transition-colors rounded-xl px-3 py-2.5 border border-gray-100/50">
-      <div className="p-1.5 bg-white rounded-lg shadow-sm text-green-600">
-        {iconMap[stat.icon] || <Info className="w-3.5 h-3.5" />}
-      </div>
-      <div className="flex flex-col">
-        <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">{label}</span>
-        <span className="text-xs font-bold text-gray-700">{stat.value}</span>
-      </div>
-    </div>
-  );
-}
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    triggerHaptic('medium');
+    setTimeout(() => {
+      const results = hybridSearch(searchQuery, undefined, 10);
+      setSearchResults(results);
+      setSearching(false);
+    }, 500);
+  };
 
-function CropCard({ item, lang, onClick }: { item: KnowledgeItem; lang: Language; onClick: () => void }) {
-  const title = lang === 'mr' ? item.title.mr : (lang === 'hi' ? (item.title.hi || item.title.en) : item.title.en);
-  const subtitle = lang === 'mr' ? item.subtitle.mr : (lang === 'hi' ? (item.subtitle.hi || item.subtitle.en) : item.subtitle.en);
-  const category = CATEGORIES.find(c => c.id === item.category);
-  const categoryName = category ? (lang === 'mr' ? category.label.mr : category.label.en) : item.category;
+  const handleIngest = () => {
+    if (!ingestContent.trim() || !ingestTitle.trim()) return;
+    triggerHaptic('medium');
+    const tags = autoTagDocument(ingestContent);
+    setIngestResult(tags);
+  };
 
-  return (
-    <div
-      onClick={onClick}
-      className="group cursor-pointer bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-green-900/5 hover:border-green-200 transition-all duration-500 overflow-hidden flex flex-col h-full"
-    >
-      {/* Image Header */}
-      <div className="relative h-56 overflow-hidden">
-        <img
-          src={item.image}
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent opacity-80" />
-        
-        {/* Floating Category Badge */}
-        <div className="absolute top-4 right-4">
-          <div className="backdrop-blur-md bg-white/20 border border-white/30 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-xl">
-            {categoryName}
-          </div>
-        </div>
-
-        {/* Title Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="text-xl font-extrabold text-white leading-tight mb-1 drop-shadow-md">{title}</h3>
-          <p className="text-sm text-gray-200 line-clamp-1 font-medium">{subtitle}</p>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="p-5 flex-1 flex flex-col">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-2.5 mb-5">
-          {item.stats.slice(0, 4).map((stat, i) => (
-            <StatBadge key={i} stat={stat} lang={lang} />
-          ))}
-        </div>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 mt-auto">
-          {item.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-gray-100/80 text-gray-500 border border-gray-200/50">
-              <Tag className="w-3 h-3" />
-              {tag}
-            </span>
-          ))}
-          {item.tags.length > 3 && (
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-gray-50 text-gray-400 border border-gray-100">
-              +{item.tags.length - 3}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Footer / Read More */}
-      <div className="px-5 py-4 border-t border-gray-50 bg-gray-50/50 group-hover:bg-green-50/30 transition-colors flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-bold text-green-600">
-          <Sparkles className="w-4 h-4 text-green-500" />
-          <span>{lang === 'mr' ? 'संपूर्ण माहिती पहा' : 'View Full Guide'}</span>
-        </div>
-        <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors border border-gray-100 group-hover:border-transparent text-gray-400">
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatsOverview({ lang, items }: { lang: Language, items: KnowledgeItem[] }) {
-  const stats = [
-    { label: lang === 'mr' ? 'पिके' : 'Crops', count: items.filter(i => i.category === 'crop').length, icon: <Wheat className="w-5 h-5" />, color: 'from-emerald-400 to-green-600', bg: 'bg-emerald-50/50' },
-    { label: lang === 'mr' ? 'तंत्रज्ञान' : 'Tech', count: items.filter(i => i.category === 'tech').length, icon: <Settings className="w-5 h-5" />, color: 'from-blue-400 to-indigo-600', bg: 'bg-blue-50/50' },
-    { label: lang === 'mr' ? 'पशुपालन' : 'Livestock', count: items.filter(i => i.category === 'livestock').length, icon: <Milk className="w-5 h-5" />, color: 'from-amber-400 to-orange-500', bg: 'bg-amber-50/50' },
-    { label: lang === 'mr' ? 'योजना' : 'Schemes', count: items.filter(i => i.category === 'scheme').length, icon: <Landmark className="w-5 h-5" />, color: 'from-purple-400 to-violet-600', bg: 'bg-purple-50/50' },
+  const tabs: { id: Tab; labelHi: string; labelEn: string; icon: any }[] = [
+    { id: 'browse', labelHi: 'ब्राउज़ करें', labelEn: 'Browse Base', icon: BookOpen },
+    { id: 'search', labelHi: 'खोज (RAG)', labelEn: 'Search (RAG)', icon: Search },
+    { id: 'graph', labelHi: 'ज्ञान ग्राफ', labelEn: 'Knowledge Graph', icon: Network },
+    { id: 'ingest', labelHi: 'दस्तावेज़ जोड़ें', labelEn: 'Ingest Document', icon: Upload },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      {stats.map((s) => (
-        <div key={s.label} className={`relative overflow-hidden ${s.bg} rounded-[20px] p-5 border border-white shadow-sm hover:shadow-md transition-all group`}>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-125 transition-transform duration-500">
-            {React.cloneElement(s.icon as React.ReactElement, { className: 'w-24 h-24' })}
-          </div>
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-black text-gray-800 tracking-tight">{s.count}</p>
-              <p className="text-sm text-gray-500 font-bold mt-1">{s.label}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white shadow-lg shadow-${s.color.split('-')[1]}/30 group-hover:-translate-y-1 transition-transform`}>
-              {s.icon}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-import { useAppStore } from '../../store/useAppStore';
-import clsx from 'clsx';
-
-const AgriKnowledgeView = ({ lang, onBack, onSelect }: { lang: Language, onBack: () => void, onSelect: (item: KnowledgeItem) => void }) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const collapsed = useAppStore((state) => state.sidebarCollapsed);
-  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [cropsData, contentData, schemesData] = await Promise.all([
-          fetchCrops(),
-          fetchContent(),
-          fetchSchemes()
-        ]);
-        
-        const normalizeText = (val: any) => {
-          if (!val) return { mr: '', en: '' };
-          if (typeof val === 'string') return { mr: val, en: val };
-          return { mr: val.mr || val.en || '', en: val.en || val.mr || '' };
-        };
-
-        const cropsMapped = (cropsData || []).map((c: any) => ({
-          ...c,
-          category: 'crop',
-          title: normalizeText(c.title || c.name),
-          subtitle: normalizeText(c.subtitle || c.scientificName),
-          stats: Array.isArray(c.stats) ? c.stats : [],
-          tags: Array.isArray(c.tags) ? c.tags : []
-        }));
-        
-        const contentMapped = (contentData || []).map((c: any) => ({
-          ...c,
-          title: normalizeText(c.title),
-          subtitle: normalizeText(c.subtitle),
-          stats: Array.isArray(c.stats) ? c.stats : [],
-          tags: Array.isArray(c.tags) ? c.tags : []
-        }));
-        
-        const schemesMapped = (schemesData || []).map((s: any) => ({
-          ...s,
-          category: 'scheme',
-          title: normalizeText(s.title || s.name),
-          subtitle: normalizeText(s.subtitle || s.benefits),
-          stats: Array.isArray(s.stats) ? s.stats : [],
-          tags: Array.isArray(s.tags) ? s.tags : []
-        }));
-        
-        setKnowledgeBase([...cropsMapped, ...contentMapped, ...schemesMapped] as any);
-      } catch (err) {
-        console.error("Failed to load knowledge hub data from Firestore:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
-
-  const filtered = knowledgeBase.filter((item) => {
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const query = searchQuery.toLowerCase();
-    const titleObj = item.title || { mr: '', en: '' };
-    const titleEn = (titleObj.en || '').toLowerCase();
-    const titleMr = (titleObj.mr || '').toLowerCase();
-    const titleHi = (titleObj.hi || '').toLowerCase();
-    const tags = Array.isArray(item.tags) ? item.tags : [];
-    
-    return matchesCategory && (
-      !query || 
-      titleEn.includes(query) || 
-      titleMr.includes(query) || 
-      titleHi.includes(query) || 
-      tags.some(t => String(t).toLowerCase().includes(query))
-    );
-  });
-
-  return (
-    <div className={clsx("h-full bg-[#f8fafc] flex flex-col animate-fade-in transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
-      {/* Premium Hero Banner */}
-      <div className="relative bg-gray-900 shrink-0 rounded-b-[40px] shadow-xl z-10">
-        <div className="absolute inset-0 overflow-hidden rounded-b-[40px]">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-800 via-emerald-700 to-teal-900 opacity-90" />
-          {/* Animated Background Elements */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000" />
-        </div>
-        
-        {/* Top Nav */}
-        <div className="absolute top-4 left-4 z-20 pt-safe-top">
-            <button 
-                onClick={() => { onBack(); triggerHaptic(); }} 
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:scale-105 transition-all shadow-lg"
-            >
-                <ArrowLeft size={20} />
-            </button>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16 relative pt-safe-top mt-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-green-100 text-xs font-bold uppercase tracking-widest mb-4">
-                <Leaf className="w-3.5 h-3.5" />
-                {lang === 'mr' ? 'स्मार्ट शेती ' : 'Smart Farming'}
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight">
-                {lang === 'mr' ? 'कृषी ज्ञानकोश' : 'Agricultural Knowledge Base'}
-              </h1>
-              <p className="text-emerald-100/80 mt-3 text-sm sm:text-base md:text-lg font-medium max-w-xl leading-relaxed">
-                {lang === 'mr'
-                  ? 'पिके, आधुनिक तंत्रज्ञान, पशुपालन आणि सरकारी योजनांची अद्ययावत माहिती मिळवा.'
-                  : 'Access up-to-date insights on crops, modern tech, livestock, and government schemes.'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Search Bar (Overlapping) */}
-        <div className="absolute -bottom-7 left-0 right-0 px-5 sm:px-8 max-w-7xl mx-auto">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-green-400 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity" />
-            <div className="relative bg-white/95 backdrop-blur-xl border border-white rounded-2xl shadow-lg flex items-center p-2">
-              <div className="p-3 text-gray-400">
-                <Search className="w-5 h-5" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === 'mr' ? 'पीक, तंत्रज्ञान किंवा योजना शोधा...' : 'Search crops, tech, or schemes...'}
-                className="flex-1 bg-transparent text-gray-700 placeholder-gray-400 font-medium outline-none pr-4 w-full"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')} 
-                  className="p-2 mr-1 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
+    <div className="min-h-screen text-slate-100 p-4 sm:p-6 bg-[#030704]">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { triggerHaptic('light'); onBack(); }}
+            className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:border-emerald-500/30 transition-all flex-shrink-0"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+              <Database className="w-5 h-5 text-emerald-400" />
+              <span>{lang === 'mr' ? 'ज्ञान बुद्धिमत्ता केंद्र' : (lang === 'hi' ? 'ज्ञान बुद्धिमत्ता केंद्र' : 'Knowledge Intelligence Center')}</span>
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              RAG-powered agriculture index with hybrid search, multi-agent query graphs & automatic tagging
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto px-5 sm:px-8 pt-16 pb-24 hide-scrollbar">
-        <div className="max-w-7xl mx-auto">
-            
-            {/* Stats Overview */}
-            <StatsOverview lang={lang} items={knowledgeBase} />
+      {/* Tabs */}
+      <div className="flex gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10 mb-6 overflow-x-auto scrollbar-none">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => { triggerHaptic('light'); setTab(t.id); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                isActive 
+                  ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{lang === 'mr' ? t.labelHi : (lang === 'hi' ? t.labelHi : t.labelEn)}</span>
+            </button>
+          );
+        })}
+      </div>
 
-            {/* Category Filter */}
-            <div className="mb-8 relative">
-              <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} lang={lang} />
+      {/* Content Cases */}
+      <div className="space-y-6">
+        
+        {/* Browse Tab */}
+        {tab === 'browse' && (
+          <div className="space-y-5 animate-fade-in">
+            {/* Filters */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                <Filter className="w-3.5 h-3.5" /> Filters:
+              </div>
+              {['all', 'government-verified', 'expert-reviewed', 'community-verified', 'ai-generated'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => { triggerHaptic('light'); setFilterConfidence(f); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    filterConfidence === f
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                      : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {f === 'all' ? (lang === 'mr' ? 'सर्व' : 'All') : CONFIDENCE_HI[f as keyof typeof CONFIDENCE_HI] || f}
+                </button>
+              ))}
+              <div className="ml-auto text-xs font-bold text-slate-500">
+                {filteredDocs.length} items found
+              </div>
             </div>
 
-            {/* Results Title */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-gray-800">
-                {lang === 'mr' ? 'माहिती व लेख' : 'Articles & Guides'}
-              </h2>
-              <p className="text-sm text-gray-500 font-bold bg-gray-100 px-3 py-1 rounded-full">
-                {filtered.length} {lang === 'mr' ? 'विषय' : 'topics'}
-              </p>
-            </div>
-
-            {/* Grid / Shimmer loader */}
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="bg-white rounded-[24px] border border-gray-100 shadow-sm h-96 flex flex-col overflow-hidden">
-                    <div className="bg-gray-200 h-56 w-full" />
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="h-5 bg-gray-200 rounded-md w-3/4 mb-3" />
-                        <div className="h-4 bg-gray-200 rounded-md w-1/2" />
+            {/* Document grid */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {filteredDocs.map((doc, i) => (
+                <button
+                  key={doc.id}
+                  onClick={() => { triggerHaptic('light'); setSelectedDoc(doc); }}
+                  className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 text-left hover:border-emerald-500/30 transition-all duration-300 relative overflow-hidden group hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+                  
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <FileText className="w-4 h-4" />
                       </div>
-                      <div className="flex gap-2">
-                        <div className="h-6 bg-gray-200 rounded w-16" />
-                        <div className="h-6 bg-gray-200 rounded w-16" />
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase font-black tracking-wider">{doc.metadata.documentType}</div>
+                        <div className="text-[9px] text-emerald-400 font-bold">version {doc.version}</div>
+                      </div>
+                    </div>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-black tracking-wider uppercase">
+                      {doc.confidenceScore}% verified
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-black text-white mb-1.5 leading-snug group-hover:text-emerald-400 transition-colors">
+                    {lang === 'mr' ? doc.titleHi : (lang === 'hi' ? doc.titleHi : doc.title)}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed mb-4 line-clamp-2">
+                    {doc.summary}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {doc.tags.slice(0, 3).map((tag: string) => (
+                      <span key={tag} className="text-[9px] font-bold px-2 py-0.5 rounded bg-white/5 border border-white/5 text-slate-400">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-3 text-[10px] text-slate-500 font-bold pt-3 border-t border-white/5">
+                    <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-emerald-500" /> {doc.metadata.source}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-cyan-500" /> {doc.metadata.year}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-amber-500" /> {doc.usageCount} views</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Search Tab (RAG) */}
+        {tab === 'search' && (
+          <div className="space-y-5 animate-fade-in">
+            <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+              <h3 className="text-sm font-black text-white mb-1.5 flex items-center gap-2">
+                <Search className="w-4 h-4 text-emerald-400" />
+                Hybrid Search Pipeline (BM25 + Semantic Cosine Similarity)
+              </h3>
+              <p className="text-xs text-slate-400 mb-4">
+                Queries are expanded with entity lookups and run against our indexes before routing.
+              </p>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder={lang === 'mr' ? 'जैसे: सोयाबीन पीली मोज़ेक वायरस का इलाज...' : 'e.g. Cotton pink bollworm control remedies...'}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#070e08]/90 border border-white/10 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                />
+                <button
+                  onClick={handleSearch}
+                  disabled={searching}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-40"
+                >
+                  {searching ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </div>
+
+            {/* Search results */}
+            {searchResults.length > 0 && (
+              <div className="space-y-4">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  hybrid search matches ranked by index weight:
+                </div>
+                
+                {searchResults.map((result, i) => (
+                  <div
+                    key={result.doc.id}
+                    onClick={() => setSelectedDoc(result.doc)}
+                    className="bg-slate-900/40 border border-white/5 hover:border-emerald-500/30 rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-4 cursor-pointer transition-all duration-300"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          #{i + 1}
+                        </span>
+                        <h4 className="text-sm font-black text-white">{lang === 'mr' ? result.doc.titleHi : result.doc.title}</h4>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">{result.doc.summary}</p>
+                      
+                      <div className="flex items-center gap-3 text-[10px] text-slate-500 font-bold pt-2">
+                        <span>Source: {result.citation.source}</span>
+                        <span>•</span>
+                        <span>Confidence: {result.citation.confidence}%</span>
+                        <span>•</span>
+                        <span>v{result.citation.version}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex md:flex-col justify-between items-end md:w-36 shrink-0 border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0 md:pl-4 gap-2">
+                      <div className="text-right">
+                        <div className="text-base font-black text-emerald-400">{(result.score).toFixed(1)}</div>
+                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">hybrid score</div>
+                      </div>
+
+                      {/* Score breakdown metrics */}
+                      <div className="flex gap-2 w-full justify-end text-[9px] text-slate-400 font-bold">
+                        <div className="text-center bg-white/[0.02] border border-white/5 rounded px-1.5 py-0.5">
+                          <span>KW: {result.keywordScore}</span>
+                        </div>
+                        <div className="text-center bg-white/[0.02] border border-white/5 rounded px-1.5 py-0.5">
+                          <span>VEC: {Math.round(result.vectorScore * 100)}%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filtered.map((item) => (
-                <CropCard
-                    key={item.id}
-                    item={item}
-                    lang={lang}
-                    onClick={() => { onSelect(item); triggerHaptic(); }}
-                />
-                ))}
-            </div>
-            ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-                <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-5 shadow-inner">
-                  <Search className="w-10 h-10 text-gray-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-700 mb-2">
-                  {lang === 'mr' ? 'माहिती सापडली नाही' : 'No topics found'}
-                </h3>
-                <p className="text-gray-500 font-medium">
-                  {lang === 'mr' ? 'कृपया वेगळे नाव टाकून पुन्हा शोधा.' : 'Try adjusting your search or category filter.'}
-                </p>
-                <button 
-                  onClick={() => {setSearchQuery(''); setSelectedCategory('all');}}
-                  className="mt-6 px-6 py-2.5 bg-green-50 text-green-700 font-bold rounded-xl hover:bg-green-100 transition-colors"
-                >
-                  {lang === 'mr' ? 'सर्व माहिती पहा' : 'View All Topics'}
-                </button>
-            </div>
             )}
-        </div>
+          </div>
+        )}
+
+        {/* Knowledge Graph Tab */}
+        {tab === 'graph' && (
+          <div className="space-y-5 animate-fade-in">
+            <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5">
+              <h3 className="text-sm font-black text-white mb-1.5 flex items-center gap-2">
+                <Network className="w-4 h-4 text-emerald-400" />
+                Taxonomic Entity Knowledge Graph
+              </h3>
+              <p className="text-xs text-slate-400">
+                Explore relationships mapping crops to pests, diseases, fertilizers, and treatment methods.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {[...CROPS, ...DISEASES, ...FERTILIZERS].slice(0, 12).map((entity) => {
+                const related = getRelatedEntities(entity.id);
+                return (
+                  <div
+                    key={entity.id}
+                    className="bg-slate-900/40 border border-white/5 rounded-2xl p-5 space-y-3.5"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <Tag className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-white leading-none">{entity.canonicalName}</div>
+                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{entity.type}</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[9px] text-slate-500 font-black uppercase tracking-wider mb-1">Synonyms:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {entity.synonyms.slice(0, 4).map((syn) => (
+                          <span key={syn} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400">
+                            {syn}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {related.length > 0 && (
+                      <div>
+                        <div className="text-[9px] text-slate-500 font-black uppercase tracking-wider mb-1.5">Relations ({related.length}):</div>
+                        <div className="space-y-1">
+                          {related.slice(0, 3).map((r, j) => (
+                            <div key={j} className="flex items-center gap-2 text-[10.5px]">
+                              <span className="text-emerald-400">→</span>
+                              <span className="text-slate-300 font-semibold">{r.entity.canonicalName}</span>
+                              <span className="text-slate-500 text-[9px] font-bold">({r.relation})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Ingest Tab */}
+        {tab === 'ingest' && (
+          <div className="space-y-5 animate-fade-in">
+            <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 space-y-4">
+              <div>
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-emerald-400" />
+                  Knowledge Ingestion Pipeline Simulator
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Submit agricultural guidelines, and the autotagging analyzer parses crops, diseases, states, and confidence.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5 block">Document Title</label>
+                  <input
+                    type="text"
+                    value={ingestTitle}
+                    onChange={(e) => setIngestTitle(e.target.value)}
+                    placeholder="e.g. Integrated pest control in Cotton"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070e08]/90 border border-white/10 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 animate-enter"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5 block">Document Content</label>
+                  <textarea
+                    value={ingestContent}
+                    onChange={(e) => setIngestContent(e.target.value)}
+                    placeholder="Paste or write crop advices..."
+                    rows={6}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070e08]/90 border border-white/10 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none animate-enter"
+                  />
+                </div>
+
+                <button
+                  onClick={handleIngest}
+                  disabled={!ingestContent.trim() || !ingestTitle.trim()}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.98] transition-all disabled:opacity-40"
+                >
+                  Run Ingestion autotagger pipeline
+                </button>
+              </div>
+            </div>
+
+            {/* Ingestion Pipeline execution tracking */}
+            {ingestResult && (
+              <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-5 space-y-4 animate-slide-up">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider">autotagger pipeline outputs</h4>
+                  <span className="ml-auto text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-bold">
+                    {ingestResult.confidence}% confidence score
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">crop ids found</div>
+                    <div className="text-sm font-black text-emerald-400 mt-1">{ingestResult.crop.length}</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">diseases mapped</div>
+                    <div className="text-sm font-black text-rose-400 mt-1">{ingestResult.disease.length}</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">detected lang</div>
+                    <div className="text-sm font-black text-cyan-400 mt-1 uppercase">{ingestResult.language}</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">keyword tokens</div>
+                    <div className="text-sm font-black text-amber-400 mt-1">{ingestResult.keywords.length}</div>
+                  </div>
+                </div>
+
+                {ingestResult.entities.length > 0 && (
+                  <div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">Identified entities:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ingestResult.entities.map((e: any) => (
+                        <span key={e.id} className="text-[10px] font-semibold px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                          {e.canonicalName} <span className="text-[9px] text-slate-500">({e.type})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
+
+      {/* Document Detail Modal */}
+      {selectedDoc && (
+        <div
+          onClick={() => setSelectedDoc(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-950 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl animate-scale-up"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between p-5 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-white">{selectedDoc.titleHi}</h3>
+                <div className="text-[10px] text-slate-400 font-bold mt-0.5">{selectedDoc.title}</div>
+              </div>
+              <button
+                onClick={() => setSelectedDoc(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">source</div>
+                  <div className="text-xs font-bold text-white mt-1">{selectedDoc.metadata.source}</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">pub year</div>
+                  <div className="text-xs font-bold text-white mt-1">{selectedDoc.metadata.year}</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">confidence</div>
+                  <div className="text-xs font-bold text-emerald-400 mt-1">{selectedDoc.confidenceScore}%</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">ver version</div>
+                  <div className="text-xs font-bold text-white mt-1">v{selectedDoc.version}</div>
+                </div>
+              </div>
+
+              <div className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
+                {selectedDoc.content}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
-};
+}
 
 export default AgriKnowledgeView;
