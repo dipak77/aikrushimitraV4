@@ -1,5 +1,5 @@
-import React from 'react';
-import { ClipboardCheck, CheckSquare, Square, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ClipboardCheck, CheckSquare, Square, Calendar, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Language } from '../../types';
 
 const TEXTS: Record<string, any> = {
@@ -14,6 +14,7 @@ const TEXTS: Record<string, any> = {
     ],
     completed: 'पूर्ण',
     remaining: 'बाकी',
+    summaryText: 'प्रगती',
   },
   hi: {
     title: 'आज के कार्य',
@@ -26,6 +27,7 @@ const TEXTS: Record<string, any> = {
     ],
     completed: 'पूर्ण',
     remaining: 'शेष',
+    summaryText: 'प्रगति',
   },
   en: {
     title: "Today's Tasks",
@@ -38,57 +40,97 @@ const TEXTS: Record<string, any> = {
     ],
     completed: 'Done',
     remaining: 'Remaining',
+    summaryText: 'Progress',
   },
 };
 
 export const TodaysTasks = ({ lang }: { lang: Language }) => {
   const t = TEXTS[lang] || TEXTS.en;
+  const [mounted, setMounted] = useState(false);
   const doneCount = t.tasks.filter((tk: any) => tk.done).length;
+  const totalCount = t.tasks.length;
+  const completionPercentage = Math.round((doneCount / totalCount) * 100);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setMounted(true);
+    }, 150);
+    return () => clearTimeout(id);
+  }, []);
 
   return (
-    <div className="relative h-full rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900/90 via-[#0d1520] to-slate-900/90 border border-white/10 p-5 flex flex-col group hover:border-cyan-500/30 transition-all duration-500">
-      {/* Glow */}
-      <div className="absolute bottom-0 right-0 w-28 h-28 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
+    <div
+      className="group relative w-full h-full rounded-[28px] overflow-hidden border border-white/[0.10] backdrop-blur-xl transition-all duration-700 hover:border-cyan-400/30 hover:-translate-y-[2px] hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(6,182,212,0.15)] flex flex-col justify-between"
+      style={{
+        background: 'linear-gradient(135deg, rgba(10,26,34,0.90) 0%, rgba(6,16,22,0.96) 50%, rgba(4,10,14,0.92) 100%)',
+        boxShadow: '0 20px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+      }}
+    >
+      {/* Noise Texture */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-soft-light"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }}
+      />
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent pointer-events-none" />
+      <div className="absolute -bottom-16 -right-16 w-44 h-44 bg-cyan-500/[0.08] rounded-full blur-[64px] pointer-events-none group-hover:bg-cyan-400/[0.12] transition-all duration-700" />
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-            <ClipboardCheck size={16} className="text-cyan-400" />
+      <div className="relative z-10 p-[24px] flex flex-col justify-between h-full flex-1">
+        {/* Header section */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <ClipboardCheck size={16} strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-black tracking-tight text-zinc-100">{t.title}</span>
           </div>
-          <span className="text-sm font-bold text-slate-200">{t.title}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-          <Calendar size={12} />
-          <span>{doneCount}/{t.tasks.length}</span>
-        </div>
-      </div>
-
-      {/* Tasks */}
-      <div className="flex-1 space-y-3 relative z-10">
-        {t.tasks.map((task: any, i: number) => (
-          <div key={i} className="flex items-center gap-3 group/task cursor-pointer">
-            {task.done ? (
-              <CheckSquare size={18} className="text-emerald-400 flex-shrink-0" />
-            ) : (
-              <Square size={18} className="text-slate-600 flex-shrink-0 group-hover/task:text-slate-400 transition-colors" />
-            )}
-            <span className={`text-sm font-medium transition-colors ${task.done ? 'text-slate-400 line-through' : 'text-slate-200 group-hover/task:text-white'}`}>
-              {task.label}
-            </span>
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+            <Calendar size={11} className="text-cyan-400" />
+            <span>{doneCount}/{totalCount} {t.completed}</span>
           </div>
-        ))}
-      </div>
-
-      {/* Summary Footer */}
-      <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-4 relative z-10">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="text-[10px] font-bold text-slate-400">{doneCount} {t.completed}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-slate-600" />
-          <span className="text-[10px] font-bold text-slate-500">{t.tasks.length - doneCount} {t.remaining}</span>
+
+        {/* Task Items List */}
+        <div className="flex-1 space-y-3 py-1.5">
+          {t.tasks.map((task: any, i: number) => (
+            <div key={i} className="flex items-center gap-3 group/task cursor-pointer">
+              {task.done ? (
+                <div className="w-[18px] h-[18px] rounded bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <CheckCircle2 size={12} strokeWidth={2.5} />
+                </div>
+              ) : (
+                <div className="w-[18px] h-[18px] rounded border border-slate-700 bg-slate-950/60 shrink-0 group-hover/task:border-cyan-400/50 transition-colors duration-300" />
+              )}
+              <span className={`text-[13px] font-bold transition-colors leading-none ${
+                task.done 
+                  ? 'text-zinc-500 line-through' 
+                  : 'text-zinc-300 group-hover/task:text-white'
+              }`}>
+                {task.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress bar footer */}
+        <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+            <span className="uppercase tracking-wider">{t.summaryText}</span>
+            <span className="text-cyan-400">{completionPercentage}%</span>
+          </div>
+
+          <div className="w-full h-2 rounded-full bg-[#0a141a] border border-white/[0.04] p-0.5 overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: mounted ? `${completionPercentage}%` : '0%',
+                background: 'linear-gradient(90deg, #0ea5e9 0%, #06b6d4 50%, #22c55e 100%)',
+                boxShadow: '0 0 10px rgba(6,182,212,0.4)',
+                transition: 'width 1.5s cubic-bezier(0.22,1,0.36,1) 0.1s',
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
