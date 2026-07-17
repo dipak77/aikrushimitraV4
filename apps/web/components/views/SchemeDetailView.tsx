@@ -4,12 +4,12 @@ import { Language } from '../../types';
 import { TRANSLATIONS } from '../../constants';
 import { ArrowLeft, IndianRupee, CheckCircle2, CheckSquare, FileText, FileCheck, ListOrdered } from 'lucide-react';
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed } from '../../store/useAppStore';
 import clsx from 'clsx';
 
 const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Language, onBack: () => void }) => {
     const t = TRANSLATIONS[lang];
-    const collapsed = useAppStore((state) => state.sidebarCollapsed);
+    const collapsed = useAppStore(selectSidebarCollapsed);
 
     return (
         <div className={clsx("h-full w-full flex flex-col bg-[#020617] animate-enter transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-64")}>
@@ -33,7 +33,7 @@ const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Languag
 
             {/* Content Content */}
             <div className="flex-1 overflow-y-auto px-4 pb-32 pt-6 -mt-6 rounded-t-[2.5rem] bg-[#020617] relative z-20 hide-scrollbar">
-                
+                <div className="max-w-[1300px] mx-auto w-full px-2 sm:px-6">
                 {/* Description */}
                 <div className="mb-8">
                     <p className="text-slate-300 leading-relaxed text-sm">{scheme.description}</p>
@@ -107,6 +107,7 @@ const SchemeDetailView = ({ scheme, lang, onBack }: { scheme: any, lang: Languag
                 </div>
 
                 <div className="h-10"></div>
+                </div>
             </div>
         </div>
     );

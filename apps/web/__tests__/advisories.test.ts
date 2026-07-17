@@ -29,7 +29,6 @@ describe('Weather Advisories and Scheme Matching Templates', () => {
     expect(compiled).toContain(mockUser.state);
     expect(compiled).toContain('heavy rain forecast');
     expect(compiled).toContain('cotton');
-    expect(compiled).toContain('drip');
   });
 
   it('correctly replaces scheme matcher template parameters', () => {

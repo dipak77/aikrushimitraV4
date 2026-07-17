@@ -272,7 +272,7 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
       <div className="space-y-6 pb-24 animate-enter">
         
         {/* ==================== Navigation Tabs ==================== */}
-        <div className="flex gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06] overflow-x-auto hide-scrollbar">
+        <div className="flex gap-1.5 p-1.5 rounded-2xl bg-[#090e18]/80 border border-white/10 backdrop-blur-xl overflow-x-auto hide-scrollbar shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]">
           {[
             { id: 'all', label: t.allTab, icon: Sprout, color: 'text-emerald-400' },
             { id: 'flowering', label: t.floweringTab, icon: Sprout, color: 'text-[#a3e635]' },
@@ -288,8 +288,8 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
                 className={clsx(
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 whitespace-nowrap flex-1 justify-center border",
                   active
-                    ? "bg-white/[0.08] text-white border-white/[0.12] shadow-lg"
-                    : "bg-transparent text-slate-400 border-transparent hover:text-slate-200"
+                    ? "bg-gradient-to-r from-emerald-500/15 to-teal-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] scale-[1.02]"
+                    : "bg-transparent text-slate-400 border-transparent hover:bg-white/[0.02] hover:text-slate-200"
                 )}
               >
                 <Icon size={14} className={clsx(tab.color, active ? "scale-110" : "")} />
@@ -306,7 +306,7 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
             {/* 1. Flowering Stage Summary Card */}
             <div 
               onClick={() => { setActiveTab('flowering'); triggerHaptic(); }}
-              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-[#a3e635]/40 bg-gradient-to-br from-[#102a10]/40 to-slate-900/40 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 cursor-pointer group"
+              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-[#a3e635]/50 bg-gradient-to-br from-[#102a10]/30 to-slate-950/60 relative overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(163,230,53,0.12)] cursor-pointer group"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] pointer-events-none" />
               <div className="flex items-center justify-between mb-4">
@@ -344,7 +344,7 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
             {/* 2. Farm Health Score Summary Card */}
             <div 
               onClick={() => { setActiveTab('health'); triggerHaptic(); }}
-              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-cyan-400/40 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 cursor-pointer group"
+              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-cyan-400/50 bg-gradient-to-br from-cyan-950/20 to-slate-950/60 relative overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(34,211,238,0.12)] cursor-pointer group"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[40px] pointer-events-none" />
               <div className="flex items-center justify-between mb-4">
@@ -379,7 +379,7 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
             {/* 3. Today's Tasks Summary Card */}
             <div 
               onClick={() => { setActiveTab('tasks'); triggerHaptic(); }}
-              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-violet-400/40 bg-gradient-to-br from-violet-950/20 to-slate-900/40 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 cursor-pointer group"
+              className="glass-panel p-6 rounded-[2rem] border border-white/[0.08] hover:border-violet-400/50 bg-gradient-to-br from-violet-950/20 to-slate-950/60 relative overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(167,139,250,0.12)] cursor-pointer group"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-[40px] pointer-events-none" />
               <div className="flex items-center justify-between mb-4">
@@ -399,8 +399,8 @@ export const FarmDetailPage = ({ lang, onBack }: { lang: Language; onBack: () =>
                 <div className="space-y-1.5">
                   {tasks.slice(0, 2).map((tk) => (
                     <div key={tk.id} className="flex items-center gap-2 text-xs">
-                      <span className={clsx("w-1.5 h-1.5 rounded-full", tk.done ? "bg-emerald-400" : "bg-zinc-600")} />
-                      <span className={clsx("truncate text-zinc-300", tk.done && "line-through text-slate-500")}>
+                       <span className={clsx("w-1.5 h-1.5 rounded-full", tk.done ? "bg-emerald-400" : "bg-zinc-600")} />
+                       <span className={clsx("truncate text-zinc-300", tk.done && "line-through text-slate-500")}>
                         {(tk.label as any)[lang] || tk.label.en}
                       </span>
                     </div>

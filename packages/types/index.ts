@@ -41,6 +41,9 @@ export interface UserProfile {
   crop: string;
   joinedAt?: number;
   lastLogin?: number;
+  state?: string;
+  crops?: string[];
+  language?: Language;
 }
 
 export interface ChatMessage {

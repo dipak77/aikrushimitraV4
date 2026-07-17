@@ -72,12 +72,12 @@ const InfoWidget = ({
   );
 };
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed } from '../../store/useAppStore';
 import clsx from 'clsx';
 
 const KnowledgeDetailView = ({ item, lang, onBack }: { item: KnowledgeItem, lang: Language, onBack: () => void }) => {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(() => new Set([0]));
-  const collapsed = useAppStore((state) => state.sidebarCollapsed);
+  const collapsed = useAppStore(selectSidebarCollapsed);
 
   const getLabel = (obj: any) => lang === 'mr' ? obj.mr : (obj.hi || obj.en);
 
@@ -151,7 +151,7 @@ const KnowledgeDetailView = ({ item, lang, onBack }: { item: KnowledgeItem, lang
             </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-5 sm:px-8 relative z-20">
+        <div className="max-w-[1300px] mx-auto px-5 sm:px-8 relative z-20">
             
             {/* Overlapping Glassmorphic Stats Grid */}
             <div className="-mt-10 mb-8 bg-white/90 backdrop-blur-2xl rounded-[28px] shadow-xl border border-white p-5 flex flex-col gap-4">

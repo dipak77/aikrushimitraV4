@@ -9,6 +9,7 @@ import {
   SOIL_INTERPRETER_V1,
 } from '../utils/prompts';
 import { useUserStore } from '../store/useUserStore';
+import { retrieveContext } from './ragService';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const PROXY_TIMEOUT_MS = parseInt(typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_PROXY_TIMEOUT || process.env.PROXY_TIMEOUT || '15000') : '15000', 10);
@@ -537,6 +538,40 @@ export const getAIFarmingAdvice = async (
       history,
     });
   } catch (error) {
+    try {
+      console.warn('LLM call failed, falling back to local RAG retrieval:', error);
+      const user = useUserStore.getState().user;
+      const userCrops = user?.crop ? [user.crop] : [cropContext];
+      const ragResults = await retrieveContext(query, {
+        crops: userCrops,
+        state: user?.state || 'maharashtra',
+        district: user?.district || 'Yavatmal'
+      });
+
+      if (ragResults && ragResults.contextText) {
+        const intro = lang === 'mr'
+          ? "नमस्कार! सध्या संपर्क साधण्यात अडचण येत आहे. तथापि, आमच्या स्थानिक कृषी डेटाबेसमधून तुमच्यासाठी ही माहिती मिळाली आहे:\n\n"
+          : lang === 'hi'
+          ? "नमस्ते! इस समय संपर्क करने में समस्या आ रही है। हालांकि, हमारे स्थानीय कृषि डेटाबेस से आपके लिए यह जानकारी मिली है:\n\n"
+          : "Hello! I am currently experiencing connection issues. However, here is the most relevant information retrieved from our local agricultural knowledge base:\n\n";
+
+        const citationsList = ragResults.citations && ragResults.citations.length > 0
+          ? (lang === 'mr' ? "\n\n📚 **संदर्भ:**\n" : lang === 'hi' ? "\n\n📚 **संदर्भ:**\n" : "\n\n📚 **Sources:**\n") + 
+            ragResults.citations.map((c: any, i: number) => `${i + 1}. ${c.source} (${c.category})`).join('\n')
+          : '';
+
+        return intro + ragResults.contextText + citationsList + (lang === 'mr' ? "\n\n🤖 [स्थानिक डेटाबेस शोध]" : lang === 'hi' ? "\n\n🤖 [स्थानीय डेटाबेस खोज]" : "\n\n🤖 [Local DB Search]");
+      } else {
+        return lang === 'mr'
+          ? "नमस्कार! सध्या संपर्क साधण्यात अडचण येत आहे आणि आमच्या स्थानिक डेटाबेसमध्ये या संदर्भात कोणतीही माहिती मिळाली नाही. कृपया मुख्य शब्द बदलून प्रयत्न करा."
+          : lang === 'hi'
+          ? "नमस्ते! इस समय संपर्क करने में समस्या आ रही है और हमारे स्थानीय डेटाबेस में इस संदर्भ में कोई जानकारी नहीं मिली। कृपया मुख्य शब्द बदल कर प्रयास करें।"
+          : "Hello! I am currently having connection issues, and I couldn't find any relevant information in our offline agricultural knowledge base. Please try rephrasing your question with different keywords.";
+      }
+    } catch (ragError) {
+      console.error('Local RAG fallback failed:', ragError);
+    }
+
     return lang === 'mr'
       ? 'काहीतरी गडबड झालीये, पुन्हा प्रयत्न करा.'
       : 'Something went wrong.';

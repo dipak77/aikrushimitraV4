@@ -120,12 +120,12 @@ const MetricCard = ({ icon: Icon, label, value, unit, color }: { icon: any, labe
     </div>
 );
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed } from '../../store/useAppStore';
 
 const WeatherView = ({ lang, onBack }: { lang: Language, onBack: () => void }) => {
     const vt = WEATHER_V_TEXT[lang];
     const user = useUserStore((state) => state.user);
-    const collapsed = useAppStore((state) => state.sidebarCollapsed);
+    const collapsed = useAppStore(selectSidebarCollapsed);
     const [loading, setLoading] = useState(false);
     const [weather, setWeather] = useState<WeatherData | null>(MOCK_WEATHER);
     const [locationName, setLocationName] = useState('Locating...');

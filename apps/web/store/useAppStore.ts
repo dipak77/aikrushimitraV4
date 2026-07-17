@@ -152,3 +152,16 @@ export const selectIsFullscreen = (state: AppState) =>
 
 export const selectShowNav = (state: AppState) =>
   !FULLSCREEN_VIEWS.includes(state.currentView);
+
+export const selectIsSubDetailPage = (state: AppState) => {
+  return (
+    (state.currentView === 'SCHEMES' && state.selectedScheme !== null) ||
+    (state.currentView === 'AGRI_KNOWLEDGE' && state.selectedKnowledgeItem !== null) ||
+    state.currentView === 'FARM_DETAIL_PAGE'
+  );
+};
+
+export const selectSidebarCollapsed = (state: AppState) => {
+  return state.sidebarCollapsed || selectIsSubDetailPage(state);
+};
+

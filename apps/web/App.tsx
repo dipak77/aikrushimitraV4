@@ -3,7 +3,7 @@ import { ViewState, Language, UserProfile } from './types';
 import { logActivity } from './services/analyticsService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useUserStore } from './store/useUserStore';
-import { useAppStore } from './store/useAppStore';
+import { useAppStore, selectIsSubDetailPage } from './store/useAppStore';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Layout
@@ -254,6 +254,7 @@ const App = () => {
   };
 
   const isFullScreen = view === 'VOICE_ASSISTANT' || view === 'AREA_CALCULATOR' || view === 'SPLASH' || view === 'LANDING' || view === 'ADMIN' || view === 'LOGIN';
+  const isSubDetailPage = useAppStore(selectIsSubDetailPage);
 
   return (
     <ErrorBoundary lang={lang}>
@@ -280,7 +281,7 @@ const App = () => {
         </main>
 
         {/* 5. Mobile Navigation */}
-        {!isFullScreen && <MobileNav view={view} setView={setView} lang={lang} />}
+        {!isFullScreen && !isSubDetailPage && <MobileNav view={view} setView={setView} lang={lang} />}
         </div>
     </GoogleOAuthProvider>
     </ErrorBoundary>

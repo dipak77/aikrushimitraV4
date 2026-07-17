@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { triggerHaptic } from '../../utils/common';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed, selectIsSubDetailPage } from '../../store/useAppStore';
 
 const MENU_TEXTS: Record<string, any> = {
   mr: {
@@ -90,7 +90,9 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
   const [moreOpen, setMoreOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const t = MENU_TEXTS[lang] || MENU_TEXTS.en;
-  const { sidebarCollapsed: collapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen, platformConfig } = useAppStore();
+  const collapsed = useAppStore(selectSidebarCollapsed);
+  const isSubDetail = useAppStore(selectIsSubDetailPage);
+  const { setSidebarCollapsed, sidebarOpen, setSidebarOpen, platformConfig } = useAppStore();
 
   const isEnabled = (id: string) => {
     if (!platformConfig || !platformConfig.features) return true;
@@ -221,20 +223,22 @@ const Sidebar = ({ view, setView, lang }: { view: ViewState, setView: (v: ViewSt
 
             {/* Action buttons: Collapse (desktop) & Close (mobile) */}
             <div className="flex items-center gap-1">
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setSidebarCollapsed(!collapsed); 
-                  triggerHaptic(); 
-                }}
-                className={clsx(
-                  "hidden lg:block p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors",
-                  collapsed ? "mt-1" : ""
-                )}
-                title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-              >
-                {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-              </button>
+              {!isSubDetail && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setSidebarCollapsed(!collapsed); 
+                    triggerHaptic(); 
+                  }}
+                  className={clsx(
+                    "hidden lg:block p-1.5 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-colors",
+                    collapsed ? "mt-1" : ""
+                  )}
+                  title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                  {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                </button>
+              )}
 
               <button 
                 onClick={(e) => { 

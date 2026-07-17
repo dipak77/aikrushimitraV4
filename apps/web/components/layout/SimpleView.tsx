@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { triggerHaptic } from '../../utils/common';
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed } from '../../store/useAppStore';
 import clsx from 'clsx';
 
 interface SimpleViewProps {
@@ -15,7 +15,7 @@ interface SimpleViewProps {
 
 const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) => {
   const orbsRef = useRef<HTMLDivElement>(null);
-  const collapsed = useAppStore((state) => state.sidebarCollapsed);
+  const collapsed = useAppStore(selectSidebarCollapsed);
 
   useEffect(() => {
     // Dynamic orb animation on mouse move
@@ -74,7 +74,11 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
       <div className="relative z-10 h-full w-full flex flex-col bg-gradient-to-br from-[#020617]/80 via-[#0f172a]/75 to-[#020617]/80 backdrop-blur-3xl animate-enter">
         
         {/* Ultra-Premium Liquid Glass Header */}
-        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-8 pt-safe-top z-50 sticky top-0 bg-gradient-to-r from-[#020617]/70 via-[#0f172a]/65 to-[#020617]/70 backdrop-blur-[40px] border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-500 hover:shadow-[0_12px_48px_rgba(0,0,0,0.5),0_4px_16px_rgba(16,185,129,0.1)] group/header">
+        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-8 pt-safe-top z-50 sticky top-0 bg-gradient-to-r from-[#020617]/70 via-[#0f172a]/65 to-[#020617]/70 backdrop-blur-[40px] border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-500 hover:shadow-[0_12px_48px_rgba(0,0,0,0.5),0_4px_16px_rgba(16,185,129,0.1)] group/header overflow-hidden">
+          
+          {/* Ambient Header Glow Behind */}
+          <div className="absolute top-0 left-1/4 right-1/4 h-[80px] bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent blur-[40px] pointer-events-none z-0"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/10 via-transparent to-cyan-950/10 opacity-40 pointer-events-none z-0" />
           
           {/* Animated Glow Line */}
           <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent opacity-0 group-hover/header:opacity-100 transition-opacity duration-700"></div>
@@ -82,7 +86,7 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
           {/* Premium Lens-Style Back Button with Ripple Effect */}
           <button 
             onClick={() => { onBack(); triggerHaptic(); }} 
-            className="relative w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl flex items-center justify-center text-slate-100 border border-white/20 hover:border-emerald-400/50 active:scale-95 transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_12px_32px_rgba(16,185,129,0.3),0_0_40px_rgba(16,185,129,0.2),inset_0_1px_0_rgba(255,255,255,0.3)] group overflow-hidden"
+            className="relative z-10 w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl flex items-center justify-center text-slate-100 border border-white/20 hover:border-emerald-400/50 active:scale-95 transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_12px_32px_rgba(16,185,129,0.3),0_0_40px_rgba(16,185,129,0.2),inset_0_1px_0_rgba(255,255,255,0.3)] group overflow-hidden"
           >
             {/* Animated Gradient Background */}
             <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/0 via-cyan-500/0 to-transparent group-hover:from-emerald-500/20 group-hover:via-cyan-500/15 transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
@@ -104,7 +108,7 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
           </button>
           
           {/* Ultra-Premium Shimmer Text Title with 3D Effect */}
-          <div className="flex items-center gap-2 md:gap-3 flex-1">
+          <div className="flex items-center gap-2 md:gap-3 flex-1 relative z-10">
             {/* Decorative Sparkle Icon */}
             <Sparkles size={20} className="text-emerald-400/80 animate-pulse-glow drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] md:w-7 md:h-7" strokeWidth={2}/>
             
@@ -129,16 +133,16 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
 
           {/* Floating Indicator Dots or Custom Header Action */}
           {headerRight ? (
-            <div className="flex items-center">{headerRight}</div>
+            <div className="flex items-center relative z-10">{headerRight}</div>
           ) : (
-            <div className="flex gap-2">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 animate-pulse-sequence shadow-[0_0_8px_rgba(16,185,129,0.6)]"
-                  style={{ animationDelay: `${i * 0.3}s` }}
-                ></div>
-              ))}
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-md cursor-default group/sync">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400/90 group-hover/sync:text-emerald-300 transition-colors">AI Sync Live</span>
+              </div>
             </div>
           )}
         </div>
@@ -149,7 +153,7 @@ const SimpleView = ({ title, children, onBack, headerRight }: SimpleViewProps) =
           <div className="sticky top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#020617]/80 to-transparent pointer-events-none z-20"></div>
           
           {/* Content Container with Enter Animation */}
-          <div className="max-w-4xl mx-auto w-full pt-4 md:pt-8 animate-[enter_0.6s_ease-out] relative">
+          <div className="max-w-[1300px] mx-auto w-full pt-4 md:pt-8 animate-[enter_0.6s_ease-out] relative">
             {/* Subtle Content Glow */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-cyan-500/5 rounded-3xl blur-3xl pointer-events-none"></div>
             

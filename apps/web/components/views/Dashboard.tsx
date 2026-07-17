@@ -45,7 +45,7 @@ import { MultiFieldsOverview } from '../dashboard/MultiFieldsOverview';
 import { NotificationsWidget } from '../dashboard/NotificationsWidget';
 import { FooterBanner } from '../dashboard/FooterBanner';
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, selectSidebarCollapsed } from '../../store/useAppStore';
 import { getAIRecommendations } from '../../services/geminiService';
 import clsx from 'clsx';
 
@@ -53,7 +53,8 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
     const t = TRANSLATIONS[lang];
     const txt = DASH_TEXT[lang];
     const [weather, setWeather] = useState<any>(MOCK_WEATHER);
-    const { sidebarCollapsed: collapsed, toggleSidebar, platformConfig } = useAppStore();
+    const collapsed = useAppStore(selectSidebarCollapsed);
+    const { toggleSidebar, platformConfig } = useAppStore();
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [liveLocation, setLiveLocation] = useState<string>(user.village || "Locating...");
@@ -161,7 +162,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             hi: `सुझाव आपके खेत पर लागू हो गए हैं। अपेक्षित लाभ: ${uplift}`,
             en: `Advisory recommendations applied to your farm. Expected gain: ${uplift}`
         };
-        setSuccessMsgRecs(labels[lang] || labels.en);
+        setSuccessMsgRecs(labels[lang === 'mr' || lang === 'hi' ? lang : 'en']);
         setTimeout(() => setSuccessMsgRecs(null), 4000);
     };
 
@@ -247,7 +248,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
             premiumFarmer: "Premium Farmer",
             viewLess: "Collapse Suggestions ↑"
         }
-    }[lang] || {
+    }[lang === 'mr' || lang === 'hi' ? lang : 'en'] || {
         live: "Live",
         online: "Online • Session Active",
         greeting: "Hello,",
@@ -489,7 +490,7 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                             <div className="flex items-center gap-3">
                                 {/* Yield Badge */}
                                 <span className="hidden sm:inline-flex px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/20 text-[10.5px] font-bold text-emerald-300 whitespace-nowrap">
-                                    {dTxt.cropYieldBadge}
+                                    {dTxt.yieldUplift}
                                 </span>
                                 {/* Toggle action button */}
                                 <button
