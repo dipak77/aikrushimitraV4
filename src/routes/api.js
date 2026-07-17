@@ -974,11 +974,12 @@ ${orchestrated.context.relatedEntities.length > 0 ? `**संबंधित व
   app.post('/api/v1/knowledge', rateLimiter(30, 60000), validateBody(['query']), async (req, res) => {
     try {
       const { query, lang } = req.body;
-      const ragResults = retrieveContext(query);
+      const ragResults = await retrieveContext(query);
+      const citations = ragResults.citations || [];
       
       if (req.body.summarize) {
         const ai = getAIClient();
-        const contextText = ragResults.map(r => r.text).join('\n');
+        const contextText = citations.map(r => r.text || '').join('\n');
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
           contents: `Based on this agricultural knowledge base context:\n${contextText}\n\nAnswer this question concisely in ${lang || 'mr'}: ${query}`,
@@ -986,11 +987,11 @@ ${orchestrated.context.relatedEntities.length > 0 ? `**संबंधित व
         });
         return res.json({
           text: filterOutput(response.text, lang || 'mr'),
-          sources: ragResults.map(r => ({ source: r.source, category: r.category, score: r.score }))
+          sources: citations.map(r => ({ source: r.source, category: r.category, score: r.score }))
         });
       }
       
-      return res.json({ results: ragResults, total: ragResults.length });
+      return res.json({ results: citations, total: citations.length });
     } catch (error) {
       logger.error('❌ Knowledge Search Error:', { error: error.message });
       return res.status(500).json({ error: 'Knowledge search failed', details: error.message });

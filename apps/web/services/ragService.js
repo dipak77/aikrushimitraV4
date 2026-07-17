@@ -58,10 +58,10 @@ async function ensureDependencies() {
   _depsLoaded = true;
 
   try {
-    const kbModule = await resilientImport('../data/knowledge');
+    const kbModule = await resilientImport('../lib/krushi/rag/knowledge-base');
     _knowledgeBase = kbModule?.KNOWLEDGE_BASE || kbModule?.default || [];
-  } catch {
-    console.warn('[RAG] Could not load knowledge base module.');
+  } catch (e) {
+    console.warn('[RAG] Could not load knowledge base module:', e);
     _knowledgeBase = [];
   }
 
@@ -318,33 +318,52 @@ const FIRESTORE_REFRESH_INTERVAL = 10 * 60 * 1000;
 function buildChunks(articles) {
   const chunks = [];
   articles.forEach((art, artIdx) => {
-    const sections = safeArr(art.sections);
-    const contentText = sections.map(s => {
-      const t = safeObj(s.title); const c = safeObj(s.content);
-      return [safeStr(t.mr), safeStr(t.en), safeStr(c.mr), safeStr(c.en)].join(' ');
-    }).join('\n');
+    // Support both 10X flat content string and legacy sections format
+    let contentText = '';
+    if (typeof art.content === 'string') {
+      contentText = [art.title, art.titleHi, art.titleMr, art.content, art.summary, art.summaryHi, art.summaryMr].filter(Boolean).join('\n');
+    } else {
+      const sections = safeArr(art.sections);
+      contentText = sections.map(s => {
+        const t = safeObj(s.title); const c = safeObj(s.content);
+        return [safeStr(t.mr), safeStr(t.en), safeStr(c.mr), safeStr(c.en)].join(' ');
+      }).join('\n');
+    }
+    
     if (!contentText.trim()) return;
     const textChunks = chunkText(contentText, CONFIG.CHUNK_SIZE, CONFIG.CHUNK_OVERLAP);
-    const titleObj = safeObj(art.title);
-    const sourceTitle = safeStr(titleObj.mr) || safeStr(titleObj.en) || 'Knowledge Base';
+    
+    // Support both 10X and legacy titles
+    let sourceTitle = 'Knowledge Base';
+    if (typeof art.title === 'string') {
+      sourceTitle = art.titleHi || art.title || 'Knowledge Base';
+    } else if (art.title && typeof art.title === 'object') {
+      sourceTitle = safeStr(art.title.mr) || safeStr(art.title.en) || 'Knowledge Base';
+    }
+    
     const lowerTitle = sourceTitle.toLowerCase();
-    const isExpert = lowerTitle.includes('icar') || lowerTitle.includes('kvk') || safeStr(art.category) === 'crop';
-    const sourceUrl =
+    const isExpert = lowerTitle.includes('icar') || lowerTitle.includes('kvk') || safeStr(art.category) === 'crop' || art.confidence === 'government-verified' || safeObj(art.metadata).verified;
+    const sourceUrl = art.metadata?.sourceUrl || art.sourceUrl || (
       art.category === 'crop'
         ? `/crops/${art.id}`
         : art.category === 'scheme'
         ? art.id === 'pmkisan'
           ? 'https://pmkisan.gov.in'
           : 'https://pmfby.gov.in'
-        : '';
+        : ''
+    );
 
     textChunks.forEach((chunk, chunkIdx) => {
       chunks.push({
-        id: `art_${artIdx}_chunk_${chunkIdx}`, text: chunk, source: sourceTitle,
+        id: `art_${art.id || artIdx}_chunk_${chunkIdx}`, 
+        text: chunk, 
+        source: sourceTitle,
         sourceUrl,
-        category: safeStr(art.category) || 'general', authorityScore: isExpert ? 1.0 : 0.8,
-        expertReviewed: isExpert, crops: safeArr(art.tags),
-        regions: ['maharashtra', 'vidarbha', 'yavatmal', 'nashik', 'pune', 'nagpur'],
+        category: art.metadata?.category || safeStr(art.category) || 'general', 
+        authorityScore: isExpert ? 1.0 : 0.8,
+        expertReviewed: isExpert, 
+        crops: art.metadata?.crop || safeArr(art.tags),
+        regions: art.metadata?.state || ['maharashtra', 'vidarbha', 'yavatmal', 'nashik', 'pune', 'nagpur'],
         tokenCount: chunk.split(/\s+/).length,
       });
     });
@@ -598,12 +617,12 @@ export async function retrieveContext(query, userContext = {}, apiKey) {
     if (fallback.length === 0) return { contextText: '', citations: [] };
     return {
       contextText: fallback.map(m => `[Source: ${m.chunk.source}]\n${m.chunk.text}`).join('\n\n'),
-      citations: fallback.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(95, Math.round(m.score * 100)), url: m.chunk.sourceUrl })),
+      citations: fallback.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(95, Math.round(m.score * 100)), url: m.chunk.sourceUrl, text: m.chunk.text })),
     };
   }
   return {
     contextText: finalResults.map(m => `[Source: ${m.chunk.source}]\n${m.chunk.text}`).join('\n\n'),
-    citations: finalResults.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(99, Math.round(m.score * 100)), url: m.chunk.sourceUrl })),
+    citations: finalResults.map(m => ({ source: m.chunk.source, category: m.chunk.category, score: Math.min(99, Math.round(m.score * 100)), url: m.chunk.sourceUrl, text: m.chunk.text })),
   };
 }
 
