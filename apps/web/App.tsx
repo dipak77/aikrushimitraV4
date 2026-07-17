@@ -37,6 +37,7 @@ import CommunityForumView from './components/views/CommunityForumView';
 import PremiumServicesView from './components/views/PremiumServicesView';
 import InnovationHubView from './components/views/InnovationHubView';
 import SettingsView from './components/views/SettingsView';
+import { FarmDetailPage } from './components/views/FarmDetailPage';
 import { OfflineDB } from './utils/offlineDb';
 import { analyzeCropDisease } from './services/geminiService';
 
@@ -246,6 +247,8 @@ const App = () => {
          return user ? <InnovationHubView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
        case 'SETTINGS':
          return user ? <SettingsView lang={lang} user={user} onBack={() => setView('DASHBOARD')} /> : null;
+       case 'FARM_DETAIL_PAGE':
+         return <FarmDetailPage lang={lang} onBack={() => setView('DASHBOARD')} />;
        default: return user ? <Dashboard lang={lang} setLang={setLang} user={user} onNavigate={setView} /> : null;
     }
   };

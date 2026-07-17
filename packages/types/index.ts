@@ -28,7 +28,8 @@ export type ViewState =
   | 'PREMIUM'
   | 'INNOVATION'
   | 'SETTINGS'
-  | 'ADMIN';
+  | 'ADMIN'
+  | 'FARM_DETAIL_PAGE';
 
 export interface UserProfile {
   name: string;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardCheck, CheckSquare, Square, Calendar, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ClipboardCheck, CheckSquare, Square, Calendar, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Language } from '../../types';
 
 const TEXTS: Record<string, any> = {
@@ -15,6 +15,7 @@ const TEXTS: Record<string, any> = {
     completed: 'पूर्ण',
     remaining: 'बाकी',
     summaryText: 'प्रगती',
+    viewMore: 'संपूर्ण माहिती पहा',
   },
   hi: {
     title: 'आज के कार्य',
@@ -28,6 +29,7 @@ const TEXTS: Record<string, any> = {
     completed: 'पूर्ण',
     remaining: 'शेष',
     summaryText: 'प्रगति',
+    viewMore: 'पूरी जानकारी देखें',
   },
   en: {
     title: "Today's Tasks",
@@ -41,10 +43,11 @@ const TEXTS: Record<string, any> = {
     completed: 'Done',
     remaining: 'Remaining',
     summaryText: 'Progress',
+    viewMore: 'View Details',
   },
 };
 
-export const TodaysTasks = ({ lang }: { lang: Language }) => {
+export const TodaysTasks = ({ lang, onClick }: { lang: Language; onClick?: () => void }) => {
   const t = TEXTS[lang] || TEXTS.en;
   const [mounted, setMounted] = useState(false);
   const doneCount = t.tasks.filter((tk: any) => tk.done).length;
@@ -60,7 +63,8 @@ export const TodaysTasks = ({ lang }: { lang: Language }) => {
 
   return (
     <div
-      className="group relative w-full h-full rounded-[28px] overflow-hidden border border-white/[0.10] backdrop-blur-xl transition-all duration-700 hover:border-cyan-400/30 hover:-translate-y-[2px] hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(6,182,212,0.15)] flex flex-col justify-between"
+      onClick={onClick}
+      className={`group relative w-full h-full rounded-[28px] overflow-hidden border border-white/[0.10] backdrop-blur-xl transition-all duration-700 hover:border-cyan-400/30 hover:-translate-y-[2px] hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(6,182,212,0.15)] flex flex-col justify-between ${onClick ? 'cursor-pointer' : ''}`}
       style={{
         background: 'linear-gradient(135deg, rgba(10,26,34,0.90) 0%, rgba(6,16,22,0.96) 50%, rgba(4,10,14,0.92) 100%)',
         boxShadow: '0 20px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
@@ -132,6 +136,25 @@ export const TodaysTasks = ({ lang }: { lang: Language }) => {
             />
           </div>
         </div>
+
+        {/* Action Button footer */}
+        <button 
+          onClick={(e) => {
+            if (onClick) {
+              e.stopPropagation();
+              onClick();
+            }
+          }}
+          className="group/btn mt-4 w-full h-10 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center justify-between pl-4 pr-1 text-xs font-bold text-white hover:bg-gradient-to-r hover:from-[#0ea5e9] hover:to-[#06b6d4] hover:text-black hover:border-transparent hover:shadow-[0_0_24px_rgba(6,182,212,0.4)] transition-all duration-500"
+        >
+          <span className="flex items-center gap-2">
+            {t.viewMore}
+            <span className="opacity-60 group-hover/btn:opacity-100 transition-opacity">→</span>
+          </span>
+          <div className="w-8 h-8 rounded-full bg-white/[0.08] group-hover/btn:bg-black/10 flex items-center justify-center transition-all">
+            <ArrowRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
+          </div>
+        </button>
       </div>
     </div>
   );

@@ -678,18 +678,18 @@ const Dashboard = ({ lang, setLang, user, onNavigate }: { lang: Language, setLan
                 {/* AI Crop Analysis (5 cols) */}
                 {showDiagnosis && (
                   <div className="col-span-1 md:col-span-5 min-h-[260px] animate-[fadeInUp_0.5s_ease-out]">
-                      <CropAnalysisCard lang={lang} />
+                      <CropAnalysisCard lang={lang} onClick={() => onNavigate('FARM_DETAIL_PAGE')} />
                   </div>
                 )}
 
                 {/* Farm Health Score (4 cols) */}
                 <div className="col-span-1 md:col-span-4 min-h-[260px] animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
-                    <FarmHealthScore lang={lang} />
+                    <FarmHealthScore lang={lang} onClick={() => onNavigate('FARM_DETAIL_PAGE')} />
                 </div>
 
                 {/* Today's Tasks (3 cols) */}
                 <div className="col-span-1 md:col-span-3 min-h-[260px] animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
-                    <TodaysTasks lang={lang} />
+                    <TodaysTasks lang={lang} onClick={() => onNavigate('FARM_DETAIL_PAGE')} />
                 </div>
             </div>
 

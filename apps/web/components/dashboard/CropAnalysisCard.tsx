@@ -50,7 +50,7 @@ const TEXTS: Record<string, any> = {
   },
 };
 
-export const CropAnalysisCard = ({ lang }: { lang: Language }) => {
+export const CropAnalysisCard = ({ lang, onClick }: { lang: Language; onClick?: () => void }) => {
   const t = TEXTS[lang] || TEXTS.en;
   const [mounted, setMounted] = useState(false);
   const [pct, setPct] = useState(0);
@@ -69,7 +69,8 @@ export const CropAnalysisCard = ({ lang }: { lang: Language }) => {
 
   return (
     <div
-      className="group relative w-full rounded-[28px] overflow-hidden border border-white/[0.10] backdrop-blur-xl transition-all duration-700 hover:border-emerald-400/30 hover:-translate-y-[2px] hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(34,197,94,0.15)]"
+      onClick={onClick}
+      className={`group relative w-full rounded-[28px] overflow-hidden border border-white/[0.10] backdrop-blur-xl transition-all duration-700 hover:border-emerald-400/30 hover:-translate-y-[2px] hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(34,197,94,0.15)] ${onClick ? 'cursor-pointer' : ''}`}
       style={{
         background: 'linear-gradient(135deg, rgba(16,42,16,0.90) 0%, rgba(10,26,10,0.96) 48%, rgba(10,22,10,0.92) 100%)',
         boxShadow: '0 20px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
