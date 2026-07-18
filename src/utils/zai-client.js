@@ -15,17 +15,15 @@ export default class ZAI {
 
     ZAI.checkPromise = (async () => {
       try {
-        const testUrl = 'https://preview-chat-ada5cc1e-5121-4779-91e2-627014ba78e7.space-z.ai/api/chat';
+        const testUrl = 'https://aikrushimitra.space-z.ai/';
         const testRes = await fetch(testUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }] }),
-          signal: AbortSignal.timeout(1500), // 1.5 seconds timeout
+          method: 'GET',
+          signal: AbortSignal.timeout(3000), // 3 seconds timeout
         });
         ZAI.usePreviewProxy = testRes.ok;
         return testRes.ok;
       } catch (err) {
-        console.warn('⚠️ Space Z preview endpoint test failed, using local Gemini/Translate:', err.message);
+        console.warn('⚠️ Space Z endpoint test failed, using local Gemini/Translate:', err.message);
         ZAI.usePreviewProxy = false;
         return false;
       }
@@ -61,7 +59,7 @@ export default class ZAI {
         const useProxy = await ZAI.checkProxy();
         if (useProxy) {
           try {
-            const url = 'https://preview-chat-ada5cc1e-5121-4779-91e2-627014ba78e7.space-z.ai/api/chat';
+            const url = 'https://aikrushimitra.space-z.ai/api/chat';
             const response = await fetch(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -145,7 +143,7 @@ export default class ZAI {
         const useProxy = await ZAI.checkProxy();
         if (useProxy) {
           try {
-            const url = 'https://preview-chat-ada5cc1e-5121-4779-91e2-627014ba78e7.space-z.ai/api/voice';
+            const url = 'https://aikrushimitra.space-z.ai/api/voice';
             const payload = {
               text: body.input,
               voice: body.voice || 'tongtong',
@@ -188,7 +186,7 @@ export default class ZAI {
         const useProxy = await ZAI.checkProxy();
         if (useProxy) {
           try {
-            const url = 'https://preview-chat-ada5cc1e-5121-4779-91e2-627014ba78e7.space-z.ai/api/asr';
+            const url = 'https://aikrushimitra.space-z.ai/api/asr';
             const response = await fetch(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
